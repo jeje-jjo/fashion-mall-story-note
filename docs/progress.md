@@ -18,7 +18,14 @@
 cd app && npm ci && VITE_MOCK=1 npx vite --port 5199
 # 다른 창: playwright로 http://localhost:5199/fashion-mall-story-note/ 열고 S.tab='fac' 등 바꿔 render()
 ```
-(data/tables가 없으면 먼저 `python3 tools/sheets/pull_firestore.py` → `rekey_site_ids.py`가 아니라, 이미 사이트 번호로 올라가 있으니 pull 결과를 data/tables로 복사해 쓰면 된다)
+**데이터 준비(클라우드 세션 포함, 2026-11-06~)**: 비공개 저장소 `jeje-jjo/fashion-mall-story-data`에 Firestore `ref` 45표·사이트 정리 JSON·크롤러 캐시가 있다.
+```
+git clone https://github.com/jeje-jjo/fashion-mall-story-data ../fashion-mall-story-data
+tools/data_sync.sh          # → data/tables, data/pulled, data/site, tools/crawler/cache
+```
+- Firestore 표를 고치면 pull → `tools/data_sync.sh --push` → 데이터 저장소 커밋.
+- 맥이 아닌 곳에서 Firestore를 읽어야 하면: OAuth Playground(datastore 범위) 1시간 토큰을 환경의 network secret(`firestore.googleapis.com`)으로 넣고, `push_firestore.token`을 `'proxy-injected'`로 바꿔 실행한다.
+- `battle_clothes`·`battle_sets`·`facility_items`·`id_map`에는 번호 바꾸기 전 문서가 Firestore에 남아 있음(앱 영향 없음, 정리는 제제 확인 후).
 
 ## 끝난 것
 - [x] 기존 노트 화면·기능 전부 새 앱에서 실행(5탭 오류 없음)
