@@ -57,7 +57,7 @@ const S = {
   people:{}, contests:[], itemPick:"", itemAlt:"", resetAsk:false, sheet:null, cp:{}, ih:{}, memo:null, memoEdit:false, battleRec:{}, btDraft:{}, btListAll:false, cloBt:null, cloBtView:false, btOpen:true, btNote:false, fcMode:"single", fcNoteOpen:false, fcDraft:{}, coordFixOpen:{}, upHl:null, facFcSel:[], facFcOpen:false, cEdit:null, cScore:"", cRes:"실패", cMsg:"", cMsgErr:false, cReset:false,
   rnKind:"시설", rnOld:"", rnNew:"", rnErr:"",
   cloCat:[], cloPat:[], cloMat:[], cloOpt:[], cloSlot:{}, cloExp:{}, cloMulti:false, cloRowMulti:{}, cloSt:"추가옵션", cloQ:"", cloOpen:null, cloSp:false, names:{fac:{}, clo:{}, people:{}}, optDraft:{}, chkname:{}, chkscore:{}, scErr:"", scErr2:"", cbattle:{}, cyears:[], cyPick:{}, cyErr:"", cyAsk:null, cyEdit:null, coordDone:[], slotOpen:null, upMulti:false, upStaffs:[], cfxPart:{}, clofix:{}, cloField:{}, fcEdit:{}, facExp:{genre:true}, cloEdit:{}, optKind:{}, cfix:{}, cfxPick:{}, cfxKind:{},
-  coordQ:"", coordOpen:[], coordSub:"req", setF:"전체", setG:"전체", setQ:"", setOpen:null, logAll:false, confirmSync:false,
+  coordQ:"", coordOpen:[], coordSub:"req", setF:"전체", setG:"전체", setQ:"", setOpen:null, own:{pat:[],mat:[],opt:[]}, nmOpen:false, nmEdit:false, nmAll:false, logAll:false, confirmSync:false,
   fac:{}, clo:{}, logs:[], live:false
 };
 try{ const m = JSON.parse(localStorage.getItem("fms-ui")||"{}"); Object.assign(S, m); }catch(e){}
@@ -191,6 +191,7 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   db.doc("ui/chiporder").onSnapshot(s => { const d = s.exists ? s.data() : {}; S.chipOrder = {pat:d.pat||[], mat:d.mat||[], opt:d.opt||[]}; render(); }, () => {});
   db.doc("ui/optcnt").onSnapshot(s => { S.optCnt = (s.exists && s.data().counts) || {}; render(); }, () => {});
   db.doc("meta/verify").onSnapshot(s => { S.verifyDone = (s.exists && s.data().done) || {}; render(); }, () => {});
+  db.doc(`${RUN}/ui/recipes`).onSnapshot(s => { const d = (s.exists && s.data()) || {}; S.own = {pat:d.pat||[], mat:d.mat||[], opt:d.opt||[]}; render(); }, () => {});
   db.doc(`${RUN}/misc/coord`).onSnapshot(s => { S.coordDone = (s.exists && s.data().list) || []; render(); }, fail);
   db.collection("coordfix").onSnapshot(s => { S.cfix = Object.fromEntries(s.docs.map(d => [+d.id.slice(1), d.data()])); render(); }, fail);
   db.collection("chkscore").onSnapshot(s => { S.chkscore = Object.fromEntries(s.docs.map(d => [+d.id.slice(1), d.data()])); render(); }, fail);
@@ -1046,7 +1047,7 @@ function viewClo(){
     </div>`;
   }
   const spAll = SP.length, spDoneN = SP.filter(cloDone).length;
-  return `<section class="card">
+  return `${nextMakeCard()}<section class="card">
     <div class="fhead" style="gap:6px;margin-bottom:22px;flex-wrap:wrap"><span class="fh-l"><button class="chip sm" data-act="foldall">전체 접기</button><button class="chip sm" data-act="openall">전체 펼치기</button><button class="chip sm ${S.cloMulti?"on":""}" data-act="cmulti" aria-pressed="${S.cloMulti}">전체 다중선택</button></span><span class="fh-act" style="gap:6px">${slotBtns("all")}<button class="chip sm ${S.orderEdit?"on":""}" data-act="orderedit" aria-pressed="${!!S.orderEdit}">${S.orderEdit?"순서 수정 끝":"순서 수정"}</button></span></div>
     ${S.orderEdit ? `<div class="orderbar"><span>옷본·재료·옵션 칩을 끌어서 순서를 바꿔요. 놓으면 바로 저장돼요.</span><button class="chip sm" data-act="orderreset">기본 순서로</button></div>` : ""}
     ${rowHead("장르","cat","ccat",S.cloCat)}
@@ -1205,6 +1206,43 @@ function viewSets(){
   </section>
   ${keys.length ? keys.map(k => `<section class="card"><div class="fhead rowhead"><span class="sublbl" style="margin:0">${esc(k)}</span><span class="hint">${groups[k].filter(x=>!x.left).length}/${groups[k].length}</span></div>${groups[k].map(card).join("")}</section>`).join("")
     : `<section class="card"><div class="empty">${q?"검색 결과가 없어요":"조건에 맞는 세트가 없어요"}</div></section>`}`;
+}
+
+/* ---------- 다음에 만들 옷 (의류 탭 맨 위) ----------
+   가진 옷본·재료·옵션(회차별 runs/rN/ui/recipes)으로 만들 수 있는 미완료 옷을 이유 태그와 함께 보여 준다.
+   이름은 노트 옷 목록의 표기(c.p·c.m·c.o)를 그대로 쓴다. 옵션이 없는 옷은 옵션 조건 없음. */
+const NM_KEYS = [["pat","옷본","p"],["mat","재료","m"],["opt","옵션","o"]];
+const nmVals = k => { const f = NM_KEYS.find(x => x[0]===k)[2]; const cnt = {}; DATA.clo.forEach(c => { const v = c[f]; if (v && v!=="???") cnt[v] = (cnt[v]||0) + 1; }); return chipOrdered(k, Object.keys(cnt).sort((a,b) => cnt[b]-cnt[a])); };
+const nmNeed = c => NM_KEYS.map(([k,l,f]) => [k, l, c[f]]).filter(([,,v]) => v && v!=="???");
+const nmMissing = c => nmNeed(c).filter(([k,,v]) => !(S.own[k]||[]).includes(v));
+function nmLastOfSet(){   /* 유효 세트에서 이 옷만 남은 경우 */
+  const m = new Map();
+  (DATA.sets||[]).filter(s => s.valid).forEach(s => { const left = (s.clothes||[]).filter(id => { const c = CLO_BY_ID.get(id); return !c || !cloDone(c); });
+    if (left.length===1 && CLO_BY_ID.get(left[0])) m.set(left[0], [...(m.get(left[0])||[]), s.id]); });
+  return m;
+}
+function nextMakeCard(){
+  const ownN = NM_KEYS.reduce((a,[k]) => a + (S.own[k]||[]).length, 0);
+  const todo = DATA.clo.filter(c => !cloDone(c) && c.done !== undefined);
+  const last = nmLastOfSet();
+  const tags = c => [last.has(c.id) && semTag("part", `세트 1벌 남음`), isOptKind(c) && c.done!==null && `<span class="tag">추가옵션</span>`, isBtKind(c) && `<span class="tag">전투 추천</span>`, isCoKind(c) && `<span class="tag">손님 요청</span>`].filter(Boolean);
+  const can = todo.filter(c => nmNeed(c).length && !nmMissing(c).length).map(c => ({c, t:tags(c)})).sort((a,b) => b.t.length - a.t.length || cloName(a.c).localeCompare(cloName(b.c),"ko"));
+  /* 하나만 더 있으면 만들 수 있는 옷이 많은 옷본·재료·옵션 */
+  const unlock = {};
+  todo.forEach(c => { const ms = nmMissing(c); if (ms.length===1){ const key = `${ms[0][1]} ${ms[0][2]}`; unlock[key] = (unlock[key]||0) + 1; } });
+  const unl = Object.entries(unlock).sort((a,b) => b[1]-a[1]).slice(0, 6);
+  const shown = S.nmAll ? can : can.slice(0, 8);
+  const row = ({c, t}) => `<div class="nmrow"><button type="button" class="iconbtn act" data-nmdone="${c.id}" aria-label="${esc(cloName(c))} 완료">${ICON.ok}</button>
+    <span class="nm-n">${esc(cloName(c))}<small class="desc">${esc([c.p, c.m, c.o].filter(Boolean).join(" · "))}</small></span><span class="nm-t">${t.join("")}</span></div>`;
+  const editor = NM_KEYS.map(([k,l]) => { const vals = nmVals(k), on = S.own[k]||[];
+    return `<div class="sublbl" style="margin:10px 0 6px">${l} <span class="hint">${on.filter(v => vals.includes(v)).length}/${vals.length}</span></div>
+      <div class="chips">${vals.map(v => `<button class="chip ${on.includes(v)?"on":""}" data-own="${k}|${esc(v)}" aria-pressed="${on.includes(v)}">${esc(v)}</button>`).join("")}</div>`; }).join("");
+  const body = !S.nmOpen ? "" : `
+    <div class="tools toolsgap"><button class="chip sm ${S.nmEdit?"on":""}" data-nm="edit" aria-pressed="${S.nmEdit}">가진 옷본·재료·옵션 ${ownN?`(${ownN})`:"고르기"}</button></div>
+    ${S.nmEdit || !ownN ? `<div class="nmedit">${!ownN?`<div class="hint">게임에서 개방한 옷본·재료·옵션을 눌러 주세요. 회차마다 따로 저장돼요.</div>`:""}${editor}</div>` : ""}
+    ${ownN ? (can.length ? `<div class="nmlist">${shown.map(row).join("")}</div>${can.length>8?`<button class="linkbtn" data-nm="all">${S.nmAll?"접기":`${can.length-8}벌 더 보기`}</button>`:""}` : `<div class="empty">지금 가진 것으로 만들 수 있는 미완료 옷이 없어요</div>`) : ""}
+    ${ownN && unl.length ? `<div class="sublbl" style="margin:12px 0 6px">하나만 더 열면</div><div class="pills">${unl.map(([k,n]) => `<span class="pill">${esc(k)} <b>+${n}벌</b></span>`).join("")}</div>` : ""}`;
+  return `<section class="card nmcard"><div class="fhead rowhead"><button class="fh-l linkhead" data-nm="open" aria-expanded="${S.nmOpen}"><span class="sublbl" style="margin:0">다음에 만들 옷</span><span class="hint">${ownN ? `만들 수 있음 ${can.length}벌` : "가진 재료를 고르면 추천"}${last.size?` · 세트 1벌 남음 ${last.size}`:""}</span></button><span class="fh-act"><button class="chip sm" data-nm="open">${S.nmOpen?"접기":"열기"}</button></span></div>${body}</section>`;
 }
 
 /* 개량 옵션 찾기: 직원별 / 옵션별. +2 이상만 묶어서 보여주고 +1은 개수만 */
@@ -1932,6 +1970,10 @@ document.addEventListener("click", e => {
   const d = b.dataset;
   if (d.tab || d.go){ const t = d.tab || d.go; if (OLD_TAB[t]){ S.tab="rec"; S.recSub=OLD_TAB[t]; } else S.tab = t; S.confirmSync=false; remember(); render(); scrollTo({top:0}); return; }
   if (d.ihb){ S.ih = {...(S.ih||{}), ["b_"+d.ihb]: +d.v}; ihSave(); render(); return; }
+  if (d.nm){ if (d.nm==="open") S.nmOpen = !S.nmOpen; if (d.nm==="edit") S.nmEdit = !S.nmEdit; if (d.nm==="all") S.nmAll = !S.nmAll; render(); return; }
+  if (d.own){ const [k, v] = d.own.split("|"); const cur = S.own[k] || []; S.nmEdit = true; S.own = {...S.own, [k]: cur.includes(v) ? cur.filter(x => x!==v) : [...cur, v]}; render();
+    if (db) writeSerial(`${RUN}/ui/recipes`, {...S.own, t:Date.now()}).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); return; }
+  if (d.nmdone){ toggleClo(+d.nmdone); return; }
   if (d.csub){ S.coordSub = d.csub; S.setOpen = null; remember(); render(); return; }
   if (d.setf){ S.setF = d.setf; remember(); render(); return; }
   if (d.setg){ S.setG = d.setg; remember(); render(); return; }
