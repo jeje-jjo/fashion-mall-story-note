@@ -38,4 +38,4 @@ firebase deploy --only firestore:rules,firestore:indexes
 
 ## 아직 안 한 것
 - 웹 API 키를 HTTP 리퍼러(`jeje-jjo.github.io/*`, `localhost:*`)로 제한하기. 선택 사항이며 Google Cloud 콘솔 → API 및 서비스 → 사용자 인증 정보에서 한다.
-- 아이폰 사파리에서 팝업 로그인 확인(docs/plan.md 1절).
+- ~~아이폰 팝업 로그인 확인~~ → 2026-11-06 아이폰 크롬 탭·홈 화면 앱 둘 다 로그인 확인됨.
