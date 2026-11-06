@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.firebase/
+.venv/
+__pycache__/
+.cache/
+tools/crawler/cache/
+*.log
+.env
+.env.*
+!.env.example
+service-account*.json
+credentials*.json
+token*.json
+.DS_Store
+# 공개 저장소라 원본 참고 자료·개인 백업은 올리지 않음
+reference/
+snapshots/

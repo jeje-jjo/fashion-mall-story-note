@@ -1,0 +1,9 @@
+{
+  "name": "fashion-mall-story-note",
+  "private": true,
+  "scripts": {
+    "build": "python3 scripts/build.py",
+    "test": "python3 scripts/build.py && node tests/smoke.js"
+  },
+  "devDependencies": { "playwright": "^1.48.0" }
+}
