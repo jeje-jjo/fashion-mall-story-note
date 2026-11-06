@@ -11,7 +11,11 @@ import type { Row } from "./data";
 export const TABLES = [
   "clothes", "facilities", "fashion_checks", "battles", "site_contests", "outfit_sets",
   "coord_requests", "verify", "battle_clothes", "battle_sets", "recipes", "site_ranks",
-  "site_trophies", "site_missions", "characters", "guide",
+  "site_trophies", "site_missions", "characters", "guide", "terms",
+  // 자료 보기(기록 탭 [자료])용 사이트 표
+  "site_skills", "site_studies", "site_exams", "site_investments", "site_sales_trips", "site_celebrities",
+  "site_uniforms", "site_fever", "site_grades", "site_formulas", "site_clear_points", "site_carryover_choices",
+  "site_comment_replies", "site_activities", "site_items", "site_goods",
 ] as const;
 export type Tables = Record<(typeof TABLES)[number], Row[]>;
 
@@ -20,6 +24,8 @@ const num = (s: unknown) => {
   return Number.isFinite(n) && String(s ?? "").match(/\d/) ? n : null;
 };
 const txt = (v: any) => (v && typeof v === "object" && "text" in v ? v.text : v ?? "");
+
+const REF_COLS: Record<string, Record<string, string>> = {"site_exams": {"c0": "#", "c1": "장르", "c2": "필요 품질", "c3": "보상 옵션", "c4": "합격 시"}, "site_studies": {"c0": "스터디", "c1": "능력치", "c2": "얻는 재료", "c3": "비용"}, "site_skills": {"c0": "스킬", "c1": "효과", "c2": "획득 조건", "c3": "포인트"}, "site_investments": {"c0": "투자", "c1": "제안자", "c2": "요청", "c3": "비용", "c4": "완료 시"}, "site_sales_trips": {"c0": "장소", "c1": "랭크", "c2": "비용", "c3": "등장 조건"}, "site_celebrities": {"c0": "유명인", "c1": "범위"}, "site_uniforms": {"c0": "유니폼", "c1": "여성", "c2": "남성"}, "site_items": {"c0": "#", "c1": "이름", "c2": "설명", "c3": "가격", "c4": "등장 조건"}, "site_fever": {"c0": "피버 레벨", "c1": "첫 좋아요 목표 (추정)", "c2": "목표 증가량 (추정)"}, "site_grades": {"c0": "등급", "c1": "품질 + 인기"}, "site_formulas": {"c0": "항목", "c1": "식"}, "site_clear_points": {"c0": "항목", "c1": "1당 클리어 포인트"}, "site_carryover_choices": {"c0": "선택지", "c1": "비용", "c2": "얻는 것"}, "site_comment_replies": {"c0": "댓글", "c1": "답변", "c2": "비용", "c3": "아주 좋아하는 손님 유형", "c4": "좋아요: 보통 / 아주 좋아할 때 (추정)"}, "site_activities": {"c0": "활동", "c1": "종류", "c2": "손님 성향"}, "site_goods": {"c0": "#", "c1": "이름", "c2": "가격", "c3": "비용"}};
 
 export function buildData(t: Tables) {
   const L: any = structuredClone(legacy);
@@ -128,6 +134,103 @@ export function buildData(t: Tables) {
   L.missions = t.site_missions;
   L.chars = t.characters;
   L.guide = t.guide;
+
+  // ================= 사이트 값으로 맞추기 (제제 결정 2026-11-06) =================
+  // 기존 노트 기준값은 일본 위키 번역 스프레드시트에서 왔다. 공략 사이트(한국어판 게임 데이터) 값이 더 정확하므로
+  // 이름·표기·조건을 전부 사이트 값으로 바꾼다. 단, 게임 화면에서 확인한 표기 규칙(ref/terms 14개)은 그대로 쓴다.
+  // 저장된 진행 데이터는 예전 이름을 키로 쓰는 곳이 있어 alias(예전 → 지금)를 같이 넘긴다(엔진이 읽을 때 바꿈).
+  const TERM = new Map<string, string>(t.terms.map((r) => [r.site, r.note]));
+  TERM.set("카무플라주 패턴", "카모플라주");
+  const term = (v: string) => TERM.get(v) ?? v;
+  const unq = (v: unknown) => String(v ?? "").replace(/^['"‘’“”]+|['"‘’“”]+$/g, "").trim();
+  const alias: Record<string, Record<string, string>> = { clo: {}, fac: {}, item: {}, recipe: {}, battle: {}, check: {} };
+  const put = (k: string, a: string, b: string) => { if (a && b && a !== b) alias[k][a] = b; };
+
+  // 옷: 이름·세부 장르·옷본/재료/옵션(옷마다 사이트 레시피)·색·계절·태그
+  const rec = new Map<number, Record<string, string>>();   // 노트 id → {p,m,o}
+  for (const r of t.recipes) {
+    const slot = r.kind === "옷본" ? "p" : r.kind === "재료" ? "m" : "o";
+    for (const lid of r.clothes || []) { const x = rec.get(lid) || {}; x[slot] = term(r.name); rec.set(lid, x); }
+  }
+  for (const c of L.clo) {
+    const st = c.site; if (!st) continue;
+    put("clo", c.n, st.name); c.n = st.name || c.n;
+    if (st.sub) c.c = term(st.sub);
+    const rc = rec.get(c.legacyId);
+    if (rc) for (const k of ["p", "m", "o"]) if (rc[k] && rc[k] !== c[k]) { if (c[k]) put("recipe", c[k], rc[k]); c[k] = rc[k]; }
+    const tags = (st.tags || []).map(term);
+    c.tgs = [c.c, ...tags];
+    c.tg = c.tgs.join(" · ");
+  }
+
+  // 시설: 이름
+  for (const f of L.fac) { if (f.site?.name) { put("fac", f.name, f.site.name); f.name = f.site.name; } }
+  const facById = new Map<number, any>(L.fac.map((f: any) => [f.id, f]));
+  // 시설 아이템 20종: 사이트 이름(상성 표 순서는 그대로)
+  const siteItems = (t.site_items || []).map((r) => String(r.c1 ?? "")).filter(Boolean);
+  const ITEM_FIX: Record<string, string> = {};
+  for (const it of L.items) { const hit = siteItems.find((x) => x === it) || siteItems.find((x) => x.replace(/\s/g, "").endsWith(it.replace(/\s/g, ""))) || siteItems.find((x) => x.includes(it));
+    if (hit && hit !== it) ITEM_FIX[it] = hit; }
+  if (ITEM_FIX["봉제인형"] == null && siteItems.includes("인형")) ITEM_FIX["봉제인형"] = "인형";
+  if (ITEM_FIX["타블렛"] == null) { const x = siteItems.find((v) => v.includes("태블릿")); if (x) ITEM_FIX["타블렛"] = x; }
+  Object.assign(alias.item, ITEM_FIX);
+  L.items = L.items.map((x: string) => ITEM_FIX[x] ?? x);
+
+  // 패션 체크: 이름·보상·필요 시설(사이트 번호)·대신 가능·계열 표기(그루메→미식, 어른→성숙)
+  const REQ_FIX: [RegExp, string][] = [[/그루메|구루메/g, "미식"], [/어른스러운/g, "성숙한"], [/어른/g, "성숙"]];
+  L.checks = L.checks.map((c: any, i: number) => {
+    const r = fcs.find((x) => x.id === i + 1); if (!r) return c;
+    const name = unq(r.siteName) || c.name; put("check", c.name, name);
+    let req = c.req || ""; for (const [a, b] of REQ_FIX) req = req.replace(a, b);
+    const main = (r.facIds || []).map((id: number) => facById.get(id)?.name).filter(Boolean);
+    const alt = (r.altFacIds || []).map((id: number) => facById.get(id)?.name).filter(Boolean);
+    // 보상: 성공 시 문구에서 새 옵션·새 옷 베이스와 돈(상금 칸과 다를 때는 성공 시 문구가 실제 지급액)
+    const parts = String(r.success ?? "").split("/").map((x) => x.trim());
+    const got = parts.map((x) => x.match(/^새 (?:옵션|옷 베이스):\s*(.+)$/)?.[1]).filter(Boolean).map((x) => term(x as string));
+    const money = Number(parts.map((x) => x.match(/^돈:\s*(\d+)/)?.[1]).find(Boolean) ?? r.prize ?? NaN);
+    const reward = [...got, Number.isFinite(money) ? `${money.toLocaleString("ko-KR")}G` : ""].filter(Boolean).join(" & ") || c.reward;
+    let note = String(c.note || ""); for (const [a, b] of Object.entries(alias.fac)) note = note.split(a).join(b); for (const [a, b] of REQ_FIX) note = note.replace(a, b);
+    return { ...c, name, req, reward, b: main.length ? main : c.b.map((x: string) => alias.fac[x] ?? x), altB: alt, note };
+  });
+  L.checksExtra = (L.checksExtra || []).map((c: any) => ({ ...c, name: unq(c.name) }));
+
+  // 배틀: 이름(사이트), 의류 조건(사이트 clothCond → 노트 조건 단어), 예시 옷 이름
+  const COND_KEY: Record<string, string> = { "스타일": "style", "베이스": "base", "태그": "tag", "계절": "season", "분류": "kind", "옵션": "option" };
+  const condOf = (cc: unknown) => String(cc ?? "").split(";").map((x) => x.trim()).filter(Boolean).flatMap((x) => {
+    const [k, ...v] = x.split(":"); const key = COND_KEY[k.trim()]; const val = v.join(":").trim();
+    if (!key || !val) return [];
+    if (key === "season") return [val.replace("봄&가을", "봄·가을")];
+    return [term(val)];
+  });
+  L.battles = L.battles.map((b: any) => {
+    if (!b.site) return b;
+    const name = b.site.name || b.name; put("battle", b.name, name);
+    const cond = condOf(b.site.clothCond);
+    return { ...b, name, legacyCond: b.cond, cond: cond.length ? cond.join("/") : (b.site.clothCond ? "-" : b.cond),
+      reward: term(b.reward || ""), ex: (b.ex || []).map((x: string) => alias.clo[x] ?? x) };
+  });
+
+  // 코디 요청: 표의 요청 문구(제제 수정 반영), 옷 이름은 옷 번호로 다시 씀
+  const nameOf = (id: number) => L.clo.find((c: any) => c.id === id)?.n;
+  L.coord = L.coord.map((c: any) => {
+    const r = cr.get(c.id); if (!r) return c;
+    const part = (ids: number[] | undefined, old: string) => { const n = (ids || []).map(nameOf).filter(Boolean); return n.length ? n.join("/") : (old ? old.split("/").map((x) => alias.clo[x.trim()] ?? x.trim()).join("/") : old); };
+    return { ...c, r: r.request || c.r, t: part(r.topIds, c.t), b: part(r.bottomIds, c.b), o: part(r.outerIds, c.o), a: part(r.accIds, c.a) };
+  });
+  L.verify = L.verify.map((v: any) => { let tx = String(v.t || ""); for (const [a, b] of Object.entries(alias.recipe)) tx = tx.split(a).join(b); return { ...v, t: tx }; });
+
+  // 자료 보기용 사이트 표(열 이름 그대로)
+  const REF = [
+    ["site_exams", "자격시험"], ["site_studies", "스터디"], ["site_skills", "스킬"], ["site_investments", "투자"],
+    ["site_sales_trips", "출장 판매"], ["site_celebrities", "유명인"], ["site_uniforms", "유니폼"], ["site_items", "아이템"],
+    ["site_fever", "좋아요 피버"], ["site_grades", "옷 등급"], ["site_formulas", "가격·품질 식"], ["site_clear_points", "클리어 포인트"],
+    ["site_carryover_choices", "이어받기"], ["site_comment_replies", "댓글 답하기"], ["site_activities", "활동"], ["site_goods", "상품"],
+  ] as const;
+  L.refTables = REF.map(([k, label]) => ({ key: k, label, rows: ((t as any)[k] || []).slice().sort((a: Row, b: Row) => (a.row ?? 0) - (b.row ?? 0)) }));
+  L.alias = alias;
+  // 자료 표 열 이름(ref 표의 columns, 2026-11-06 기준)
+  L.refCols = REF_COLS;
+  L.terms = Object.fromEntries(TERM);
   L.idMap = { clo: Object.fromEntries(cloMap), fac: Object.fromEntries(facMap) };
   return L;
 }

@@ -26,19 +26,12 @@
 .bt-ok{color:var(--green);font-size:12px}
 .bt-ng{color:var(--red);font-size:12px}
 .s.cs-site{color:var(--fg);font-weight:600}
-/* 헤더 지금 상태 */
-.nowbar{margin:6px 0 4px}
-.nowline{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:6px;width:100%;padding:8px 12px;border-radius:12px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line);font-size:13px}
-.nowline b{font-weight:700}
-.nowline .sep{color:var(--fg3)}
-.nowline .chev{margin-left:auto;transition:transform .15s}
-.nowline[aria-expanded="true"] .chev{transform:rotate(90deg)}
-.nowedit{margin-top:6px;padding:10px 12px;border-radius:12px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
-.nowstep{display:flex;align-items:center;gap:8px}
-.nowstep b{min-width:48px;text-align:center;font-size:15px}
-.nowedit .sublbl{margin:10px 0 6px}
-.nowedit .sublbl:first-child{margin-top:0}
 .trdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px;vertical-align:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.refrow{padding:10px 0;border-top:1px solid var(--line);font-size:13px}
+.refrow:first-child{border-top:0}
+.refrow .rk{color:var(--fg3);font-size:11.5px;margin-right:4px}
+.refrow .rh{font-weight:700;font-size:14px;margin-bottom:2px}
+.refrow .rv{display:inline-block;margin-right:10px}
 /* 마네킹 플래너 */
 .mqcard .fc-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .mq-chips{margin-top:8px}
@@ -1341,7 +1334,6 @@ html body .cyl2{grid-template-columns:minmax(0,1fr) 100px}
     <div><p class="eyebrow">패션몰스토리 노트</p><h1 id="ttl">메인</h1><p id="sub">시설과 의류 진행 상황</p><div class="hprog" aria-hidden="true"><i id="hprogI" style="width:0"></i></div></div>
     <div class="hdr-r"><div class="sync" id="sync"><i></i><span>불러오는 중</span></div><button class="btn sm ghost" id="saveAll" type="button" hidden>지금 저장</button></div>
   </header>
-  <div class="nowbar" id="nowbar"></div>
   <div class="prefs" id="prefs">
     <div class="seg qseg" role="group" aria-label="빠른 보기"><button type="button" data-act="quick" data-q="memo" aria-expanded="false">리셋 주기</button><button type="button" data-act="quick" data-q="up" aria-expanded="false">개량 옵션 찾기</button></div>
     <div class="seg" role="group" aria-label="기기"><button type="button" data-device="auto">자동</button><button type="button" data-device="phone">핸드폰</button><button type="button" data-device="desk">PC·패드</button></div>
