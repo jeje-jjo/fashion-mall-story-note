@@ -986,6 +986,29 @@ async function saveBtFull(i){
   S.battleRec = {...S.battleRec, [i]:rec}; render(); toast(`${b.name} 기록을 저장했어요`);
   if (db) try{ await writeSerial(`battles/b${i}`, rec); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
+/* 옷 상세 맨 위: 사이트 기준값 먼저(제제 원칙), 기록한 품질·매력(2026-10-30 영상)은 "기록 보기"로 연다 */
+function cloSiteBlock(c){
+  const st = c.site; if (!st) return "";
+  const nf = v => v==null || v==="" ? "-" : Number(v).toLocaleString("ko-KR");
+  const styles = Object.entries(st.styles||{}).sort((a,b) => b[1]-a[1]).map(([k,v]) => `${catTag(k)}<b class="cs-v">${v}</b>`).join("");
+  const sets = (st.sets||[]).map(id => { const s = (DATA.sets||[]).find(x => x.id===id); if (!s) return `#${id}`; const inf = setInfo(s);
+    return `<span class="pill ${inf.left?"":"must"}">세트 ${id} <b>${inf.done}/${inf.total}</b></span>`; }).join("");
+  const pairList = ids => ids.map(id => CLO_BY_ID.get(id)).filter(Boolean).map(x => `<span class="pill ${cloDone(x)?"must":""}">${cloDone(x)?"✓ ":""}${esc(cloName(x))}</span>`).join("");
+  /* 궁합은 사이트가 하의 쪽에만 적어 둠: 상의·셋업이면 하의 목록에서 거꾸로 찾음 */
+  const rev = v => DATA.clo.filter(x => (v>0 ? x.site?.goodIds : x.site?.badIds)?.includes(c.id)).map(x => x.id);
+  const good = [...new Set([...(st.goodIds||[]), ...rev(1)])], bad = [...new Set([...(st.badIds||[]), ...rev(-1)])];
+  const g = GS_BY[c.id], open = S.cloRecOpen === c.id;
+  return `<div class="csite">
+    <div class="cs-facts">${[["품질", st.q], ["인기", st.pop], ["가격", st.price!=null?"¥"+nf(st.price):null], ["재고", st.stock], ["Tier", st.tier]].map(([k,v]) => `<span class="cs-f"><small>${k}</small><b>${v==null?"-":k==="가격"?v:nf(v)}</b></span>`).join("")}</div>
+    <div class="cs-line"><small>종류</small>${esc([st.kind, st.genre && layGName(st.genre), st.sub].filter(Boolean).join(" · "))}${st.cust?` · 손님 ${esc(st.cust)}`:""}</div>
+    ${styles ? `<div class="cs-line"><small>스타일 점수</small>${styles}</div>` : ""}
+    ${sets ? `<div class="cs-line"><small>코디 세트</small>${sets}</div>` : ""}
+    ${good.length ? `<div class="cs-line"><small>잘 어울림</small>${pairList(good)}${st.pairCut?`<span class="hint">사이트 목록 일부</span>`:""}</div>` : ""}
+    ${bad.length ? `<div class="cs-line"><small>안 어울림</small>${pairList(bad)}</div>` : ""}
+    ${g ? `<button class="linkbtn" data-clorec="${c.id}" aria-expanded="${open}">${open?"기록 접기":"기록 보기"}</button>${open?`<div class="cs-line"><small>내 기록</small>품질 <b>${nf(g[1])}</b> · 매력 <b>${nf(g[2])}</b> <span class="hint">2026-10-30 게임 화면</span></div>`:""}` : ""}
+    <div class="hint">기준값 출처: KairoHistory 옷 목록</div>
+  </div>`;
+}
 function viewClo(){
   const cats = ["전체", ...new Set(DATA.clo.map(c => c.c))];
   const kinds = S.cloKind || [];
@@ -1083,7 +1106,7 @@ function viewClo(){
           ${opened && hybrid() ? `<button class="iconbtn act" data-sheet="clo|${c.id}" aria-label="${esc(cloName(c))} 수정">${ICON.pen}</button><button class="iconbtn act ${battleOf(c)>=0?"on":""}" data-sheet="battle|${c.id}" aria-label="전투 추천 ${battleOf(c)>=0?"해제":"켜기"}" aria-pressed="${battleOf(c)>=0}">${ICON.sword}</button>` : ""}
           <button class="iconbtn" data-oclo="${c.id}" aria-label="자세히">${ICON.chev}</button>
         </div>
-        ${opened ? `<div class="detail"><dl class="kv">
+        ${opened ? `<div class="detail">${cloSiteBlock(c)}<dl class="kv">
           <dt>분류</dt><dd>${esc(c.c)}</dd><dt>옷본</dt><dd>${esc(c.p)||"-"}</dd><dt>재료</dt><dd>${esc(c.m)||"-"}</dd>
           <dt>옵션</dt><dd>${esc(c.o)||"-"}</dd><dt>색</dt><dd>${esc(c.col)||"-"}</dd><dt>계절</dt><dd>${esc(c.s)||"-"}</dd>
           <dt>태그</dt><dd>${esc(c.tg)||"-"}</dd>${newLines(c).length?`<dt class="kv-new">신규</dt><dd class="kv-new">${newLines(c).map(([k,v])=>`<span class="kvn"><b>${k}</b>${esc(v)}</span>`).join("")}</dd>`:""}${battleOf(c)>=0?`<dt>전투 추천</dt><dd><b style="color:var(--fg)">${esc(DATA.battles[battleOf(c)].name)}</b>${S.cbattle[c.id]?"":" · 자동"}</dd>`:""}${X?`<dt>이전 추가옵션</dt><dd>${esc(X)}</dd>`:""}</dl>
@@ -2127,6 +2150,7 @@ document.addEventListener("click", e => {
   if (d.setg){ S.setG = d.setg; remember(); render(); return; }
   if (d.setpill){ S.setOpen = S.setOpen===d.setpill ? null : d.setpill; render(); return; }
   if (d.setdone){ toggleClo(+d.setdone); return; }
+  if (d.clorec){ S.cloRecOpen = S.cloRecOpen===+d.clorec ? null : +d.clorec; render(); return; }
   if (d.mqg){ const [i, g] = d.mqg.split("|"); mqSave(+i, {genre:g}); return; }
   if (d.mqs !== undefined){ const [i, v] = d.mqs.split("|"); mqSave(+i, {season:v}); return; }
   if (d.mqset){ const [i, key] = d.mqset.split("|"); const ids = key.split("-"); const outfit = {};
