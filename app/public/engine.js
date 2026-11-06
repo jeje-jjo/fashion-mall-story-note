@@ -1669,11 +1669,15 @@ function contestForm(key, inline){
           ${hist.length ? `<div class="chist"><div class="chist-h"><span>점수 기록 ${hist.length}건</span>${S.cReset?`<span class="chist-act"><button class="linkbtn" type="button" data-creset="0">취소</button><button class="linkbtn danger" type="button" data-cresetok="${key}">정말 지우기</button></span>`:`<button class="linkbtn" type="button" data-creset="1">기록 지우기</button>`}</div><div class="chist-list">${hist.map(x => `<div class="chist-row"><span class="tag ${x.result==="성공"?"green":"red"}">${x.result}</span><b>${nf(x.score)}점</b><span class="hint">${x.now?"지금 기록":""}${x.t?`${x.now?" · ":""}${fmtT(x.t)}`:x.now?"":"날짜 없음"}${x.by==="chat"?" · 대화":""}${x.from?` · ${esc(x.from)}`:""}</span></div>`).join("")}</div></div>` : ""}
         </form>`;
 }
+/* 사이트 콘테스트 20개: 이름 "숍 어워드 Lv.2" → 노트 칸(Lv.1~4 = 초급~우주급으로 봄) */
+const siteContest = (cname, gi) => (DATA.contests||[]).find(x => String(x.name||"").replace(/\s/g,"") === `${cname}Lv.${gi+1}`.replace(/\s/g,""));
+const contestSiteLine = sc => !sc ? "" : [sc.score!=null ? `통과 ${nf(sc.score)}점` : "", sc.prize!=null ? `¥${nf(sc.prize)}` : "", sc.option ? `보상 ${sc.option}` : ""].filter(Boolean).join(" · ");
 function viewContest(){
   const filled = S.contests.length;
   return `${yearCard()}<section class="card">
     <div class="sec-h"><h2>콘테스트 통과 기준</h2><span>${filled} / ${CONTESTS.length*GRADES.length} 기록</span></div>
-    <p style="margin:0;color:var(--fg2);font-size:14px">실패는 더 높은 점수일 때만 바뀌고, 성공하면 그 점수로 바뀌어요. 칸을 눌러 기록하세요.</p>
+    <p style="margin:0;color:var(--fg2);font-size:14px">칸마다 사이트 통과 점수·상금·보상 옵션을 먼저 보여 줘요. 칸을 누르면 내 점수 기록을 보고 남길 수 있어요(실패는 더 높은 점수일 때만, 성공은 그 점수로 바뀌어요).</p>
+    <div class="hint" style="margin-top:6px">Lv.1~4를 초급~우주급으로 맞췄어요 · 출처: KairoHistory 콘테스트</div>
   </section>
   ${CONTESTS.map(([c, cname]) => {
     const done = GRADES.filter((_, gi) => cRec(cKey(c, gi))?.result === "성공").length;
@@ -1681,15 +1685,16 @@ function viewContest(){
     <div class="sec-h"><h2>${cname}</h2><span>통과 ${done} / ${GRADES.length}</span></div>
     <div class="flushlist" style="margin-bottom:-8px">${GRADES.map((g, gi) => {
       const key = cKey(c, gi), r = cRec(key), ed = S.cEdit === key;
-      const line = !r ? "아직 기록 없음" : r.result === "성공" ? `${nf(r.score)}점으로 통과${r.from?` · ${r.from}`:""}` : `${nf(r.score)}점으로는 부족 · 그보다 높아야 통과`;
+      const line = !r ? "내 기록 없음" : r.result === "성공" ? `내 기록 ${nf(r.score)}점 통과${r.from?` · ${r.from}`:""}` : `내 기록 ${nf(r.score)}점 부족`;
+      const sc = siteContest(cname, gi), sl = contestSiteLine(sc);
       return `<div class="${ed?"open":""}">
         <button class="row" data-cedit="${key}">
           <span class="grade-dot g${gi+1}" aria-hidden="true">${g[0]}</span>
-          <div class="body"><div class="t">${g} ${r?`<span class="tag ${r.result==="성공"?"green":"red"}">${r.result}</span>`:""}</div><div class="s">${line}</div></div>
+          <div class="body"><div class="t">${g} ${r?`<span class="tag ${r.result==="성공"?"green":"red"}">${r.result}</span>`:""}</div>${sl?`<div class="s cs-site">${esc(sl)}</div>`:""}<div class="s">${line}</div></div>
           ${r?`<span class="cscore">${nf(r.score)}</span>`:""}
           ${ICON.chev}
         </button>
-        ${ed ? contestForm(key, true) : ""}
+        ${ed ? (sc?.appear && sc.appear!=="항상" ? `<div class="hint" style="padding:0 0 6px 44px">등장: ${esc(sc.appear.replace(/^조건:\s*/,""))}</div>` : "") + contestForm(key, true) : ""}
       </div>`; }).join("")}</div>
   </section>`; }).join("")}`;
 }
