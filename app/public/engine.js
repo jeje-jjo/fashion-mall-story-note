@@ -1084,6 +1084,33 @@ function cloSiteBlock(c){
     <div class="hint">기준값 출처: KairoHistory 옷 목록</div>
   </div>`;
 }
+/* 옷 상세: 이 옷이 필요한 곳 · 옵션 얻는 곳(2026-11-06 개편). 기준 표와 진행 상태를 이어서 보여 주기만 하고 따로 저장하지 않음 */
+const optToks = v => String(v||"").split(/[,、·\/]/).map(x => x.replace(/^★\s*/,"").trim()).filter(Boolean);
+const _optSrc = {};
+function optSources(o){
+  if (!o || o==="없음") return [];
+  if (_optSrc[o]) return _optSrc[o];
+  const has = v => optToks(v).includes(o), out = [];
+  (DATA.checks||[]).forEach((k, i) => { if (has(k.site?.option)) out.push(`패션 체크 ${i+1}`); });
+  (DATA.checksExtra||[]).forEach(k => { if (has(k.site?.option)) out.push(`모델 체크 ${k.site.id}`); });
+  (DATA.contests||[]).forEach(k => { if (has(k.option)) out.push(String(k.name||"콘테스트").replace(/\s+/g," ")); });
+  const ref = key => ((DATA.refTables||[]).find(t => t.key===key)?.rows || []);
+  ref("site_exams").forEach(r => { if (has(r.c3)) out.push(`자격시험 ${r.c1||""}`.trim()); });
+  ref("site_studies").forEach(r => { if (has(r.c2)) out.push(`스터디 ${r.c0||""}`.trim()); });
+  return (_optSrc[o] = [...new Set(out)]);
+}
+function cloNeedBlock(c){
+  const nm = new Set([c.n, cloName(c)]);
+  const sets = (c.site?.sets||[]).map(id => (DATA.sets||[]).find(x => x.id===id)).filter(Boolean).map(setInfo).filter(i => i.left > 0).sort((a,b) => a.left - b.left);
+  const pills = sets.slice(0, 4).map(i => `<span class="pill ${i.left===1?"need":"must"}">세트 ${i.s.id} ${i.left===1?"1벌 남음":`${i.done}/${i.total}`}</span>`);
+  DATA.battles.forEach((b, i) => { if ((b.site?.clothes||[]).some(x => x.id===c.id)) pills.push(`<span class="pill">배틀 ${esc(bShort(i))}</span>`); });
+  const guests = [...new Set(DATA.coord.filter(r => ["t","b","o","a"].some(k => String(cPart(r, k)||"").split("/").some(v => nm.has(v.replace(/\s*외$/,"").trim())))).map(coordName))];
+  guests.forEach(g => pills.push(`<span class="pill">손님 ${esc(g)}</span>`));
+  for (let i = 0; i < mqN(); i++) if (Object.values(mqOf(i).outfit||{}).includes(c.id)) pills.push(`<span class="pill need">마네킹 ${i+1}</span>`);
+  const src = optSources(c.o);
+  if (!pills.length && !src.length) return "";
+  return `<div class="csite cneed">${pills.length?`<div class="cs-line" style="margin-top:0"><small>이 옷이 필요한 곳</small>${pills.join("")}</div>`:""}${src.length?`<div class="cs-line"><small>${esc(c.o)} 얻는 곳</small>${src.map(x => `<span class="pill">${esc(x)}</span>`).join("")}</div>`:""}</div>`;
+}
 function viewClo(){
   const cats = ["전체", ...new Set(DATA.clo.map(c => c.c))];
   const kinds = S.cloKind || [];
@@ -1182,7 +1209,7 @@ function viewClo(){
           ${c.site ? `<span class="rowvals" aria-hidden="true"><span>품질 ${c.site.q ?? "-"}</span><span>인기 ${c.site.pop ?? "-"}</span><span>${c.site.price!=null ? Number(c.site.price).toLocaleString("ko-KR")+"G" : "-"}</span></span>` : ""}
           <button class="iconbtn" data-oclo="${c.id}" aria-label="자세히">${ICON.chev}</button>
         </div>
-        ${opened ? `<div class="detail">${cloSiteBlock(c)}<dl class="kv">
+        ${opened ? `<div class="detail">${cloSiteBlock(c)}${cloNeedBlock(c)}<dl class="kv">
           <dt>분류</dt><dd>${esc(c.c)}</dd><dt>옷본</dt><dd>${esc(c.p)||"-"}</dd><dt>재료</dt><dd>${esc(c.m)||"-"}</dd>
           <dt>옵션</dt><dd>${esc(c.o)||"-"}</dd><dt>색</dt><dd>${esc(c.col)||"-"}</dd><dt>계절</dt><dd>${esc(c.s)||"-"}</dd>
           <dt>태그</dt><dd>${esc(c.tg)||"-"}</dd>${newLines(c).length?`<dt class="kv-new">신규</dt><dd class="kv-new">${newLines(c).map(([k,v])=>`<span class="kvn"><b>${k}</b>${esc(v)}</span>`).join("")}</dd>`:""}${battleOf(c)>=0?`<dt>전투 추천</dt><dd><b style="color:var(--fg)">${esc(DATA.battles[battleOf(c)].name)}</b>${S.cbattle[c.id]?"":" · 자동"}</dd>`:""}${X?`<dt>이전 추가옵션</dt><dd>${esc(X)}</dd>`:""}</dl>
