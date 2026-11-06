@@ -1038,7 +1038,7 @@ function cloSiteBlock(c){
     <div class="cs-line"><small>종류</small>${esc([st.kind, st.genre && layGName(st.genre), st.sub].filter(Boolean).join(" · "))}${st.cust?` · 손님 ${esc(st.cust)}`:""}</div>
     ${styles ? `<div class="cs-line"><small>스타일 점수</small>${styles}</div>` : ""}
     ${sets ? `<div class="cs-line"><small>코디 세트</small>${sets}</div>` : ""}
-    ${good.length ? `<div class="cs-line"><small>잘 어울림</small>${pairList(good)}${st.pairCut?`<span class="hint">사이트 목록 일부</span>`:""}</div>` : ""}
+    ${good.length ? `<div class="cs-line"><small>잘 어울림</small>${pairList(good)}</div>` : ""}
     ${bad.length ? `<div class="cs-line"><small>안 어울림</small>${pairList(bad)}</div>` : ""}
     ${g ? `<button class="linkbtn" data-clorec="${c.id}" aria-expanded="${open}">${open?"기록 접기":"기록 보기"}</button>${open?`<div class="cs-line"><small>내 기록</small>품질 <b>${nf(g[1])}</b> · 매력 <b>${nf(g[2])}</b> <span class="hint">2026-10-30 게임 화면</span></div>`:""}` : ""}
     <div class="hint">기준값 출처: KairoHistory 옷 목록</div>
@@ -1283,7 +1283,6 @@ const MQ_COLORS = (() => { const n = {}; DATA.clo.forEach(c => (c.site?.cols||[]
 const MQ_PAIR = (() => { const m = new Map(); const put = (a, b, v) => { m.set(a+":"+b, v); m.set(b+":"+a, v); };
   DATA.clo.forEach(c => { (c.site?.goodIds||[]).forEach(x => put(c.id, x, 1)); (c.site?.badIds||[]).forEach(x => put(c.id, x, -1)); }); return m; })();
 const mqPair = (a, b) => MQ_PAIR.get(a.id+":"+b.id) ?? 0;
-const mqCut = (t, b) => !MQ_PAIR.has(t.id+":"+b.id) && (b.site?.pairCut || t.site?.pairCut);
 const mqNow = () => ({season:"봄·가을", trend:"", ...(S.now||{})});
 const mqSeasonOf = m => m.season || mqNow().season;
 /* 옷 계절과 목표 계절의 궁합(AppData.GetMatchSeason): 봄·가을 옷은 봄·가을에 +1, 여름·겨울 옷은 제 계절 +1 · 반대 계절 −1 */
@@ -1306,7 +1305,7 @@ function mqEval(o, m){
   const pct = Math.max(5, Math.min(95, parts.reduce((a,p) => a + p[1], 0)));
   const ids = new Set(pcs.map(c => c.id));
   const sets = [...new Set(pcs.flatMap(c => MQ_SETS_OF.get(c.id) || []))].filter(s => s.clothes.every(id => ids.has(id)));
-  return { o, pcs, pct, parts, pair, cut: !setup && top && bot && mqCut(top, bot), setup, trendN, sets,
+  return { o, pcs, pct, parts, pair, setup, trendN, sets,
     gN: pcs.filter(c => c.site?.genre===g).length, style: pcs.reduce((a,c) => a + mqStyle(c, g), 0), pop: pcs.reduce((a,c) => a + mqPop(c), 0),
     bad: pcs.some(c => mqMatch(c, now) < 0), key: MQ_SLOTS.map(([k]) => o[k]?.id||"").join("-") };
 }
@@ -1367,7 +1366,7 @@ function mqTags(x, m){
   const now = mqSeasonOf(m), t = [];
   const sv = x.parts[0][1]; t.push(`<span class="tag ${sv>=30?"mq-ok":sv<0?"mq-ng":""}" title="상의·하의 기준">상하 계절 ${sv>=30?"✓":sv<0?"✕":"보통"}</span>`);
   if (x.setup) t.push(`<span class="tag mq-ok">셋업</span>`);
-  else if (x.o.t && x.o.b) t.push(`<span class="tag ${x.pair>0?"mq-ok":x.pair<0?"mq-ng":""}" ${x.cut?`title="사이트 궁합 목록이 잘려 있어 모를 수 있어요"`:""}>궁합 ${x.pair>0?"+1":x.pair<0?"−1":x.cut?"?":"0"}</span>`);
+  else if (x.o.t && x.o.b && x.pair) t.push(`<span class="tag ${x.pair>0?"mq-ok":"mq-ng"}">궁합 ${x.pair>0?"+1":"−1"}</span>`);
   if (x.trendN) t.push(`<span class="tag mq-ok">유행색 ${x.trendN}</span>`);
   x.sets.forEach(s => t.push(semTag("done", `세트 ${s.id} 완성`)));
   t.push(`<span class="tag">${esc(layGName(m.genre))} ${x.gN}/${x.pcs.length}벌</span>`);
