@@ -180,7 +180,9 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
       if (md?.n){ S.roundNo = +md.n; render(); } }, () => fin());
     setTimeout(fin, 5000); });
   db.collection(`${RUN}/fac`).onSnapshot(s => { S.fac = Object.fromEntries(s.docs.map(d => { const v = {...d.data()}; if (v.put) v.put = alArr("item", v.put); return [+d.id.slice(1), v]; })); render(); }, fail);
-  db.collection(`${RUN}/clo`).onSnapshot(s => { S.clo = Object.fromEntries(s.docs.map(d => [+d.id.slice(1), d.data()])); render(); }, fail);
+  db.collection(`${RUN}/clo`).onSnapshot(s => { S.clo = Object.fromEntries(s.docs.map(d => { const v = {...d.data()};
+    if (v.opt){ const o = {...v.opt}; if (o.guest) o.guest = o.guest.replace(/^(.*?)(\s*\(.*\))?$/, (m, a, b) => al("person", a) + (b || "")); if (o.likeDetail) o.likeDetail = alSlash("fac", o.likeDetail); v.opt = o; }
+    return [+d.id.slice(1), v]; })); render(); }, fail);
   /* 선택 저장 칸: 기기 간 공유 (예전엔 브라우저에만 저장했으므로, 서버가 비어 있으면 이 기기 것을 올림) */
   let slotFirst = true;
   db.doc("ui/slots").onSnapshot(s => {
@@ -1920,12 +1922,12 @@ const CP_CAP = [
   ["guests", "발견한 손님 수", 15, () => new Set(DATA.clo.map(c => optOf(c).guest).filter(Boolean)).size],
   ["trophy", "트로피 획득", 50, () => 33],
   ["bld", "획득한 건물", 8, () => DATA.fac.length],
-  ["battle", "클리어한 배틀", 40, () => DATA.battles.length],
-  ["fc", "클리어한 패션 체크", 25, () => DATA.checks.length],
+  ["battle", "클리어한 배틀", 40, () => DATA.battles.length + (DATA.battlesExtra||[]).length],
+  ["fc", "클리어한 패션 체크", 25, () => DATA.checks.length + (DATA.checksExtra||[]).length],
   ["wish", "대성공한 요청", 5, () => Math.max(0, peopleNow().length*4 - 10)],
   ["exam", "합격한 자격시험", 35, () => DATA.up.staff.length*2],
 ];
-const CP_SRC = {made:"가게 정보", rank:"가게 정보", trophy:"가게 정보", guests:"신규 손님 수", bld:"노트 시설 수", battle:"노트 배틀 수", fc:"노트 체크 수", wish:"코디 인원×4−10", exam:"직원 14명×2"};
+const CP_SRC = {made:"가게 정보", rank:"가게 정보", trophy:"가게 정보", guests:"신규 손님 수", bld:"노트 시설 수", battle:"사이트 배틀 수(챌린지+다른 가게)", fc:"사이트 체크 수(모델 체크 포함)", wish:"코디 인원×4−10", exam:"직원 14명×2"};
 const cpRaw = k => { const v = S.cp?.[k]; if (v !== undefined && v !== "") return v; const d = CP_CAP.find(x => x[0]===k)?.[3]; return d ? d() : ""; };
 const cpNum = k => Number(String(cpRaw(k)).replace(/[^\d]/g,"")) || 0;
 function cpCalc(){
@@ -1970,11 +1972,11 @@ function homeClear(){
   </section>`;
 }
 /* 회차 연계(인계) 계산 — 클리어 포인트와는 별개
-   돈·포인트는 100점마다 20%씩 최대 3회(60%), 옷·점원 매개변수는 50점에 20%. 이어지는 값은 소수점 아래 버림 */
+   돈·포인트는 100점마다 20%씩 최대 3회(60%), 옷·점원 파라미터는 50점에 20%. 이어지는 값은 소수점 아래 버림 */
 const IH_ITEMS = [
   ["money", "돈 20%", 100, 3], ["pts", "포인트 20%", 100, 3],
-  ["clo", "옷 매개변수 20%", 50, 1], ["staff", "점원 매개변수 20%", 50, 1],
-  ["rnd", "무작위 옵션", 30, 1], ["facSeed", "시설 인기 업의 종", 30, 1], ["cloSeed", "옷 인기 업 씨", 30, 1],
+  ["clo", "옷 파라미터 20%", 50, 1], ["staff", "점원 파라미터 20%", 50, 1],
+  ["rnd", "랜덤 옵션", 30, 1], ["facSeed", "시설 인기 UP 씨앗", 30, 1], ["cloSeed", "옷 매력 UP 씨앗", 30, 1],
 ];
 const IH_ST = [["a","접객"],["b","속도"],["c","솜씨"]];
 const ihStaffName = i => DATA.up.staff[i].replace(/\s*\(.*\)$/, "");
@@ -2019,8 +2021,8 @@ function homeCarry(){
       <div class="cpgrid">
         ${row("money", "소지금", "돈 연계", "money")}
         ${row("pts", "포인트", "포인트 연계", "pts")}
-        ${row("q", "옷 평균 품질", "미션 화면 · 옷 매개변수", "clo")}
-        ${row("c", "옷 평균 매력", "미션 화면 · 옷 매개변수", "clo")}
+        ${row("q", "옷 평균 품질", "미션 화면 · 옷 파라미터", "clo")}
+        ${row("c", "옷 평균 매력", "미션 화면 · 옷 파라미터", "clo")}
         ${row("sa", "점원 평균 능력", r.stN ? `점원별 ${r.stN}칸 평균 ${nf0(Math.floor(r.staffAvg))}` : "미션 화면 평균", "staff")}
       </div>
       <div class="fhead" style="margin:16px 0 8px"><span class="sublbl" style="margin:0">점원별 능력</span><button class="chip sm fold" data-act="ihstaff" aria-expanded="${so}">${so?"접기 ▴":"펼치기 ▾"}</button></div>

@@ -143,7 +143,7 @@ export function buildData(t: Tables) {
   TERM.set("카무플라주 패턴", "카모플라주");
   const term = (v: string) => TERM.get(v) ?? v;
   const unq = (v: unknown) => String(v ?? "").replace(/^['"‘’“”]+|['"‘’“”]+$/g, "").trim();
-  const alias: Record<string, Record<string, string>> = { clo: {}, fac: {}, item: {}, recipe: {}, battle: {}, check: {} };
+  const alias: Record<string, Record<string, string>> = { clo: {}, fac: {}, item: {}, recipe: {}, battle: {}, check: {}, person: {} };
   const put = (k: string, a: string, b: string) => { if (a && b && a !== b) alias[k][a] = b; };
 
   // 옷: 이름·세부 장르·옷본/재료/옵션(옷마다 사이트 레시피)·색·계절·태그
@@ -161,6 +161,37 @@ export function buildData(t: Tables) {
     const tags = (st.tags || []).map(term);
     c.tgs = [c.c, ...tags];
     c.tg = c.tgs.join(" · ");
+  }
+
+  // 레시피 목록이 사이트에서 24벌까지만 보여서(+n 잘림) 옷마다 못 맞춘 옷은 같은 이름 바꾸기(띄어쓰기 등)를 그대로 적용
+  for (const c of L.clo) for (const k of ["p", "m", "o"]) if (c[k] && alias.recipe[c[k]]) c[k] = alias.recipe[c[k]];
+
+  // 개량 옵션 표: 옵션 이름 사이트 표기, 사이트에만 있는 옵션(특수 옵션 등)은 스타일 보너스로 행 추가
+  {
+    const staffSub = L.up.staff.map((x: string) => (x.match(/\(([^)]*)\)\s*$/) || [])[1] || "");
+    const nk = (v: string) => term(v.trim()).replace(/\s/g, "");
+    const rows: Record<string, string[]> = {};
+    for (const [k, v] of Object.entries(L.up.rows as Record<string, string[]>)) rows[alias.recipe[k] ?? k] = v;
+    for (const r of t.recipes) {
+      const name = term(r.name); if (!r.styleBonus || rows[name]) continue;
+      const bonus = new Map<string, number>(String(r.styleBonus).split(",").map((x) => { const m = x.trim().match(/^(.*\S)\s+(\d+)$/); return m ? [nk(m[1]), +m[2]] : ["", 0]; }));
+      rows[name] = staffSub.map((g: string) => { const v = bonus.get(nk(g)) ?? 0; return v ? `+${v}` : ""; });
+    }
+    L.up.rows = rows;
+  }
+
+  // 게임에서 확인할 것: 사이트 값으로 답이 나온 항목은 뺀다(레시피·계절·색·번호)
+  const SITE_OK = new Set(["slit", "slit2", "q3", "opt_none", "bot", "acc", "kairo"]);
+  L.verify = L.verify.filter((v: any) => !SITE_OK.has(v.k));
+
+  // 옷의 신규 손님·좋아하는 매장 칸: 사이트 캐릭터·시설 이름(띄어쓰기만 다른 것)으로
+  const nsp = (v: string) => v.replace(/\s/g, "");
+  const charBy = new Map<string, string>(t.characters.map((r) => [nsp(r.name), r.name]));
+  const facBy = new Map<string, string>(t.facilities.map((r) => [nsp(r.name), r.name]));
+  const FAC_WORD: Record<string, string> = { "수입차 매장": "수입차 가게" };
+  for (const c of L.clo) {
+    if (c.g) { const m = c.g.match(/^(.*?)(\s*\(.*\))?$/); const nm = charBy.get(nsp(m[1])); if (nm && nm !== m[1]) { put("person", m[1], nm); c.g = nm + (m[2] || ""); } }
+    if (c.ld && c.lt === "신규 매장") c.ld = c.ld.split("/").map((x: string) => { const v = x.trim(); const nv = FAC_WORD[v] ?? alias.fac[v] ?? facBy.get(nsp(v)) ?? v; put("fac", v, nv); return nv; }).join("/");
   }
 
   // 시설: 이름
@@ -206,7 +237,7 @@ export function buildData(t: Tables) {
     if (!b.site) return b;
     const name = b.site.name || b.name; put("battle", b.name, name);
     const cond = condOf(b.site.clothCond);
-    return { ...b, name, legacyCond: b.cond, cond: cond.length ? cond.join("/") : (b.site.clothCond ? "-" : b.cond),
+    return { ...b, name, legacyCond: b.cond, stat: b.stat === "손재주" ? "솜씨" : b.stat, cond: cond.length ? cond.join("/") : (b.site.clothCond ? "-" : b.cond),
       reward: term(b.reward || ""), ex: (b.ex || []).map((x: string) => alias.clo[x] ?? x) };
   });
 
