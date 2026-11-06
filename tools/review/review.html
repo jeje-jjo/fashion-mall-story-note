@@ -97,6 +97,10 @@ const DIFF = [
 ].map(([id,name,field,note,site])=>({key:`${id}:${field}`,id,name,field,
   opts:[{v:"note",label:note,d:"노트"},{v:"site",label:site,d:"사이트"},{v:"check",label:"게임에서 확인할게",d:""}]}));
 
+// 저장소 문서 id는 영문·숫자·_-.~:@+ 만 된다. 한국어 항목명은 영문 코드로 바꾼다(data.key에는 원래 키를 그대로 둔다).
+const FIELD_ID = {"색":"col","옵션":"opt","계절":"season","옷본":"pat","재료":"mat"};
+const docId = key => key.replace(/[^:]+$/, f => FIELD_ID[f] ?? f).replace(/[/:]/g, "_");
+
 const choices = {};           // key -> {choice}
 let db = null, filter = "all";
 
@@ -137,13 +141,17 @@ async function pick(key, v){
   render();
   if (!db){ return; }
   try {
-    const ref = db.doc("choices/" + key.replace(/[/:]/g, "_"));
+    const ref = db.doc("choices/" + docId(key));
     if (choices[key]) await ref.set({key, choice: v, t: Date.now()});
     else await ref.delete();
   } catch (e) {
     if (prev) choices[key] = prev; else delete choices[key];
     render();
-    showNotice("저장하지 못했어요. 이 페이지 주인 계정으로 열었는지 확인해 주세요.");
+    const code = e?.code ?? (e instanceof TypeError ? "bad_id" : "unknown");
+    const msg = code === "unavailable" ? "연결이 잠시 불안정해요. 조금 뒤 다시 눌러 주세요."
+      : code === "revoked" || code === "not_granted" ? "저장 권한이 없어요. 페이지를 새로 열어 주세요."
+      : `저장하지 못했어요 (${code}).`;
+    showNotice(msg);
   }
 }
 
