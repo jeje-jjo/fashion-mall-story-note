@@ -632,9 +632,9 @@ nav.tabs button svg{width:21px;height:21px}
 .legend{align-items:center}
 
 /* 넓은 화면(아이패드 가로·데스크톱): 탭바를 왼쪽 레일로 */
-@media (min-width:900px){
+@media (min-width:740px){
   body{padding-left:calc(96px + max(16px,env(safe-area-inset-left,0px)));padding-bottom:40px}
-  .app{max-width:720px;padding-top:28px}
+  .app{max-width:1100px;padding-top:20px}
   nav.tabs{top:0;bottom:0;right:auto;width:96px;border-top:0;border-right:1px solid var(--line);padding:24px 10px}
   nav.tabs .in{grid-template-columns:1fr;grid-auto-rows:min-content;gap:6px}
   nav.tabs button{padding:8px 0 6px;font-size:11px;border-radius:14px}
@@ -642,6 +642,8 @@ nav.tabs button svg{width:21px;height:21px}
   nav.tabs button.on .tic{background:transparent}
   .toast{bottom:28px;left:calc(50% + 48px)}
   .tiles{grid-template-columns:repeat(4,1fr)}
+  .fab{bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+  #quick{bottom:calc(24px + env(safe-area-inset-bottom,0px))}
 }
 
 /* 컴팩트 수정 줄 */
@@ -1328,26 +1330,57 @@ html body .cyl2{grid-template-columns:minmax(0,1fr) 100px}
 .row:has(+ .rowpills){border-bottom-color:transparent!important}
 .rowpills{border-bottom:1px solid var(--line2,var(--line))}
 .open > .rowpills{border-bottom-color:transparent}
+
+/* ---------- 2026-11-06 개편: 머리줄 한 줄, 떠 있는 빠른 보기 버튼, 도구 탭 화면 설정 ---------- */
+.hello{align-items:center;padding:4px 2px 6px;gap:10px}
+.hello .hl{min-width:0}
+.hello h1{font-size:22px;margin:0}
+.hello #sub{margin:2px 0 0;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-r{gap:8px}
+.hbtn{width:34px;height:34px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--line);color:var(--fg2)}
+.hbtn.on{background:var(--blue-soft);color:var(--blue-ink);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--blue) 40%,transparent)}
+#recentPanel[hidden]{display:none}
+#recentPanel .recent-card{margin-bottom:4px}
+.fab{position:fixed;z-index:25;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(84px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}
+.fab button{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--card);color:var(--blue-ink);box-shadow:0 2px 10px rgba(40,20,25,.14),inset 0 0 0 1px var(--line)}
+.fab button svg{width:18px;height:18px}
+.fab button.on{background:var(--blue);color:#fff;box-shadow:0 2px 10px rgba(40,20,25,.2)}
+html.sheet-open .fab{display:none}
+#quick{position:fixed;z-index:26;right:calc(max(14px,env(safe-area-inset-right,0px)) + 52px);bottom:calc(84px + env(safe-area-inset-bottom,0px));width:min(420px,calc(100vw - 90px));max-height:min(70vh,560px);overflow:auto;border-radius:16px;box-shadow:0 10px 30px rgba(40,20,25,.18)}
+#quick .qpanel{margin:0;border-color:color-mix(in srgb,var(--blue) 40%,var(--line))}
+.prefs-card .setrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line)}
+.prefs-card .setrow:first-of-type{border-top:0}
+.sumbar{position:fixed;z-index:22;top:env(safe-area-inset-top,0px);left:0;right:0;display:none;align-items:center;gap:8px;padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));background:color-mix(in srgb,var(--bg) 92%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.sumbar.show{display:flex}
+.sumbar .sum-chips{flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.sumbar .sum-chips::-webkit-scrollbar{display:none}
+.sumbar .chip{flex:none}
+.rowvals{display:none}
+@media (min-width:740px){
+  .sumbar{left:96px}
+  .rowvals{display:flex;gap:14px;flex:none;font-size:12.5px;color:var(--fg3);font-variant-numeric:tabular-nums}
+  .rowvals span{min-width:56px;text-align:right}
+}
+.prefs-card .setk{width:72px;flex:none;font-size:13.5px;font-weight:600;color:var(--fg2)}
 </style>
 
 <div class="app">
   <header class="hello">
-    <div><p class="eyebrow">패션몰스토리 노트</p><h1 id="ttl">메인</h1><p id="sub">시설과 의류 진행 상황</p><div class="hprog" aria-hidden="true"><i id="hprogI" style="width:0"></i></div></div>
-    <div class="hdr-r"><div class="sync" id="sync"><i></i><span>불러오는 중</span></div><button class="btn sm ghost" id="saveAll" type="button" hidden>지금 저장</button></div>
+    <div class="hl"><h1 id="ttl">의류</h1><p id="sub">시설과 의류 진행 상황</p><div class="hprog" aria-hidden="true"><i id="hprogI" style="width:0"></i></div></div>
+    <div class="hdr-r"><button type="button" class="iconbtn hbtn" id="recentBtn" data-act="recent" aria-expanded="false" aria-label="최근에 바꾼 것"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></button><div class="sync" id="sync"><i></i><span>불러오는 중</span></div><button class="btn sm ghost" id="saveAll" type="button" hidden>지금 저장</button></div>
   </header>
-  <div class="prefs" id="prefs">
-    <div class="seg qseg" role="group" aria-label="빠른 보기"><button type="button" data-act="quick" data-q="memo" aria-expanded="false">리셋 주기</button><button type="button" data-act="quick" data-q="up" aria-expanded="false">개량 옵션 찾기</button></div>
-    <div class="seg" role="group" aria-label="기기"><button type="button" data-device="auto">자동</button><button type="button" data-device="phone">핸드폰</button><button type="button" data-device="desk">PC·패드</button></div>
-    <div class="seg" role="group" aria-label="화면 모드"><button type="button" data-mode="system">시스템</button><button type="button" data-mode="light">라이트</button><button type="button" data-mode="dark">다크</button></div>
-    <button type="button" class="chip sm" data-act="palopen" aria-expanded="false">메인 색상</button>
-    <div class="pals" role="group" aria-label="색 테마" hidden><button type="button" class="pal" data-pal="rose" style="--p:#955F64"><i aria-hidden="true"></i>빈티지 로즈</button><button type="button" class="pal" data-pal="red" style="--p:#994F53"><i aria-hidden="true"></i>뮤트 레드</button><button type="button" class="pal" data-pal="taupe" style="--p:#8E706E"><i aria-hidden="true"></i>로즈 토프</button><button type="button" class="pal" data-pal="blue" style="--p:#3182F6"><i aria-hidden="true"></i>기존 블루</button></div>
-  </div>
+  <div id="recentPanel" hidden></div>
+  <div id="sumBar" class="sumbar" role="region" aria-label="고른 조건"></div>
   <div id="quick" hidden></div>
   <div id="notice" hidden class="note-bar"></div>
   <main id="view"></main>
 </div>
 
 <nav class="tabs" aria-label="메뉴"><div class="in" id="tabs"></div></nav>
+<div class="fab" id="fab" role="group" aria-label="빠른 보기">
+  <button type="button" data-act="quick" data-q="memo" aria-expanded="false" aria-label="리셋 주기" title="리셋 주기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M4 10h16M9 3.5v4M15 3.5v4"/></svg></button>
+  <button type="button" data-act="quick" data-q="up" aria-expanded="false" aria-label="개량 옵션 찾기" title="개량 옵션 찾기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18V6M6.5 11.5L12 6l5.5 5.5M5 20.5h14"/></svg></button>
+</div>
 <div id="sheet"></div>
 <div class="toast" id="toast" role="status"><span id="toastMsg"></span><button id="toastUndo">되돌리기</button></div>
 

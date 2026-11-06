@@ -32,6 +32,10 @@ const TYPE_COLOR = {"쿨":"#3B82F6","내추럴":"#D97706","큐트":"#EC4899","�
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ICON = {
+  tool:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M14.5 5.5a4 4 0 00-5.2 5.2L4 16l4 4 5.3-5.3a4 4 0 005.2-5.2l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>',
+  clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M4 10h16M9 3.5v4M15 3.5v4"/></svg>',
+  upg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18V6M6.5 11.5L12 6l5.5 5.5M5 20.5h14"/></svg>',
   warn:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5L2.8 19.5h18.4L12 3.5z"/><path d="M12 10v4.2"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg>`,
   carry:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0113.7-5.6L20 8.7M20 4v4.7h-4.7M20 12a8 8 0 01-13.7 5.6L4 15.3M4 20v-4.7h4.7"/></svg>`,
   dots:`<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>`,
@@ -58,7 +62,7 @@ const ICON = {
 
 /* ---------- state ---------- */
 const S = {
-  tab:"home", recSub:"contest", homeQ:"", homeOpen:"", homeCt:false, facType:"전체", facSt:"전체", facSort:"기본순", facQ:"", facOpen:null,
+  tab:"clo", recSub:"contest", homeQ:"", homeOpen:"", homeCt:false, facType:"전체", facSt:"전체", facSort:"기본순", facQ:"", facOpen:null,
   people:{}, contests:[], itemPick:"", itemAlt:"", resetAsk:false, sheet:null, cp:{}, ih:{}, memo:null, memoEdit:false, battleRec:{}, btDraft:{}, btListAll:false, cloBt:null, cloBtView:false, btOpen:true, btNote:false, fcMode:"single", fcNoteOpen:false, fcDraft:{}, coordFixOpen:{}, upHl:null, facFcSel:[], facFcOpen:false, cEdit:null, cScore:"", cRes:"실패", cMsg:"", cMsgErr:false, cReset:false,
   rnKind:"시설", rnOld:"", rnNew:"", rnErr:"",
   cloCat:[], cloPat:[], cloMat:[], cloOpt:[], cloSlot:{}, cloExp:{}, cloMulti:false, cloRowMulti:{}, cloSt:"추가옵션", cloQ:"", cloOpen:null, cloSp:false, names:{fac:{}, clo:{}, people:{}}, optDraft:{}, chkname:{}, chkscore:{}, scErr:"", scErr2:"", cbattle:{}, cyears:[], cyPick:{}, cyErr:"", cyAsk:null, cyEdit:null, coordDone:[], slotOpen:null, upMulti:false, upStaffs:[], cfxPart:{}, clofix:{}, cloField:{}, fcEdit:{}, facExp:{genre:true}, cloEdit:{}, optKind:{}, cfix:{}, cfxPick:{}, cfxKind:{},
@@ -86,6 +90,8 @@ if (!Array.isArray(S.cloCat)) S.cloCat = S.cloCat && S.cloCat!=="전체" ? [S.cl
 if (!Array.isArray(S.cloPat)) S.cloPat = S.cloPat && S.cloPat!=="전체" ? [S.cloPat] : [];
 S.cloCat = S.cloCat.map(k => k==="포클로어" ? "포크로어" : k).filter(k => DATA.clo.some(c => c.c===k));
 if (!Array.isArray(S.upStaffs)) S.upStaffs = [];
+/* 2026-11-06 제제 결정: 의류 칩 줄은 모두 다중 선택이 기본(한 번만 켬, 이후엔 고른 대로) */
+try{ if (localStorage.getItem("fms-v2-multi") !== "1"){ S.cloMulti = true; localStorage.setItem("fms-v2-multi", "1"); } }catch(e){}
 /* 의류 필터는 열 때마다 전부 접힌 상태로 시작(선택은 유지) */
 S.cloExp = {}; S.btOpen = false;
 if (S.facSort==="타입순") S.facSort = "장르순";
@@ -93,9 +99,15 @@ if (S.facSort==="필요 적은순") S.facSort = "좋음 적은순";
 const tabFromHash = location.hash.replace("#","");
 const OLD_TAB = {contest:"contest", info:"contest", log:"log"};
 if (S.recSub==="info" || S.recSub==="battle") S.recSub = "contest";
-if (OLD_TAB[S.tab]){ S.recSub = OLD_TAB[S.tab]; S.tab = "rec"; }
-if (["home","fac","clo","coord","rec"].includes(tabFromHash)) S.tab = tabFromHash;
-else if (OLD_TAB[tabFromHash]){ S.tab = "rec"; S.recSub = OLD_TAB[tabFromHash]; }
+/* 2026-11-06 개편: 메인·기록 탭을 없애고 도구 탭으로. 예전 주소·저장값은 새 탭으로 넘김 */
+const TAB_MAP = {home:"clo", rec:"tool"};
+const TAB_KEYS = ["clo","fac","coord","tool"];
+if (OLD_TAB[S.tab]){ S.recSub = OLD_TAB[S.tab]; S.tab = "tool"; }
+if (TAB_MAP[S.tab]) S.tab = TAB_MAP[S.tab];
+if (TAB_KEYS.includes(tabFromHash)) S.tab = tabFromHash;
+else if (TAB_MAP[tabFromHash]) S.tab = TAB_MAP[tabFromHash];
+else if (OLD_TAB[tabFromHash]){ S.tab = "tool"; S.recSub = OLD_TAB[tabFromHash]; }
+if (!TAB_KEYS.includes(S.tab)) S.tab = "clo";
 
 /* 인물: 코디 요청 이름에서 ①②③④ 번호를 떼어 기본 이름으로 묶음. people = {원래 기본이름: 현재 이름} */
 const NUM_RE = /\s*[①②③④⑤⑥⑦⑧⑨⑩]+\s*$/;
@@ -348,8 +360,8 @@ if (S.cloSlot) S.cloSlot = slotAlias(S.cloSlot);
 const slotBtns = key => { const has = S.cloSlot[key] != null;
   return `<button class="chip sm ghostchip" data-slot="save|${key}">${key==="all"?"전체 저장":"저장"}</button><button class="chip sm ghostchip" data-slot="load|${key}" ${has?"":'aria-disabled="true"'} style="${has?"":"opacity:.45"}">불러오기</button>${has?`<button class="chip sm ghostchip" data-slot="del|${key}" aria-label="저장 삭제">×</button>`:""}`; };
 const rowHead = (label, key, attr, cur, total) => { label = `<i class="rdot r-${key}" aria-hidden="true"></i>${label}`; const open = S.slotOpen===key, has = S.cloSlot[key] != null, exp = !!S.cloExp[key];
-  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${label}${has?`<i class="savedot" title="저장된 선택 있음"></i>`:""}</span><button class="chip sm ${allSel(cur, key)?"on":""}" data-${attr}="전체" aria-pressed="${allSel(cur, key)}" title="${allSel(cur, key)?"전체 해제":"이 줄 전체 선택"}">전체${total!=null?`<b>${total}</b>`:""}</button>${key==="opt" && S.spAvail?.length ? (() => { const all = S.spAvail.every(k => cur.includes(k)); return `<button class="chip sm spchip ${all?"on":""}" data-act="spall" aria-pressed="${all}" title="${all?"특수 옵션만 해제":"특수 옵션만 전체 선택"}">★ 특수${all?" 해제":" 전체"}</button>`; })() : ""}<button class="chip sm fold" data-cfold="${key}" aria-expanded="${exp}">${exp?"접기 ▴":`펼치기 ▾${cur.length?` <b>${cur.length}</b>`:""}`}</button></span><span class="fh-act">${cur.length?`<button class="chip sm" data-cclear="${key}">전체해제</button>`:""}<button class="chip sm ${isMulti(key)?"on":""}" data-rmulti="${key}" aria-pressed="${isMulti(key)}">${isMulti(key)?"다중":"단일"}</button><button class="chip sm mbtn ${open?"on":""}" data-slotmenu="${key}" aria-expanded="${open}" aria-label="선택 저장 메뉴">${ICON.dots}</button></span></div>
-  ${open ? `<div class="slotmenu">${slotBtns(key)}</div>` : ""}`; };
+  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${label}${has?`<i class="savedot" title="저장된 선택 있음"></i>`:""}</span><button class="chip sm ${allSel(cur, key)?"on":""}" data-${attr}="전체" aria-pressed="${allSel(cur, key)}" title="${allSel(cur, key)?"전체 해제":"이 줄 전체 선택"}">전체${total!=null?`<b>${total}</b>`:""}</button>${key==="opt" && S.spAvail?.length ? (() => { const all = S.spAvail.every(k => cur.includes(k)); return `<button class="chip sm spchip ${all?"on":""}" data-act="spall" aria-pressed="${all}" title="${all?"특수 옵션만 해제":"특수 옵션만 전체 선택"}">★ 특수${all?" 해제":" 전체"}</button>`; })() : ""}<button class="chip sm fold" data-cfold="${key}" aria-expanded="${exp}">${exp?"접기 ▴":`펼치기 ▾${cur.length?` <b>${cur.length}</b>`:""}`}</button></span><span class="fh-act">${cur.length?`<button class="chip sm" data-cclear="${key}">전체해제</button>`:""}<button class="chip sm ${isMulti(key)?"on":""}" data-rmulti="${key}" aria-pressed="${isMulti(key)}">${isMulti(key)?"다중":"단일"}</button></span></div>
+  `; };
 /* 접힘: 칩을 모두 숨김(선택은 유지, 머리에 선택 개수 표시). 펼침: 전체 칩 */
 const ORDER_KEYS = ["pat","mat","opt"];
 /* 기존 노트에서 정해 둔 칩 순서(2026-11-06 기존 노트 ui/chiporder). 새 노트에 순서가 저장돼 있지 않으면 이 순서를 씀.
@@ -554,7 +566,7 @@ function counts(){
   const cd = tracked.filter(cloDone).length, ct = tracked.length;
   $("#sub").textContent = `${roundLabel()} · 시설 ${Math.round(fd/ft*100)}% · 신규 손님 옷 ${Math.round(cd/ct*100)}%`;
   $("#ttl").textContent = (TABS.find(t => t[0]===S.tab)||TABS[0])[1];
-  $("#saveAll").hidden = S.tab==="rec" || !db;
+  $("#saveAll").hidden = !db;
   const hp = $("#hprogI"); if (hp) hp.style.width = `${Math.round(fd/ft*100)}%`;
 }
 const pendingList = () => {
@@ -574,7 +586,8 @@ const editSlot = (kind, id, html, label="수정") => hybrid() ? `<div class="edi
 const SHEET_TITLE = {coordreq:"코디 요청 수정",fac:"시설 이름 수정", clo:"옷 수정", coord:"손님 이름 수정", fc:"패션 체크 수정", contest:"콘테스트 기록", battle:"전투 추천", bt:"전투 기록 수정"};
 const battleFor = c => DATA.battles[bGenreIdx(c)]?.name || DATA.battles[0]?.name || "";
 /* PC·패드는 가운데 모달, 핸드폰은 바텀 시트. 설정이 auto면 화면 너비로 */
-const isDesk = () => { const d = document.documentElement.getAttribute("data-device"); return d==="desk" || (d!=="phone" && window.innerWidth >= 700); };
+/* 2026-11-06: 아래에서 올라오는 시트는 쓰지 않고 항상 가운데 창으로(제제: 올라오는 창은 불편) */
+const isDesk = () => true;
 const fld = (label, inner) => `<div class="fld"><span class="fl">${label}</span>${inner}</div>`;
 const dl = (id, vals) => `<datalist id="${id}">${vals.map(v => `<option value="${esc(v)}">`).join("")}</datalist>`;
 /* 옷 수정 전체 폼: 이름 · 기본정보 · 추가옵션 · 전투 추천을 한 번에, 저장하면 바뀐 것만 반영 */
@@ -810,7 +823,7 @@ async function saveScore(oi, pv, sv){
 function fcFilterRow(){
   const sel = S.facFcSel, open = !!S.facFcOpen, multi = S.fcMode==="multi";
   const nums = Array.from({length:FC_MAX}, (_,i) => i+1);
-  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">패션 체크</span>${sel.map(n => `<button class="chip sm on" data-fcn="${n}" title="${esc(checkName(n-1))}">${n}</button>`).join("")}<button class="chip sm fold" data-fexp="fc" aria-expanded="${open}">${open?"접기 ▴":"펼치기 ▾"}</button></span>
+  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">패션 체크</span>${sel.map(n => `<button class="chip sm on" data-fcn="${n}" title="${esc(checkName(n-1))}">${n}</button>`).join("")}${!multi && sel.length===1 ? `<button class="chip sm ghostchip" data-act="fcprev" ${sel[0]<=1?'disabled style="opacity:.4"':""} aria-label="이전 패션 체크">‹ ${sel[0]>1?sel[0]-1:""}</button><button class="chip sm ghostchip" data-act="fcnext" ${sel[0]>=FC_MAX?'disabled style="opacity:.4"':""} aria-label="다음 패션 체크">${sel[0]<FC_MAX?sel[0]+1:""} ›</button>` : ""}<button class="chip sm fold" data-fexp="fc" aria-expanded="${open}">${open?"접기 ▴":"펼치기 ▾"}</button></span>
     <span class="fh-act"><button class="chip sm" data-act="fcreset" ${sel.length||open?"":'disabled style="opacity:.5"'}>초기화</button><button class="chip sm ${multi?"":"on"}" data-act="fcsingle" aria-pressed="${!multi}">단일</button><button class="chip sm ${multi?"on":""}" data-act="fcmulti" aria-pressed="${multi}">다중</button></span></div>
   ${open ? `<div class="numpad">${nums.map(n => `<button class="${sel.includes(n)?"on":""}" data-fcn="${n}" aria-pressed="${sel.includes(n)}" title="${esc(checkName(n-1))}">${n}</button>`).join("")}</div>${(DATA.checksExtra||[]).length?`<div class="chips" style="margin-top:8px"><button class="chip sm ${S.fcExtra?"on":""}" data-act="fcextra" aria-pressed="${!!S.fcExtra}">모델 체크 ${(DATA.checksExtra||[]).length}</button></div>${S.fcExtra?fcExtraList():""}`:""}` : ""}`;
 }
@@ -1166,6 +1179,7 @@ function viewClo(){
             <div class="s">${[c.p,c.m,c.o].filter(Boolean).map(esc).join(" · ")}${X?` — ${esc(X)}`:""}</div>
           </button>
           ${opened && hybrid() ? `<button class="iconbtn act" data-sheet="clo|${c.id}" aria-label="${esc(cloName(c))} 수정">${ICON.pen}</button><button class="iconbtn act ${battleOf(c)>=0?"on":""}" data-sheet="battle|${c.id}" aria-label="전투 추천 ${battleOf(c)>=0?"해제":"켜기"}" aria-pressed="${battleOf(c)>=0}">${ICON.sword}</button>` : ""}
+          ${c.site ? `<span class="rowvals" aria-hidden="true"><span>품질 ${c.site.q ?? "-"}</span><span>인기 ${c.site.pop ?? "-"}</span><span>${c.site.price!=null ? Number(c.site.price).toLocaleString("ko-KR")+"G" : "-"}</span></span>` : ""}
           <button class="iconbtn" data-oclo="${c.id}" aria-label="자세히">${ICON.chev}</button>
         </div>
         ${opened ? `<div class="detail">${cloSiteBlock(c)}<dl class="kv">
@@ -2117,7 +2131,7 @@ function homeGo(go){
   else if (go==="cloq"){ S.tab="clo"; S.cloSp=false; S.cloSt="전체"; S.cloKind=[]; S.cloCat=[]; S.cloPat=[]; S.cloMat=[]; S.cloOpt=[]; S.cloQ=S.homeQ.trim(); }
   else if (go==="coordq"){ S.tab="coord"; S.coordQ=S.homeQ.trim(); }
   else if (go==="facq"){ S.tab="fac"; S.itemPick=""; S.facType="전체"; S.facSt="전체"; S.facFcSel=[]; S.facFcOpen=false; S.facQ=S.homeQ.trim(); }
-  else if (go==="log" || go==="contest"){ S.tab="rec"; S.recSub=go; }
+  else if (go==="log" || go==="contest"){ S.tab="tool"; S.recSub=go; }
   remember(); render(); scrollTo({top:0});
 }
 function homeUndo(id){
@@ -2268,9 +2282,9 @@ function todayGo(go){
   if (k==="set"){ S.tab="coord"; S.coordSub="set"; S.setF="1벌 남음"; S.setG="전체"; }
   else if (k==="make"){ S.tab="clo"; S.nmOpen=true; }
   else if (k==="fc"){ S.tab="fac"; S.facFcSel=[+a]; S.facFcOpen=false; }
-  else if (k==="contest"){ S.tab="rec"; S.recSub="contest"; }
+  else if (k==="contest"){ S.tab="tool"; S.recSub="contest"; }
   else if (k==="mq"){ S.tab="coord"; S.coordSub="mq"; }
-  else if (k==="rank"){ S.tab="rec"; S.recSub="goal"; S.goalSub="rank"; }
+  else if (k==="rank"){ S.tab="tool"; S.recSub="goal"; S.goalSub="rank"; }
   else if (k==="verify"){ S.tab="clo"; S.verifyOpen=true; }
   remember(); render(); scrollTo({top:0});
 }
@@ -2302,7 +2316,45 @@ function viewRec(){
   ${(({contest:viewContest, goal:viewGoals, ref:viewRef, layout:viewLayout, up:viewUp, log:viewLog})[S.recSub] || viewContest)()}`;
 }
 
-const TABS = [["home","메인",ICON.home],["fac","시설",ICON.fac],["clo","의류",ICON.clo],["coord","코디",ICON.coord],["rec","기록",ICON.trophy]];
+/* ---------- 도구 탭(2026-11-06 개편): 콘테스트 · 계산기 · 자료 · 관리 · 화면 · 더 보기 ---------- */
+const TOOL_SUBS = [["contest","콘테스트"],["calc","계산기"],["ref","자료"],["log","관리"],["set","화면"],["more","더 보기"]];
+const MORE_SUBS = [["todo","할 일·검색"],["goal","목표"],["layout","배치"],["up","개량 옵션 표"]];
+function viewTool(){
+  if (["goal","layout","up","home"].includes(S.recSub)){ S.moreSub = S.recSub==="home" ? "todo" : S.recSub; S.recSub = "more"; }
+  const cur = TOOL_SUBS.some(([k]) => k===S.recSub) ? S.recSub : "contest";
+  const pc = pendingList().length;
+  return `<section class="card subnav"><div class="seg wide">${TOOL_SUBS.map(([k,l]) => `<button class="${cur===k?"on":""}" data-rsub="${k}" aria-pressed="${cur===k}">${l}${k==="log"&&pc?` <span class="badge-in">${pc}</span>`:""}</button>`).join("")}</div></section>
+  ${({contest:viewContest, calc:viewCalc, ref:viewRef, log:viewLog, set:viewSet, more:viewMore})[cur]()}`;
+}
+function viewCalc(){ return homeClear() + homeCarry(); }
+function viewSet(){
+  const row = (label, inner) => `<div class="setrow"><span class="setk">${label}</span>${inner}</div>`;
+  const segB = (attr, list) => `<div class="seg">${list.map(([v,l]) => `<button type="button" data-${attr}="${v}">${l}</button>`).join("")}</div>`;
+  return `<section class="card prefs-card">
+    <div class="sec-h"><h2>화면</h2><span>이 기기에만 저장돼요</span></div>
+    ${row("기기", segB("device", [["auto","자동"],["phone","핸드폰"],["desk","PC·패드"]]))}
+    ${row("테마", segB("mode", [["system","시스템"],["light","라이트"],["dark","다크"]]))}
+    ${row("메인 색상", `<div class="pals">${[["rose","#955F64","빈티지 로즈"],["red","#994F53","뮤트 레드"],["taupe","#8E706E","로즈 토프"],["blue","#3182F6","기존 블루"]].map(([k,c,l]) => `<button type="button" class="pal" data-pal="${k}" style="--p:${c}"><i aria-hidden="true"></i>${l}</button>`).join("")}</div>`)}
+  </section>${homeLegend()}`;
+}
+function viewMore(){
+  const cur = MORE_SUBS.some(([k]) => k===S.moreSub) ? S.moreSub : "todo";
+  const q = S.homeQ.trim();
+  const todo = () => `<section class="card hsearch-card">
+    <form id="homeForm" class="hsearch" role="search">${ICON.search}<input class="search" id="homeQ" type="search" enterkeyhint="search" autocomplete="off" placeholder="옷, 손님, 시설, 옵션 한 번에 찾기" value="${esc(S.homeQ)}" aria-label="통합 검색">${q?`<button type="button" class="iconbtn" data-act="hclear" aria-label="검색어 지우기">${ICON.x}</button>`:""}</form>
+    ${q ? `<div class="hres">${homeResults(q)}</div>` : `<div class="hint" style="margin-top:10px">예: 크롭 · 도찬배 · 카페 · 폼폼 · 고딕</div>`}
+  </section>${q ? "" : homeToday() + homeTodo()}`;
+  return `<section class="card subnav"><div class="hint" style="margin:0 0 8px">자주 안 쓰는 화면을 모아 뒀어요</div><div class="seg wide">${MORE_SUBS.map(([k,l]) => `<button class="${cur===k?"on":""}" data-msub="${k}" aria-pressed="${cur===k}">${l}</button>`).join("")}</div></section>
+  ${({todo, goal:viewGoals, layout:viewLayout, up:viewUp})[cur]()}`;
+}
+/* 머리줄 🕘: 최근에 바꾼 것(되돌리기)을 머리줄 아래로 펼침 */
+function recentPanel(){
+  const keep = S.homeRc; S.homeRc = true;
+  const html = homeRecent().replace('<section class="card fold-card open">', '<section class="card recent-card">').replace(/<button class="fold-h"[\s\S]*?<\/button>/, '<div class="sec-h" style="margin:0 0 6px"><h2>최근에 바꾼 것</h2><button type="button" class="chip sm fold" data-act="recent">닫기</button></div>');
+  S.homeRc = keep; return html;
+}
+
+const TABS = [["clo","의류",ICON.clo],["fac","시설",ICON.fac],["coord","코디",ICON.coord],["tool","도구",ICON.tool]];
 /* 검색창은 다시 그리지 않고 그대로 둠: 아이폰·아이패드 한글 조합이 끊기지 않게 함 */
 function patchKeep(oldEl, newEl, keep){
   const oc = [...oldEl.childNodes], nc = [...newEl.childNodes];
@@ -2324,7 +2376,7 @@ function patchKeep(oldEl, newEl, keep){
 function render(){
   counts();
   const ae = document.activeElement;
-  const html = `<div class="stack">${({home:viewHome,fac:viewFac,clo:viewClo,coord:viewCoord,rec:viewRec})[S.tab]()}</div>`;
+  const html = `<div class="stack">${({fac:viewFac,clo:viewClo,coord:viewCoord,tool:viewTool})[S.tab]()}</div>`;
   const view = $("#view");
   if (ae && ae.classList?.contains("search") && ae.id && view.contains(ae)){
     const tmp = document.createElement("div"); tmp.innerHTML = html;
@@ -2337,18 +2389,48 @@ function render(){
   renderSheet();
   const qk = $("#quick");
   if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="memo" ? homeMemo(true) : upFinder(true, true)}</div>` : ""; qk.hidden = !S.quick; }
-  document.querySelectorAll("#prefs [data-q]").forEach(b => { const on = S.quick===b.dataset.q; b.classList.toggle("on", on); b.setAttribute("aria-expanded", on); });
+  document.querySelectorAll("#fab [data-q]").forEach(b => { const on = S.quick===b.dataset.q; b.classList.toggle("on", on); b.setAttribute("aria-expanded", on); });
+  const rp = $("#recentPanel"); if (rp){ rp.innerHTML = S.recentOpen ? recentPanel() : ""; rp.hidden = !S.recentOpen; }
+  $("#recentBtn")?.classList.toggle("on", !!S.recentOpen); $("#recentBtn")?.setAttribute("aria-expanded", !!S.recentOpen);
+  window.__prefsApply?.();
+  renderSum();
   const pc = pendingList().length;
-  $("#tabs").innerHTML = TABS.map(([k,l,ic]) => `<button class="${S.tab===k?"on":""}" data-tab="${k}" aria-current="${S.tab===k?"page":"false"}"><span class="tic">${ic}</span><span>${l}</span>${k==="rec"&&pc?`<span class="badge">${pc}</span>`:""}</button>`).join("");
+  $("#tabs").innerHTML = TABS.map(([k,l,ic]) => `<button class="${S.tab===k?"on":""}" data-tab="${k}" aria-current="${S.tab===k?"page":"false"}"><span class="tic">${ic}</span><span>${l}</span>${k==="tool"&&pc?`<span class="badge">${pc}</span>`:""}</button>`).join("");
 }
 
+/* 내려 볼 때 위에 붙는 요약줄(2026-11-06 제제: 고른 칩 요약만). 의류 = 고른 칩, 시설 = 장르·패션 체크(이전·다음)·아이템 */
+function sumHtml(){
+  const chip = (attr, v, label) => `<button class="chip sm on" data-${attr}="${esc(v)}" aria-label="${esc(label)} 빼기">${esc(label)} ×</button>`;
+  if (S.tab==="clo"){
+    const cs = [...S.cloCat.map(v => chip("ccat", v, v)), ...S.cloPat.map(v => chip("cpat", v, v)), ...S.cloMat.map(v => chip("cmat", v, v)), ...S.cloOpt.map(v => chip("copt", v, (SP_OPTS.includes(v)?"★ ":"")+v))];
+    const bt = S.cloBt != null && DATA.battles[S.cloBt] ? `<button class="chip sm on" data-cbt="${S.cloBt}">${esc(bShort(S.cloBt))} ×</button>` : "";
+    return `<div class="sum-chips">${cs.join("")}${bt}${!cs.length && !bt ? `<span class="hint">고른 조건 없음</span>` : ""}</div><button class="chip sm" data-act="sumtop">조건 ▴</button>`;
+  }
+  if (S.tab==="fac"){
+    const sel = S.facFcSel, one = sel.length===1 && S.fcMode!=="multi";
+    const fc = sel.length ? `${one?`<button class="chip sm ghostchip" data-act="fcprev" aria-label="이전 패션 체크">‹</button>`:""}${sel.map(n => chip("fcn", n, `체크 ${n}`)).join("")}${one?`<button class="chip sm ghostchip" data-act="fcnext" aria-label="다음 패션 체크">›</button>`:""}` : "";
+    const ty = S.facType && S.facType!=="전체" ? `<button class="chip sm on" data-ftype="전체">${esc(S.facType)} ×</button>` : "";
+    const it = S.itemPick ? `<button class="chip sm on" data-pick="">${esc(S.itemPick)} ×</button>` : "";
+    return `<div class="sum-chips">${ty}${fc}${it}${!ty && !fc && !it ? `<span class="hint">고른 조건 없음</span>` : ""}</div><button class="chip sm" data-act="sumtop">조건 ▴</button>`;
+  }
+  return "";
+}
+function renderSum(){ const el = $("#sumBar"); if (!el) return; const h = sumHtml(); el.innerHTML = h; el.dataset.on = h ? "1" : ""; sumVis(); }
+function sumVis(){ const el = $("#sumBar"); if (!el) return; const list = document.querySelector("#view .list"); const top = list ? list.getBoundingClientRect().top : 1e9; el.classList.toggle("show", !!el.dataset.on && top < 40 && !S.sheet); }
+addEventListener("scroll", sumVis, {passive:true});
+/* 떠 있는 버튼 팝업: 바깥을 누르면 닫음(다시 그리지 않고 숨기기만) */
+document.addEventListener("click", e => {
+  if (!S.quick || e.target.closest("#quick,#fab")) return;
+  S.quick = null; const qk = $("#quick"); if (qk) qk.hidden = true;
+  document.querySelectorAll("#fab [data-q]").forEach(b => { b.classList.remove("on"); b.setAttribute("aria-expanded", "false"); });
+}, true);
 /* ---------- events ---------- */
 document.addEventListener("click", e => {
   const pk = e.target.closest("[data-p40ck]"); if (pk){ e.preventDefault(); toggleP40(+pk.dataset.p40ck); return; }
   const b = e.target.closest("button"); if (!b) return;
   if (b.id==="saveAll"){ saveAll(); return; }
   const d = b.dataset;
-  if (d.tab || d.go){ const t = d.tab || d.go; if (OLD_TAB[t]){ S.tab="rec"; S.recSub=OLD_TAB[t]; } else S.tab = t; S.confirmSync=false; remember(); render(); scrollTo({top:0}); return; }
+  if (d.tab || d.go){ const t = TAB_MAP[d.tab || d.go] || d.tab || d.go; if (OLD_TAB[t]){ S.tab="tool"; S.recSub=OLD_TAB[t]; } else S.tab = t; S.confirmSync=false; remember(); render(); scrollTo({top:0}); return; }
   if (d.ihb){ S.ih = {...(S.ih||{}), ["b_"+d.ihb]: +d.v}; ihSave(); render(); return; }
   if (d.nm){ if (d.nm==="open") S.nmOpen = !S.nmOpen; if (d.nm==="edit") S.nmEdit = !S.nmEdit; if (d.nm==="all") S.nmAll = !S.nmAll; render(); return; }
   if (d.own){ const [k, v] = d.own.split("|"); const cur = S.own[k] || []; S.nmEdit = true; S.own = {...S.own, [k]: cur.includes(v) ? cur.filter(x => x!==v) : [...cur, v]}; render();
@@ -2386,6 +2468,8 @@ document.addEventListener("click", e => {
   if (d.nows){ mqNowSave({season:d.nows}); return; }
   if (d.nowt !== undefined){ mqNowSave({trend:d.nowt}); return; }
   if (d.rsub){ S.recSub = d.rsub; S.confirmSync=false; remember(); render(); return; }
+  if (d.msub){ S.moreSub = d.msub; remember(); render(); return; }
+  if (d.act==="recent"){ S.recentOpen = !S.recentOpen; render(); return; }
   if (d.hgo){ homeGo(d.hgo); return; }
   if (d.hopen !== undefined){ S.homeOpen = S.homeOpen===d.hopen ? "" : d.hopen; render(); return; }
   if (d.hundo){ homeUndo(d.hundo); return; }
@@ -2452,7 +2536,7 @@ document.addEventListener("click", e => {
   if (d.uphl !== undefined){ S.upHl = S.upHl===+d.uphl ? null : +d.uphl; render(); return; }
   if (d.fcrm){ const [key, id] = d.fcrm.split("|"); const oi = +S.sheet.id; const cur = S.fcDraft[oi] || {main:checkMain(oi).map(f=>f.id), alt:checkAlt(oi).map(f=>f.id)}; cur[key] = cur[key].filter(x => x!==+id); S.fcDraft = {...S.fcDraft, [oi]:cur}; render(); return; }
   if (d.fced){ S.fcEdit = {...S.fcEdit, [d.fced]: !S.fcEdit[d.fced]}; render(); return; }
-  if (d.act==="golegend"){ S.tab="home"; S.homeLegend=true; remember(); render(); setTimeout(() => document.querySelector(".lgic")?.closest(".card")?.scrollIntoView({block:"start",behavior:"smooth"}), 50); return; }
+  if (d.act==="golegend"){ S.tab="tool"; S.recSub="set"; S.homeLegend=true; remember(); render(); setTimeout(() => document.querySelector(".lgic")?.closest(".card")?.scrollIntoView({block:"start",behavior:"smooth"}), 50); return; }
   if (d.act==="hrc"){ S.homeRc = !S.homeRc; render(); return; }
   if (d.act==="hlegend"){ S.homeLegend = !S.homeLegend; render(); return; }
   if (d.act==="huptbl"){ S.homeUpTbl = !S.homeUpTbl; render(); return; }
@@ -2533,6 +2617,8 @@ document.addEventListener("click", e => {
   if (d.act==="coord-open"){ S.coordOpen = [...new Set(DATA.coord.map(c => curPerson(c.pb)))]; saveCoordOpen(); render(); return; }
   if (d.act==="coord-hidedone"){ S.coordHideDone = !S.coordHideDone; remember(); saveCoordOpen(); render(); return; }
   if (d.act==="coord-close"){ S.coordOpen = []; saveCoordOpen(); render(); return; }
+  if (d.act==="fcprev" || d.act==="fcnext"){ const cur = S.facFcSel[0] || 0, n = Math.min(FC_MAX, Math.max(1, cur + (d.act==="fcnext" ? 1 : -1))); S.facType="전체"; S.itemPick=""; S.facFcSel = [n]; S.fcNoteOpen = false; remember(); render(); return; }
+  if (d.act==="sumtop"){ const el = document.querySelector("#view .card"); scrollTo({top:0, behavior:"smooth"}); return; }
   if (d.fcn !== undefined){ const n = +d.fcn; S.facType="전체"; S.itemPick=""; if (S.fcMode==="multi") S.facFcSel = S.facFcSel.includes(n) ? S.facFcSel.filter(x => x!==n) : [...S.facFcSel, n].sort((a,b)=>a-b); else { S.facFcSel = S.facFcSel.includes(n) && S.facFcSel.length===1 ? [] : [n]; } S.fcNoteOpen = false; remember(); render(); return; }
   if (d.act==="fcopen"){ S.facFcOpen = !S.facFcOpen; remember(); render(); return; }
   if (d.cdone !== undefined){ const n = d.cdone; S.coordDone = S.coordDone.includes(n) ? S.coordDone.filter(x => x!==n) : [...S.coordDone, n]; S.coordOpen = S.coordOpen.filter(x => x!==n); saveCoordOpen(); render(); toast(S.coordDone.includes(n) ? `${n} 코디 완료` : `${n} 완료 취소`); if (db) writeSerial(`${RUN}/misc/coord`, {list:S.coordDone}).catch(()=>{}); return; }
@@ -2652,19 +2738,18 @@ async function markSynced(){
     if (pref.pal==="blue") root.removeAttribute("data-pal"); else root.setAttribute("data-pal", pref.pal);
     root.setAttribute("data-design", "hybrid");
     root.setAttribute("data-device", pref.device||"auto");
-    document.querySelectorAll("#prefs [data-device]").forEach(b => b.classList.toggle("on", b.dataset.device===(pref.device||"auto")));
-    const pals = document.querySelector("#prefs .pals"); if (pals) pals.hidden = !palOpen;
-    document.querySelector("#prefs [data-act=palopen]")?.classList.toggle("on", palOpen);
-    document.querySelectorAll("#prefs [data-mode]").forEach(b => b.classList.toggle("on", b.dataset.mode===pref.mode));
-    document.querySelectorAll("#prefs [data-pal]").forEach(b => b.classList.toggle("on", b.dataset.pal===pref.pal));
+    document.querySelectorAll("[data-device]:not(html)").forEach(b => b.classList.toggle("on", b.dataset.device===(pref.device||"auto")));
+    document.querySelectorAll("button[data-mode]").forEach(b => b.classList.toggle("on", b.dataset.mode===pref.mode));
+    document.querySelectorAll("button[data-pal]").forEach(b => b.classList.toggle("on", b.dataset.pal===pref.pal));
     try{ localStorage.setItem("fms-theme", JSON.stringify(pref)); }catch(e){}
   }
-  document.getElementById("prefs").addEventListener("click", e => {
-    const b = e.target.closest("[data-mode],[data-pal],[data-design],[data-device],[data-act=palopen]"); if (!b) return;
+  document.addEventListener("click", e => {
+    const b = e.target.closest("button[data-mode],button[data-pal],button[data-device]"); if (!b) return;
     if (b.dataset.act==="palopen") palOpen = !palOpen;
     else if (b.dataset.mode) pref.mode = b.dataset.mode; else if (b.dataset.design){ pref.design = b.dataset.design; S.sheet = null; } else if (b.dataset.device) pref.device = b.dataset.device; else pref.pal = b.dataset.pal;
     apply(); if (b.dataset.design || b.dataset.device) render();
   });
+  window.__prefsApply = apply;
   apply();
 })();
 render();
