@@ -59,7 +59,12 @@ tools/data_sync.sh          # → data/tables, data/pulled, data/site, tools/cra
 
 ## 남은 일 (제제 결정 반영, 순서는 Claude 재량)
 제제 원칙: **매력·품질·능력치·통과 점수 등 기준값은 사이트 값을 먼저 보여 주고, 제제가 넣은 기록은 "기록 보기"로 연다.** 기존 노트 데이터(플레이하며 넣은 값)는 모두 유지. 새로 넣으면 좋을 기능은 다 넣고, 빼는 건 제제가 한다.
-8. 손님 요청 사이트 추천 옷: 사이트 요청 매처 데이터는 클라우드에서 Cloudflare 403 → **맥에서 `python3 tools/crawler/fetch_api.py match` 후 `tools/data_sync.sh --push`, 데이터 저장소 커밋** (맥 깃 계정에 데이터 저장소 쓰기 권한이 없으면 `cache/api/ko_match.json` 파일만 대화에 올려도 됨) → 받으면 손님 요청 문구·조건·추천 옷을 사이트 값으로 넣기
+8. **사이트 도구 데이터(못 받음, 제제가 나중에 받거나 만들어 줌. 그때까지 지금 데이터만 씀)** — 클라우드·제제 회사 맥 모두 Cloudflare 403
+   1) 요청 매처 `/api/fashion-mall-story/ko/match`: 손님 요청·패션 체크·배틀 조건 + 옷 속성 → 손님 요청 사이트 문구·조건·추천 옷
+   2) 배치 `/ko/layout`: 시설 시너지·부지 크기 → 배치 판 추천
+   3) 판매 예측 `/ko/sales`: 손님별 좋아하는 장르·색 → 잘 팔릴 옷 순위, 마네킹 손님 색
+   4) 빌더 `/ko/builder`: 전체 상하 궁합(제제: 필요 없음)
+   받으면 `tools/crawler/cache/api/ko_{이름}.json`에 두고 데이터 저장소 `crawler-cache/api/`에 커밋
 9. 전투 이름 "성숙 챌린지 배틀"(예전 고저스 챌린지), "자신 있는 챌린지 배틀"(예전 특기 챌린지)은 **우선 사이트 이름 그대로 둠(제제 2026-11-06)**
 10. 데이터 이전(tools/migrate) — **제제가 말할 때 진행(기존 노트 사용 중)**: 기존 아티팩트 저장소(ArtifactData, url X6H5NaXw1k8pZD98Raioum) → Firestore `note/v2/...`, 옷·시설 번호를 `DATA.idMap`/`ref/id_map`으로 바꿔서. 백업 후 제제 확인 뒤 실행
 11. 맥·아이폰·아이패드에서 로그인·동기화 확인(제제)
