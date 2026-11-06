@@ -24,3 +24,4 @@ legacy/package-lock.json
 data/site/
 data/tables/
 data/pulled/
+tools/migrate/out/

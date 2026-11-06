@@ -68,10 +68,13 @@ tools/data_sync.sh          # → data/tables, data/pulled, data/site, tools/cra
    4) 빌더 `/ko/builder`: 전체 상하 궁합(제제: 필요 없음)
    받으면 `tools/crawler/cache/api/ko_{이름}.json`에 두고 데이터 저장소 `crawler-cache/api/`에 커밋
 9. 전투 이름 "성숙 챌린지 배틀"(예전 고저스 챌린지), "자신 있는 챌린지 배틀"(예전 특기 챌린지)은 **우선 사이트 이름 그대로 둠(제제 2026-11-06)**
-10. 데이터 이전(tools/migrate) — **제제가 말할 때 진행(기존 노트 사용 중)**: 기존 아티팩트 저장소(ArtifactData, url X6H5NaXw1k8pZD98Raioum) → Firestore `note/v2/...`. 백업 후 제제 확인 뒤 실행
-   - 옮길 경로(엔진이 읽는 것 전부): `meta/round`·`meta/verify`, 회차별 `runs/r7/{fac,clo,misc/coord,ui/recipes}`(지금 회차 r7, 이전 회차 runs/r1~r6도 보존용으로), `names/all`·`names/people`, `checks`, `clofix`, `coordfix`, `cbattle`, `battles`, `contest`, `chkscore`, `cyear`, `log`, `calc/clear`·`calc/carry`, `memo/reset`, `layslots/s1~5`, **`ui/slots`(의류 탭 선택 저장: 전체·줄별)**, **`ui/chiporder`(옷본·재료·옵션 칩 순서)**, `ui/coordopen`, `ui/layout`, `ui/optcnt`
-   - 번호: 옷 `c{id}`·시설 `f{id}`는 `DATA.idMap`(노트 id → 사이트 번호)으로 바꿔서 쓴다. 이름 값은 그대로 옮기고 새 노트가 읽을 때 `DATA.alias`로 바꿈(slots·chiporder·optcnt·recipes·fac put·battles·cbattle·coordfix·clofix·clo opt)
-   - 칩 순서: 새 노트에 `ui/chiporder`가 없으면 기존 노트 순서(엔진 `NOTE_CHIP_ORDER`, 2026-11-06 기준)를 씀. 이전하면 그 문서가 우선
+10. 데이터 이전 — **1차 끝(2026-11-06): 회차 무관 데이터만 옮김**(제제: 회차 초기화로 지워지는 것만 빼고 전부)
+   - 옮긴 것 1,424건 → Firestore `note/v2/`: meta(회차 7·확인 체크), names, checks(대상 시설만, 이름은 사이트 이름), coordfix 41, cbattle 41, battles 15, contest 17, chkscore 20, cyear 37, calc 2, memo, layslots 4, ui 5(선택 저장·칩 순서·열어 둔 손님·배치·옵션 개수), log 1,234(최신 1,000 + id 기준 500 합친 것)
+   - 안 옮긴 것: `runs/*`(회차별 체크·넣은 아이템·추가옵션 메모·코디 완료·가진 재료), clofix 7벌(모두 사이트 값과 같음)
+   - 백업: 데이터 저장소 `legacy-backup/2026-11-06/` + Firestore `backup/legacy-2026-11-06/cols/*`
+   - 스크립트 `tools/migrate/migrate.py DUMP_DIR [--write]`(옷·시설 번호 → 사이트 번호). 개수 대조 일치, 화면 엔진으로 읽기 확인
+   - **제제가 기존 노트를 계속 쓰므로 완성 때 최신 저장으로 다시 받아 한 번 더 돌린다(같은 경로 덮어씀). 그때 runs/r7(회차별)도 같이 옮김.** 그 전에 새 노트에서 고친 회차 무관 기록은 덮어써질 수 있음
+   - Firestore 쓰기는 OAuth Playground(datastore 범위) 1시간 토큰을 network secret으로 넣어서 함
 11. 맥·아이폰·아이패드에서 로그인·동기화 확인(제제)
 
 ## 데이터 메모
