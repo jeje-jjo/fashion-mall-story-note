@@ -1,0 +1,194 @@
+<title>패션몰 노트 시안</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500;600&family=DotGothic16&family=Nanum+Myeongjo:wght@400;700&family=Jua&family=Gothic+A1:wght@400;600;800&display=swap">
+<style>
+/* 시안 다섯 장을 같은 '의류' 화면으로 나란히. 페이지 자체는 중립 회색, 각 시안은 자기 세계를 가진다 */
+:root{--page:#f1eeef;--ink:#2d2729;--soft:#77696d;--frame:#d9d1d3}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#18151a;--ink:#ece4e7;--soft:#a2959a;--frame:#332c31;color-scheme:dark}}
+:root[data-theme="dark"]{--page:#18151a;--ink:#ece4e7;--soft:#a2959a;--frame:#332c31;color-scheme:dark}
+body{background:var(--page);color:var(--ink);font-family:"IBM Plex Sans KR",system-ui,sans-serif}
+.wrap{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px;max-width:1900px;margin:0 auto}
+.intro{max-width:640px;display:grid;gap:6px;margin-bottom:22px}
+.intro h1{font-family:"Gowun Dodum",sans-serif;font-weight:400;font-size:26px;margin:0}
+.intro p{margin:0;color:var(--soft);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:28px 22px}
+figure{margin:0;display:grid;gap:10px;min-width:0}
+figcaption{display:grid;gap:2px}
+figcaption b{font-size:15px}
+figcaption span{font-size:12.5px;color:var(--soft)}
+.phone{width:100%;max-width:360px;aspect-ratio:9/17.5;border-radius:28px;overflow:hidden;position:relative;border:6px solid var(--frame);display:flex;flex-direction:column}
+.phone *{box-sizing:border-box}
+.scroll{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:10px;padding:12px 14px}
+.row{display:flex;align-items:center;gap:8px}
+.grow{flex:1;min-width:0}
+.nav{display:grid;grid-template-columns:repeat(6,1fr);text-align:center;font-size:11.5px}
+.nav span{padding:10px 0 14px}
+
+/* 1 로즈 미니멀 */
+.t1{--bg:#fbf7f7;--card:#fff;--fg:#3a2e31;--mu:#9a888c;--ln:#efe3e5;--ac:#b0707d;--acs:#f5e7e9;background:var(--bg);color:var(--fg);font-family:"IBM Plex Sans KR",sans-serif;font-size:13.5px}
+.t1 .hd{padding:16px 16px 8px;display:flex;justify-content:space-between;align-items:baseline}
+.t1 .hd b{font-family:"Gowun Dodum";font-weight:400;font-size:19px}
+.t1 .hd small{color:var(--mu)}
+.t1 .pill{display:flex;background:var(--acs);border-radius:99px;padding:3px;font-size:12px}
+.t1 .pill i{font-style:normal;padding:4px 10px;border-radius:99px}.t1 .pill i.on{background:#fff;box-shadow:0 1px 2px #0001}
+.t1 .search{height:34px;border:1px solid var(--ln);border-radius:10px;background:#fff;padding:0 12px;display:flex;align-items:center;color:var(--mu);font-size:12.5px}
+.t1 .chips{display:flex;gap:6px;font-size:12px}.t1 .chips i{font-style:normal;padding:4px 11px;border:1px solid var(--ln);border-radius:99px;background:#fff}.t1 .chips i.on{border-color:var(--ac);background:var(--acs);color:#8e5562}
+.t1 .list{background:#fff;border:1px solid var(--ln);border-radius:14px}
+.t1 .it{padding:10px 12px;border-top:1px solid var(--ln)}.t1 .it:first-child{border:0}
+.t1 .ck{width:20px;height:20px;border-radius:6px;border:1.5px solid #d9c4c8}.t1 .ck.on{background:var(--ac);border-color:var(--ac)}
+.t1 .tag{font-size:11px;padding:1px 8px;border-radius:99px;background:var(--acs);color:#8e5562}
+.t1 .sub{font-size:11.5px;color:var(--mu);margin-top:2px;padding-left:28px}
+.t1 .nav{background:#fff;border-top:1px solid var(--ln);color:var(--mu)}.t1 .nav .on{color:#8e5562;font-weight:600}
+
+/* 2 도트 쇼윈도 */
+.t2{--bg:#f6e9e3;--panel:#fffaf3;--ink:#3b2a3a;--pink:#e58fa8;--mint:#8fcfbf;--gold:#e9b949;background:var(--bg);color:var(--ink);font-family:"DotGothic16","Gothic A1",sans-serif;font-size:13px;
+  background-image:linear-gradient(#0000 23px,#e7d6cf 24px),linear-gradient(90deg,#0000 23px,#e7d6cf 24px);background-size:24px 24px}
+.t2 .px{background:var(--panel);box-shadow:0 0 0 2px var(--ink),4px 4px 0 2px #3b2a3a33;border-radius:2px}
+.t2 .hd{margin:12px 14px 0;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;background:var(--pink);color:#fff;box-shadow:0 0 0 2px var(--ink),0 4px 0 2px var(--ink)}
+.t2 .hd b{font-weight:400;font-size:16px;letter-spacing:.04em}
+.t2 .coin{display:flex;gap:4px;align-items:center;font-size:12px}.t2 .coin i{width:10px;height:10px;background:var(--gold);box-shadow:0 0 0 2px var(--ink)}
+.t2 .tabs{display:flex;gap:6px;font-size:12px}.t2 .tabs i{font-style:normal;padding:3px 8px;background:var(--panel);box-shadow:0 0 0 2px var(--ink)}.t2 .tabs i.on{background:var(--mint)}
+.t2 .search{padding:7px 10px;color:#8a7686}
+.t2 .it{padding:8px 10px;display:flex;gap:8px;align-items:center}
+.t2 .spr{width:28px;height:28px;flex:none;display:grid;grid-template-columns:repeat(7,1fr);background:var(--panel)}
+.t2 .spr b{display:block}
+.t2 .lv{font-size:11px;background:var(--ink);color:var(--panel);padding:1px 5px}
+.t2 .star{color:var(--gold);text-shadow:1px 1px 0 var(--ink)}
+.t2 .bar{height:6px;background:#e7d6cf;box-shadow:0 0 0 1px var(--ink);margin-top:4px}.t2 .bar i{display:block;height:100%;background:var(--pink)}
+.t2 .nav{background:var(--ink);color:#e0cfd9}.t2 .nav .on{color:var(--gold)}
+
+/* 3 룩북 */
+.t3{--bg:#f4f3f1;--fg:#1f1d1e;--mu:#7e787a;--ln:#d6d2d0;--ac:#a2485c;background:var(--bg);color:var(--fg);font-family:"Gothic A1",sans-serif;font-size:13px}
+.t3 .hd{padding:18px 16px 6px;border-bottom:1px solid var(--fg)}
+.t3 .hd small{font-size:10px;letter-spacing:.24em;color:var(--mu)}
+.t3 .hd b{display:block;font-family:"Nanum Myeongjo",serif;font-size:26px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
+.t3 .filters{display:flex;gap:14px;font-size:12px;border-bottom:1px solid var(--ln);padding-bottom:8px}.t3 .filters i{font-style:normal;color:var(--mu)}.t3 .filters i.on{color:var(--fg);text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1.5px}
+.t3 .it{display:grid;grid-template-columns:34px 1fr auto;gap:10px;padding:9px 0;border-bottom:1px solid var(--ln);align-items:baseline}
+.t3 .no{font-family:"Nanum Myeongjo",serif;font-size:18px;color:var(--mu);font-variant-numeric:tabular-nums}
+.t3 .nm{font-weight:600}.t3 .meta{font-size:11px;color:var(--mu);letter-spacing:.02em}
+.t3 .stamp{font-size:10px;letter-spacing:.12em;color:var(--ac);border:1px solid var(--ac);padding:1px 6px;transform:rotate(-4deg)}
+.t3 .nav{border-top:1px solid var(--fg);font-size:11px;letter-spacing:.06em}.t3 .nav .on{font-weight:800}
+
+/* 4 나이트 부티크 */
+.t4{--bg:#211a20;--card:#2c232b;--fg:#f1e6ea;--mu:#a7949d;--ln:#3d323b;--ac:#e2a6b3;--gold:#d8b98a;background:radial-gradient(120% 60% at 50% 0,#33252f,var(--bg));color:var(--fg);font-family:"IBM Plex Sans KR",sans-serif;font-size:13px}
+.t4 .hd{padding:18px 16px 6px;text-align:center}
+.t4 .hd small{display:block;font-size:10px;letter-spacing:.3em;color:var(--gold)}
+.t4 .hd b{font-family:"Gowun Dodum";font-weight:400;font-size:20px}
+.t4 .seg{display:flex;justify-content:center;gap:4px;font-size:12px}.t4 .seg i{font-style:normal;padding:5px 12px;border-radius:99px;color:var(--mu)}.t4 .seg i.on{background:var(--ac);color:#2a1c24}
+.t4 .card{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:10px 12px;display:flex;gap:10px;align-items:center}
+.t4 .sw{width:34px;height:34px;border-radius:10px;flex:none}
+.t4 .nm{font-weight:500}.t4 .meta{font-size:11px;color:var(--mu)}
+.t4 .q{font-size:11px;color:var(--gold);font-variant-numeric:tabular-nums;text-align:right}
+.t4 .dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--mu)}.t4 .dot.on{background:var(--ac);border-color:var(--ac)}
+.t4 .nav{background:#1b1519;border-top:1px solid var(--ln);color:var(--mu)}.t4 .nav .on{color:var(--ac)}
+
+/* 5 스티커 다이어리 */
+.t5{--bg:#fdf3ee;--fg:#43363a;--mu:#9c8a8f;--rose:#f2b7c2;--mint:#bfe3d6;--lemon:#f6e3a1;--lilac:#d9cdf0;background:var(--bg);color:var(--fg);font-family:"Jua","Gothic A1",sans-serif;font-size:14px}
+.t5 .hd{padding:16px 16px 4px;display:flex;align-items:center;gap:8px}
+.t5 .hd b{font-weight:400;font-size:21px}
+.t5 .badge{font-size:11px;background:var(--lemon);padding:2px 8px;border-radius:8px;transform:rotate(3deg)}
+.t5 .tabs{display:flex;gap:6px}.t5 .tabs i{font-style:normal;font-size:12.5px;padding:5px 12px;border-radius:12px 12px 4px 12px;background:#fff;box-shadow:0 2px 0 #e9d7cf}.t5 .tabs i.on{background:var(--rose)}
+.t5 .card{background:#fff;border-radius:18px;padding:10px 12px;box-shadow:0 3px 0 #ecdcd4;display:flex;gap:10px;align-items:center;position:relative}
+.t5 .ic{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:15px;flex:none}
+.t5 .meta{font-family:"Gothic A1";font-size:11px;color:var(--mu)}
+.t5 .ck{width:24px;height:24px;border-radius:50%;border:2px dashed #e3c9cf}.t5 .ck.on{border:0;background:var(--mint);display:grid;place-items:center;font-size:12px}
+.t5 .nav{background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -2px 0 #f0e1da;color:var(--mu)}.t5 .nav .on{color:var(--fg)}
+</style>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>새 노트 화면 시안</h1>
+    <p>다섯 시안 모두 같은 의류 화면이에요. 마음에 드는 번호를 알려 주시거나, "1번 바탕에 2번 체크 모양"처럼 섞어서 골라도 돼요.</p>
+  </div>
+  <div class="grid">
+
+  <figure>
+    <div class="phone t1">
+      <div class="hd"><b>패션몰스토리 노트</b><small>7회차</small></div>
+      <div class="scroll">
+        <div class="pill"><i class="on">전체 옷</i><i>추가옵션</i><i>전투 추천</i><i>미완료</i></div>
+        <div class="search">옷 이름·옷본·재료·옵션</div>
+        <div class="chips"><i class="on">전체</i><i>캐주얼</i><i>스트리트</i><i>파스텔</i></div>
+        <div class="list">
+          <div class="it"><div class="row"><span class="ck on"></span><span class="grow">오버사이즈 티셔츠</span><span class="tag">캐주얼</span></div><div class="sub">컷앤소 · 라운드넥 · 주황 · 여름</div></div>
+          <div class="it"><div class="row"><span class="ck"></span><span class="grow">베이스볼 롱 티셔츠</span><span class="tag">캐주얼</span></div><div class="sub">컷앤소 · 라운드넥 · 프린트 · 봄·가을</div></div>
+          <div class="it"><div class="row"><span class="ck on"></span><span class="grow">공연 티셔츠</span><span class="tag">록</span></div><div class="sub">컷앤소 · 라운드넥 · 프린트 · 여름</div></div>
+          <div class="it"><div class="row"><span class="ck"></span><span class="grow">라메 레이스 원피스</span><span class="tag">고저스</span></div><div class="sub">원피스 · 플레어 · 레이스 · 봄·가을</div></div>
+          <div class="it"><div class="row"><span class="ck"></span><span class="grow">브이넥 스웨터</span><span class="tag">캐주얼</span></div><div class="sub">컷앤소 · 브이넥 · 갈색 · 겨울</div></div>
+        </div>
+      </div>
+      <div class="nav"><span>메인</span><span>시설</span><span class="on">의류</span><span>코디</span><span>기록</span><span>공략</span></div>
+    </div>
+    <figcaption><b>1 · 로즈 미니멀</b><span>지금 앱의 정돈판. 흰 카드, 얇은 선, 알약 토글. 오래 봐도 피곤하지 않은 기본형.</span></figcaption>
+  </figure>
+
+  <figure>
+    <div class="phone t2">
+      <div class="hd"><b>FASHION NOTE</b><span class="coin"><i></i>7회차</span></div>
+      <div class="scroll">
+        <div class="tabs"><i class="on">전체</i><i>추가옵션</i><i>전투</i><i>미완료</i></div>
+        <div class="search px">▶ 옷 이름 검색_</div>
+        <div class="px">
+          <div class="it"><span class="spr" style="background:linear-gradient(#f2a65a 0 0) 25% 30%/50% 50% no-repeat,#fffaf3;box-shadow:0 0 0 2px #3b2a3a"></span><div class="grow">오버사이즈 티셔츠<div class="bar"><i style="width:100%"></i></div></div><span class="lv">T1</span></div>
+          <div class="it"><span class="spr" style="background:linear-gradient(#e46d6d 0 0) 25% 30%/50% 50% no-repeat,#fffaf3;box-shadow:0 0 0 2px #3b2a3a"></span><div class="grow">베이스볼 롱 티셔츠<div class="bar"><i style="width:40%"></i></div></div><span class="lv">T1</span></div>
+          <div class="it"><span class="spr" style="background:linear-gradient(#3b2a3a 0 0) 25% 30%/50% 50% no-repeat,#fffaf3;box-shadow:0 0 0 2px #3b2a3a"></span><div class="grow">공연 티셔츠 <span class="star">★★</span><div class="bar"><i style="width:100%"></i></div></div><span class="lv">T2</span></div>
+          <div class="it"><span class="spr" style="background:linear-gradient(#a98bd6 0 0) 30% 20%/40% 70% no-repeat,#fffaf3;box-shadow:0 0 0 2px #3b2a3a"></span><div class="grow">라메 레이스 원피스 <span class="star">★★★★</span><div class="bar"><i style="width:0"></i></div></div><span class="lv">T4</span></div>
+        </div>
+        <div class="px" style="padding:8px 10px;font-size:12px">필요한 옵션 &nbsp;프린트 ×3 &nbsp;레이스 ×1</div>
+      </div>
+      <div class="nav"><span>메인</span><span>시설</span><span class="on">▶의류</span><span>코디</span><span>기록</span><span>공략</span></div>
+    </div>
+    <figcaption><b>2 · 도트 쇼윈도</b><span>카이로 게임 화면 같은 픽셀 테두리와 격자 바닥. 옷마다 작은 도트 아이콘, 완료는 게이지로.</span></figcaption>
+  </figure>
+
+  <figure>
+    <div class="phone t3">
+      <div class="hd"><small>SEASON 7 · CLOTHES</small><b>의류 432</b></div>
+      <div class="scroll">
+        <div class="filters"><i class="on">전체</i><i>추가옵션</i><i>전투 추천</i><i>미완료</i><i>완료</i></div>
+        <div>
+          <div class="it"><span class="no">01</span><div><div class="nm">오버사이즈 티셔츠</div><div class="meta">캐주얼 / 컷앤소 / 라운드넥</div></div><span class="stamp">DONE</span></div>
+          <div class="it"><span class="no">02</span><div><div class="nm">베이스볼 롱 티셔츠</div><div class="meta">캐주얼 / 컷앤소 / 프린트</div></div><span></span></div>
+          <div class="it"><span class="no">03</span><div><div class="nm">보더 티셔츠</div><div class="meta">캐주얼 / 컷앤소 / 보더</div></div><span class="stamp">DONE</span></div>
+          <div class="it"><span class="no">04</span><div><div class="nm">링거 티셔츠</div><div class="meta">캐주얼 / 컷앤소 / 링거넥</div></div><span></span></div>
+          <div class="it"><span class="no">05</span><div><div class="nm">브이넥 스웨터</div><div class="meta">캐주얼 / 컷앤소 / 브이넥</div></div><span></span></div>
+          <div class="it"><span class="no">06</span><div><div class="nm">긴소매 브이넥 티셔츠</div><div class="meta">캐주얼 / 컷앤소 / 브이넥</div></div><span></span></div>
+        </div>
+      </div>
+      <div class="nav"><span>메인</span><span>시설</span><span class="on">의류</span><span>코디</span><span>기록</span><span>공략</span></div>
+    </div>
+    <figcaption><b>3 · 룩북</b><span>패션 잡지 목차처럼. 큰 번호와 명조 제목, 장식 없이 선으로만 나눔. 완료는 도장.</span></figcaption>
+  </figure>
+
+  <figure>
+    <div class="phone t4">
+      <div class="hd"><small>FASHION MALL</small><b>의류</b></div>
+      <div class="scroll">
+        <div class="seg"><i class="on">전체 옷</i><i>추가옵션</i><i>전투</i><i>미완료</i></div>
+        <div class="card"><span class="sw" style="background:#f0a46b"></span><div class="grow"><div class="nm">오버사이즈 티셔츠</div><div class="meta">캐주얼 · 컷앤소 · 여름</div></div><div class="q">1300<br>342</div><span class="dot on"></span></div>
+        <div class="card"><span class="sw" style="background:linear-gradient(135deg,#e35d5d 50%,#f3eee9 50%)"></span><div class="grow"><div class="nm">베이스볼 롱 티셔츠</div><div class="meta">캐주얼 · 프린트 · 봄·가을</div></div><div class="q">1200<br>281</div><span class="dot"></span></div>
+        <div class="card"><span class="sw" style="background:#1a1418;border:1px solid #4a3e47"></span><div class="grow"><div class="nm">공연 티셔츠</div><div class="meta">록 · 프린트 · 여름</div></div><div class="q">1090<br>—</div><span class="dot on"></span></div>
+        <div class="card"><span class="sw" style="background:#9a7ac9"></span><div class="grow"><div class="nm">라메 레이스 원피스</div><div class="meta">고저스 · 레이스 · 봄·가을</div></div><div class="q">2160<br>—</div><span class="dot"></span></div>
+      </div>
+      <div class="nav"><span>메인</span><span>시설</span><span class="on">의류</span><span>코디</span><span>기록</span><span>공략</span></div>
+    </div>
+    <figcaption><b>4 · 나이트 부티크</b><span>밤 매장 조명 같은 다크 톤. 옷 색을 칩으로 보여 주고 품질·매력 숫자를 오른쪽에 정렬.</span></figcaption>
+  </figure>
+
+  <figure>
+    <div class="phone t5">
+      <div class="hd"><b>의류 노트</b><span class="badge">7회차</span></div>
+      <div class="scroll">
+        <div class="tabs"><i class="on">전체</i><i>추가옵션</i><i>전투</i><i>미완료</i></div>
+        <div class="card"><span class="ic" style="background:var(--rose)">👕</span><div class="grow">오버사이즈 티셔츠<div class="meta">캐주얼 · 컷앤소 · 라운드넥</div></div><span class="ck on">✓</span></div>
+        <div class="card"><span class="ic" style="background:var(--mint)">👕</span><div class="grow">베이스볼 롱 티셔츠<div class="meta">캐주얼 · 프린트</div></div><span class="ck"></span></div>
+        <div class="card"><span class="ic" style="background:var(--lilac)">👗</span><div class="grow">라메 레이스 원피스<div class="meta">고저스 · 레이스</div></div><span class="ck"></span></div>
+        <div class="card"><span class="ic" style="background:var(--lemon)">🧶</span><div class="grow">브이넥 스웨터<div class="meta">캐주얼 · 브이넥 · 겨울</div></div><span class="ck on">✓</span></div>
+      </div>
+      <div class="nav"><span>메인</span><span>시설</span><span class="on">의류</span><span>코디</span><span>기록</span><span>공략</span></div>
+    </div>
+    <figcaption><b>5 · 스티커 다이어리</b><span>다이어리에 붙인 스티커처럼 둥근 카드와 파스텔 색 아이콘. 귀엽지만 색은 네 가지로 제한.</span></figcaption>
+  </figure>
+
+  </div>
+</div>
