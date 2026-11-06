@@ -193,6 +193,7 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   db.doc("meta/verify").onSnapshot(s => { S.verifyDone = (s.exists && s.data().done) || {}; render(); }, () => {});
   db.doc(`${RUN}/ui/recipes`).onSnapshot(s => { const d = (s.exists && s.data()) || {}; S.own = {pat:d.pat||[], mat:d.mat||[], opt:d.opt||[]}; render(); }, () => {});
   db.collection(`${RUN}/mannequins`).onSnapshot(s => { S.mq = Object.fromEntries(s.docs.map(d => [+d.id.slice(1), d.data()])); render(); }, () => {});
+  db.doc(`${RUN}/ui/goals`).onSnapshot(s => { S.goals = (s.exists && s.data()) || null; render(); }, () => {});
   db.doc(`${RUN}/ui/now`).onSnapshot(s => { S.now = (s.exists && s.data()) || null; render(); }, () => {});
   db.doc(`${RUN}/ui/mqcfg`).onSnapshot(s => { S.mqCfg = (s.exists && s.data()) || null; render(); }, () => {});
   db.doc(`${RUN}/misc/coord`).onSnapshot(s => { S.coordDone = (s.exists && s.data().list) || []; render(); }, fail);
@@ -2043,7 +2044,7 @@ function viewHome(){
     <form id="homeForm" class="hsearch" role="search">${ICON.search}<input class="search" id="homeQ" type="search" enterkeyhint="search" autocomplete="off" placeholder="옷, 손님, 시설, 옵션 한 번에 찾기" value="${esc(S.homeQ)}" aria-label="통합 검색">${q?`<button type="button" class="iconbtn" data-act="hclear" aria-label="검색어 지우기">${ICON.x}</button>`:""}</form>
     ${q ? `<div class="hres">${homeResults(q)}</div>` : `<div class="hint" style="margin-top:10px">예: 크롭 · 도찬배 · 카페 · 폼폼 · 고딕</div>`}
   </section>
-  ${q ? "" : homeTodo() + homeMemo() + homeUp() + homeRecent() + homeLegend() + homeClear() + homeCarry()}`;
+  ${q ? "" : homeToday() + homeTodo() + homeMemo() + homeUp() + homeRecent() + homeLegend() + homeClear() + homeCarry()}`;
 }
 function homeGo(go){
   if (go==="fac"){ S.tab="fac"; S.itemPick=""; S.facType="전체"; S.facSt=["미완료","일부완료"]; S.facFcSel=[]; S.facFcOpen=false; S.facQ=""; }
@@ -2138,11 +2139,84 @@ async function saveLayout(rects){
   S.layout = {rects}; render();
   if (db) try{ await writeSerial("ui/layout", {rects, t:Date.now()}); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
+/* ---------- 목표 (기록 탭 [목표]): 트로피·미션 체크, 랭크 조건표 ----------
+   사이트 표(트로피 40·미션 71·랭크 11)의 행 번호(row)로 체크한다. 회차별 저장 runs/rN/ui/goals {tro:{row:true}, mis:{row:true}, rank}
+   → 새 회차는 새 run 경로라 이전 회차 체크는 그대로 남는다. */
+const GOAL_T = [...(DATA.trophies||[])].sort((a,b) => a.row - b.row);
+const GOAL_M = [...(DATA.missions||[])].sort((a,b) => a.row - b.row);
+const GOAL_R = [...(DATA.ranks||[])].sort((a,b) => a.row - b.row);
+const goals = () => ({tro:{}, mis:{}, rank:0, ...(S.goals||{})});
+function goalSave(patch){ S.goals = {...goals(), ...patch, t:Date.now()}; render();
+  if (db) writeSerial(`${RUN}/ui/goals`, S.goals).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); }
+const misGroups = () => { const g = {}; GOAL_M.forEach(m => (g[m.c0] = g[m.c0] || []).push(m)); return g; };
+const misNext = list => list.find(m => !goals().mis[m.row]);
+const rankNext = () => GOAL_R.find(r => +r.c0 === (+goals().rank || 0) + 1);
+function viewGoals(){
+  const G = goals(), sub = S.goalSub || "tro";
+  const tDone = GOAL_T.filter(t => G.tro[t.row]).length, tPts = GOAL_T.filter(t => G.tro[t.row]).reduce((a,t) => a + (+t.c3||0), 0);
+  const mDone = GOAL_M.filter(m => G.mis[m.row]).length;
+  const head = `<section class="card"><div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">목표</span><span class="hint">${roundLabel()} · 트로피 ${tDone}/${GOAL_T.length} · 미션 ${mDone}/${GOAL_M.length}${G.rank?` · 랭크 ${G.rank}`:""}</span></span></div>
+    ${seg(["트로피","미션","랭크"], {tro:"트로피",mis:"미션",rank:"랭크"}[sub], "goalsub")}
+    <div class="hint" style="margin-top:8px">회차마다 따로 체크해요(이전 회차 체크는 그대로 남아요) · 출처: KairoHistory 진행</div></section>`;
+  if (sub === "mis"){
+    const gs = misGroups();
+    return head + `<section class="card">${Object.entries(gs).map(([k, list]) => { const n = misNext(list), d = list.filter(m => G.mis[m.row]).length;
+      return `<div class="fccard"><div class="fc-h"><b class="fc-n">${esc(k)}</b><span class="fc-c">${d}/${list.length}</span></div>
+        ${n ? `<div class="cs-line" style="margin-top:6px"><small>다음</small><b>${esc(n.c2)}</b>${n.c3?`<span class="tag plain">보상 ${esc(n.c3)}</span>`:""}</div>` : `<div class="cs-line">${semTag("done","모두 달성")}</div>`}
+        <div class="pills" style="margin-top:8px">${list.map(m => `<button type="button" class="pill ${G.mis[m.row]?"must":""}" data-gmis="${m.row}" aria-pressed="${!!G.mis[m.row]}" title="${esc(m.c2)} · ${esc(m.c3||"")}">${G.mis[m.row]?"✓ ":""}${esc(m.c1)}단계</button>`).join("")}</div></div>`; }).join("")}
+      <div class="hint" style="margin-top:8px">단계를 누르면 그 단계까지 한 번에 체크돼요. 체크된 단계를 다시 누르면 그 단계부터 해제돼요.</div></section>`;
+  }
+  if (sub === "rank"){
+    const cur = +G.rank || 0;
+    return head + `<section class="card"><div class="sublbl" style="margin:0 0 6px">지금 랭크</div>
+      <div class="chips">${GOAL_R.map(r => `<button class="chip sm ${cur===+r.c0?"on":""}" data-grank="${esc(r.c0)}" aria-pressed="${cur===+r.c0}">${esc(r.c0)}</button>`).join("")}</div>
+      <div class="list" style="margin-top:10px">${GOAL_R.map(r => { const n = +r.c0, st = n <= cur ? "done" : n === cur + 1 ? "next" : "";
+        return `<div class="fccard ${st==="done"?"cdone":""}"><div class="fc-h"><b class="fc-n">랭크 ${esc(r.c0)}</b>${st==="done"?semTag("done","달성"):st==="next"?semTag("part","다음"):""}</div>
+          ${r.c1 && r.c1!=="—" ? `<div class="cs-line"><small>조건</small>${r.c1.split(",").map(x => `<span class="tag plain">${esc(x.trim())}</span>`).join("")}</div>` : ""}
+          ${r.c2 ? `<div class="cs-line"><small>랭크업 시</small>${esc(r.c2.replace(/\s*\/\s*/g, " · "))}</div>` : ""}</div>`; }).join("")}</div>
+      <div class="hint" style="margin-top:8px">* 표시는 사이트 표기 그대로예요(평균값 등).</div></section>`;
+  }
+  return head + `<section class="card"><div class="fhead rowhead"><span class="fh-l"><span class="hint">점수 합 ${nf0(tPts)}</span></span></div><div class="list">${GOAL_T.map(t => { const d = !!G.tro[t.row];
+    return `<div class="row ${d?"done":""}"><button data-gtro="${t.row}" aria-label="${esc(t.c0)} ${d?"해제":"달성"}">${ck(d)}</button>
+      <div class="body"><div class="t"><span class="n">${esc(t.c0)}</span>${t.c3?`<span class="tag plain">${esc(t.c3)}점</span>`:""}</div><div class="s">${esc(t.c1||"")}${t.c2?` · ${esc(t.c2.replace(/^조건:\s*/,""))}`:""}</div></div></div>`; }).join("")}</div></section>`;
+}
+
+/* ---------- 메인 "오늘 할 일" 요약: 누르면 해당 화면으로 ---------- */
+function homeToday(){
+  const items = [];
+  const last = nmLastOfSet();
+  if (last.size) items.push(["set", "세트 1벌 남음", `${last.size}벌`, [...last.keys()].slice(0,3).map(id => cloName(CLO_BY_ID.get(id))).join(", ")]);
+  const ownN = NM_KEYS.reduce((a,[k]) => a + (S.own[k]||[]).length, 0);
+  if (ownN){ const can = DATA.clo.filter(c => !cloDone(c) && c.done !== undefined && nmNeed(c).length && !nmMissing(c).length); if (can.length) items.push(["make", "만들 수 있는 옷", `${can.length}벌`, can.slice(0,3).map(cloName).join(", ")]); }
+  const fcOk = CHECKS.filter(c => { const m = checkMain(c.oi); return c.oi < FC_MAX && m.length && m.every(facDone) && !S.chkscore[c.oi]; });
+  if (fcOk.length) items.push(["fc|"+(fcOk[0].oi+1), "도전 가능한 패션 체크", `${fcOk.length}개`, fcOk.slice(0,3).map(c => `${c.oi+1}. ${checkName(c.oi)}`).join(", ")]);
+  const n = mqNow(), yr = S.cyears.find(x => cyRound(x) === cyThisRound() && +x.year === +n.year && x.picks);
+  items.push(["contest", `올해 콘테스트(${n.year}년 차)`, yr ? `${Object.keys(yr.picks).length}개` : "기록 없음", yr ? CONTESTS.filter(([k]) => yr.picks[k]).map(([k,nm]) => `${nm} ${yr.picks[k]}`).join(", ") : "출현하면 기록 탭에 남겨 주세요"]);
+  const mqSet = Array.from({length: mqN()}, (_, i) => mqOf(i)), mqBad = mqSet.filter(m => { const o = mqOutfit(m); return o && o.t && mqEval(o, m).bad; }).length, mqEmpty = mqSet.filter(m => !m.outfit).length;
+  if (mqBad || mqEmpty) items.push(["mq", "마네킹", mqBad ? `계절 안 맞음 ${mqBad}` : `빈 칸 ${mqEmpty}`, mqBad && mqEmpty ? `빈 칸 ${mqEmpty}` : `${mqN()}칸 중`]);
+  const rn = rankNext(); if (rn && goals().rank) items.push(["rank", `다음 랭크 ${rn.c0}`, "", (rn.c1||"").split(",").slice(0,3).map(x => x.trim()).join(" · ")]);
+  const vl = verifyLeft().length; if (vl) items.push(["verify", "게임에서 확인할 것", `${vl}개`, verifyLeft().slice(0,2).map(v => v.t).join(", ")]);
+  if (!items.length) return "";
+  return `<section class="card"><div class="sec-h"><h2>오늘 할 일</h2><span>누르면 그 화면으로 가요</span></div>
+    <div class="list">${items.map(([go, k, v, s]) => `<button class="row today" data-today="${esc(go)}"><div class="body"><div class="t"><span class="n">${esc(k)}</span>${v?`<span class="tag plain">${esc(v)}</span>`:""}</div>${s?`<div class="s">${esc(s)}</div>`:""}</div>${ICON.chev}</button>`).join("")}</div></section>`;
+}
+function todayGo(go){
+  const [k, a] = go.split("|");
+  if (k==="set"){ S.tab="coord"; S.coordSub="set"; S.setF="1벌 남음"; S.setG="전체"; }
+  else if (k==="make"){ S.tab="clo"; S.nmOpen=true; }
+  else if (k==="fc"){ S.tab="fac"; S.facFcSel=[+a]; S.facFcOpen=false; }
+  else if (k==="contest"){ S.tab="rec"; S.recSub="contest"; }
+  else if (k==="mq"){ S.tab="coord"; S.coordSub="mq"; }
+  else if (k==="rank"){ S.tab="rec"; S.recSub="goal"; S.goalSub="rank"; }
+  else if (k==="verify"){ S.tab="clo"; S.verifyOpen=true; }
+  remember(); render(); scrollTo({top:0});
+}
+
 function viewRec(){
   const pc = pendingList().length;
-  const subs = [["contest","콘테스트"],["layout","배치"],["up","개량 옵션"],["log","관리"]];
+  const subs = [["contest","콘테스트"],["goal","목표"],["layout","배치"],["up","개량 옵션"],["log","관리"]];
   return `<section class="card subnav"><div class="seg wide">${subs.map(([k,l]) => `<button class="${S.recSub===k?"on":""}" data-rsub="${k}" aria-pressed="${S.recSub===k}">${l}${k==="log"&&pc?` <span class="badge-in">${pc}</span>`:""}</button>`).join("")}</div></section>
-  ${(({contest:viewContest, layout:viewLayout, up:viewUp, log:viewLog})[S.recSub] || viewContest)()}`;
+  ${(({contest:viewContest, goal:viewGoals, layout:viewLayout, up:viewUp, log:viewLog})[S.recSub] || viewContest)()}`;
 }
 
 const TABS = [["home","메인",ICON.home],["fac","시설",ICON.fac],["clo","의류",ICON.clo],["coord","코디",ICON.coord],["rec","기록",ICON.trophy]];
@@ -2216,6 +2290,13 @@ document.addEventListener("click", e => {
   if (d.mqopen){ S.mqOpen = S.mqOpen===+d.mqopen ? null : +d.mqopen; render(); return; }
   if (d.mqmore){ S.mqMore = +d.mqmore; render(); return; }
   if (d.mqn){ S.mqCfg = {n:+d.mqn}; render(); if (db) writeSerial(`${RUN}/ui/mqcfg`, {n:+d.mqn, t:Date.now()}).catch(() => {}); return; }
+  if (d.today){ todayGo(d.today); return; }
+  if (d.goalsub){ S.goalSub = {"트로피":"tro","미션":"mis","랭크":"rank"}[d.goalsub]; render(); return; }
+  if (d.gtro){ const G = goals(), tro = {...G.tro}; if (tro[d.gtro]) delete tro[d.gtro]; else tro[d.gtro] = true; goalSave({tro}); return; }
+  if (d.gmis){ const G = goals(), mis = {...G.mis}, row = +d.gmis, m = GOAL_M.find(x => x.row===row); const list = misGroups()[m.c0];
+    const idx = list.findIndex(x => x.row===row), on = !mis[row];
+    list.forEach((x, j) => { if (on && j <= idx) mis[x.row] = true; if (!on && j >= idx) delete mis[x.row]; }); goalSave({mis}); return; }
+  if (d.grank){ goalSave({rank: +d.grank === +goals().rank ? 0 : +d.grank}); return; }
   if (d.act==="nowopen"){ S.nowOpen = !S.nowOpen; render(); return; }
   if (d.nowy){ mqNowSave({year: Math.max(1, mqNow().year + +d.nowy)}); return; }
   if (d.nowm){ const n = mqNow(); let m = n.month + +d.nowm, y = n.year; if (m > 12){ m = 1; y++; } if (m < 1){ m = y > 1 ? 12 : 1; if (y > 1) y--; } mqNowSave({month:m, year:y, seasonFix:false}); return; }
