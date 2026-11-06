@@ -79,6 +79,7 @@ tools/data_sync.sh          # → data/tables, data/pulled, data/site, tools/cra
 11. 맥·아이폰·아이패드에서 로그인·동기화 확인(제제)
 
 ## 데이터 메모
+- Firestore 구조 정리 문서(표·컬럼·설명, 진행 데이터 경로, 백업): 구글 드라이브 claude 폴더 "패션몰스토리 노트 Firestore 구조 (2026-11-06)" (doc id 1lbf2D8jTkVRYuesKdxMb7gS_xNPSD2egzm5qSI-xGvE)
 - 기존 노트 저장소: 아티팩트 X6H5NaXw1k8pZD98Raioum의 db, 지금 회차 경로 `runs/r7`(meta/round). 읽기 전용으로만 봄
 - 상하 궁합 목록은 사이트에 보이는 8개까지만 씀(제제 결정)
 - 게임 확인 대기: 옵션 33·42, 카이로군 #218·#459, 코디 79 코튼 팬츠(#136/#144)
