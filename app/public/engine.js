@@ -57,7 +57,7 @@ const S = {
   people:{}, contests:[], itemPick:"", itemAlt:"", resetAsk:false, sheet:null, cp:{}, ih:{}, memo:null, memoEdit:false, battleRec:{}, btDraft:{}, btListAll:false, cloBt:null, cloBtView:false, btOpen:true, btNote:false, fcMode:"single", fcNoteOpen:false, fcDraft:{}, coordFixOpen:{}, upHl:null, facFcSel:[], facFcOpen:false, cEdit:null, cScore:"", cRes:"실패", cMsg:"", cMsgErr:false, cReset:false,
   rnKind:"시설", rnOld:"", rnNew:"", rnErr:"",
   cloCat:[], cloPat:[], cloMat:[], cloOpt:[], cloSlot:{}, cloExp:{}, cloMulti:false, cloRowMulti:{}, cloSt:"추가옵션", cloQ:"", cloOpen:null, cloSp:false, names:{fac:{}, clo:{}, people:{}}, optDraft:{}, chkname:{}, chkscore:{}, scErr:"", scErr2:"", cbattle:{}, cyears:[], cyPick:{}, cyErr:"", cyAsk:null, cyEdit:null, coordDone:[], slotOpen:null, upMulti:false, upStaffs:[], cfxPart:{}, clofix:{}, cloField:{}, fcEdit:{}, facExp:{genre:true}, cloEdit:{}, optKind:{}, cfix:{}, cfxPick:{}, cfxKind:{},
-  coordQ:"", coordOpen:[], logAll:false, confirmSync:false,
+  coordQ:"", coordOpen:[], coordSub:"req", setF:"전체", setG:"전체", setQ:"", setOpen:null, logAll:false, confirmSync:false,
   fac:{}, clo:{}, logs:[], live:false
 };
 try{ const m = JSON.parse(localStorage.getItem("fms-ui")||"{}"); Object.assign(S, m); }catch(e){}
@@ -73,7 +73,7 @@ if (Array.isArray(S.cloOpt)){ const RN = {"호피":"레오파드","와펜":"자�
 /* 메인 클리어 포인트·회차 연계는 항상 접힌 상태로 시작 */
 S.homeCp = false; S.homeIh = false; S.cpCapOpen = false; S.ihStaffOpen = false;
 const facSts = () => Array.isArray(S.facSt) ? S.facSt : (S.facSt && S.facSt!=="전체" ? [S.facSt] : []);
-const remember = () => { try{ localStorage.setItem("fms-ui", JSON.stringify({tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,recSub:S.recSub})); }catch(e){} };
+const remember = () => { try{ localStorage.setItem("fms-ui", JSON.stringify({tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
 if (S.facType!=="전체" && S.facType!=="우선개량" && !(S.facType in TYPE_COLOR)) S.facType = "전체";
 if (!Array.isArray(S.cloCat)) S.cloCat = S.cloCat && S.cloCat!=="전체" ? [S.cloCat] : [];
 if (!Array.isArray(S.cloPat)) S.cloPat = S.cloPat && S.cloPat!=="전체" ? [S.cloPat] : [];
@@ -1120,7 +1120,7 @@ function coordFixBox(n, list){
     ${pick && kind==="part" ? `<form class="inl" data-cfpform="${pick.id}"><select class="field kind" id="cfp-${pick.id}" aria-label="부위">${PARTS.map(([k,l]) => `<option value="${k}" ${k===pk?"selected":""}>${l}</option>`).join("")}</select><input class="field" id="cfv-${pick.id}" list="dl-clo" value="${esc(S.optDraft["cfv-"+pick.id] ?? cPart(pick,pk) ?? "")}" placeholder="옷 이름" aria-label="옷 이름"><datalist id="dl-clo">${cloNames.map(v => `<option value="${esc(v)}">`).join("")}</datalist><button class="btn" type="submit">저장</button></form><div class="hint">${fx[PK(pk)]?`원래 ${esc(pick[pk]||"-")} · 비우고 저장하면 원래대로`:"원래 값과 다르면 수정됨으로 표시돼요"}</div>` : ""}
   </div>`;
 }
-function viewCoord(){
+function viewCoordReq(){
   const q = S.coordQ.trim();
   const cm = cloRenamed();
   const rows = DATA.coord.filter(c => !q || coordName(c).includes(q) || [c.r,cTitle(c),c.t,c.b,c.o,c.a,cPart(c,"t"),cPart(c,"b"),cPart(c,"o"),cPart(c,"a"),c.e,withClo(c.t,cm),withClo(c.b,cm),withClo(c.o,cm),withClo(c.a,cm)].some(v => String(v).includes(q)));
@@ -1151,6 +1151,60 @@ function viewCoord(){
     <div class="tools toolsgap"><input class="search" id="coordQ" placeholder="인물, 요청, 옷 이름 검색" value="${esc(q)}" aria-label="코디 검색"></div>
   </section>
   ${shownCards.length ? shownCards.map(card).join("") : `<section class="card"><div class="empty">${q?"검색 결과가 없어요":"위에서 손님을 누르면 요청이 나와요"}</div></section>`}`;
+}
+
+/* ---------- 코디 탭: [손님 요청 | 코디 세트] ---------- */
+function viewCoord(){
+  const subs = [["req","손님 요청"],["set","코디 세트"]];
+  return `<section class="card subnav"><div class="seg wide">${subs.map(([k,l]) => `<button class="${S.coordSub===k?"on":""}" data-csub="${k}" aria-pressed="${S.coordSub===k}">${l}</button>`).join("")}</div></section>
+  ${S.coordSub==="set" ? viewSets() : viewCoordReq()}`;
+}
+/* 코디 세트(사이트 207개 중 2파츠 이상 유효 세트): 구성 옷을 다 만들면 완성.
+   세트 상태 = 노트에 있는 구성 옷의 완료 체크로 계산(따로 저장하지 않음). 노트에 없는 옷은 회색 표시, 계산에서는 남은 옷으로 셈 */
+const SET_GENRES = ["내추럴","큐트","쿨","성숙","레트로","하드","서브컬쳐"];
+const CLO_BY_ID = new Map(DATA.clo.map(c => [c.id, c]));
+function setInfo(s){
+  const items = (s.clothes || []).map((id, i) => ({ id, c: CLO_BY_ID.get(id) || null, name: s.names?.[i] }));
+  const done = items.filter(x => x.c && cloDone(x.c)).length;
+  return { s, items, done, total: items.length, left: items.length - done };
+}
+function viewSets(){
+  const q = S.setQ.trim();
+  const all = (DATA.sets || []).filter(s => s.valid).map(setInfo);
+  const fs = { "전체": () => true, "1벌 남음": x => x.left===1, "완성": x => x.left===0, "미완성": x => x.left>0 };
+  const inG = x => S.setG==="전체" || x.s.genre===S.setG;
+  const hit = x => !q || [x.s.sub, x.s.genre, ...x.items.map(it => it.c ? cloName(it.c) : it.name)].some(v => String(v||"").includes(q));
+  const rows = all.filter(x => inG(x) && (fs[S.setF] || fs["전체"])(x) && hit(x))
+    .sort((a,b) => (a.left===0) - (b.left===0) || a.left - b.left || b.done - a.done || a.s.id - b.s.id);
+  const nDone = all.filter(x => !x.left).length, nOne = all.filter(x => x.left===1).length;
+  const gChips = [["전체","전체", `${nDone}/${all.length}`], ...SET_GENRES.map(g => { const l = all.filter(x => x.s.genre===g); return [g, g, `${l.filter(x=>!x.left).length}/${l.length}`]; })];
+  const groups = {};
+  rows.forEach(x => { const k = `${x.s.genre} · ${x.s.sub}`; (groups[k] = groups[k] || []).push(x); });
+  const pill = (x, it) => {
+    const key = `${x.s.id}:${it.id}`, d = it.c && cloDone(it.c);
+    if (!it.c) return `<span class="pill off" title="노트에 없는 옷">${esc(it.name || "#"+it.id)}</span>`;
+    return `<button type="button" class="pill ${d?"must":""}" data-setpill="${key}" aria-expanded="${S.setOpen===key}">${d?"✓ ":""}${esc(cloName(it.c))}</button>`;
+  };
+  const detail = x => {
+    const it = x.items.find(it => S.setOpen===`${x.s.id}:${it.id}`); if (!it || !it.c) return "";
+    const c = it.c, st = c.site || {}, d = cloDone(c);
+    const facts = [["옷본", c.p], ["재료", c.m], ["옵션", c.o], ["계절", c.s], ["품질", st.q], ["인기", st.pop], ["가격", st.price], ["Tier", st.tier]].filter(([,v]) => v!=null && v!=="");
+    return `<div class="edl setdet"><div class="edl-h"><span class="fl">${esc(cloName(c))} <small class="desc">${esc(c.c||"")}</small></span>
+      <button type="button" class="btn ${d?"ghost":""}" data-setdone="${c.id}">${d?"완료 취소":"완료 체크"}</button></div>
+      <div class="pills">${facts.map(([k,v]) => `<span class="pill"><span style="color:var(--fg3);margin-right:6px">${k}</span>${esc(v)}</span>`).join("")}</div></div>`;
+  };
+  const card = x => `<div class="fccard setcard ${x.left?"":"cdone"}">
+    <div class="fc-h"><b class="fc-n">세트 ${x.s.id}</b>${x.left===1?semTag("part","1벌 남음"):""}${x.left===0?semTag("done","완성"):""}<span class="fc-c">${x.done}/${x.total}</span></div>
+    <div class="pills">${x.items.map(it => pill(x, it)).join("")}</div>${detail(x)}</div>`;
+  const keys = Object.keys(groups);
+  return `<section class="card">
+    <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">코디 세트</span><span class="hint">${all.length}개 · 완성 ${nDone} · 1벌 남음 ${nOne}</span></span></div>
+    ${chips(gChips, S.setG, "setg")}
+    <div class="tools toolsgap">${seg(["전체","1벌 남음","미완성","완성"], S.setF, "setf")}<input class="search" id="setQ" placeholder="옷 이름, 세부 장르 검색" value="${esc(q)}" aria-label="코디 세트 검색"></div>
+    <div class="hint" style="margin-top:8px">구성 옷을 모두 완료하면 세트 완성 · 옷을 누르면 정보와 완료 체크 · 출처: KairoHistory 코디 세트</div>
+  </section>
+  ${keys.length ? keys.map(k => `<section class="card"><div class="fhead rowhead"><span class="sublbl" style="margin:0">${esc(k)}</span><span class="hint">${groups[k].filter(x=>!x.left).length}/${groups[k].length}</span></div>${groups[k].map(card).join("")}</section>`).join("")
+    : `<section class="card"><div class="empty">${q?"검색 결과가 없어요":"조건에 맞는 세트가 없어요"}</div></section>`}`;
 }
 
 /* 개량 옵션 찾기: 직원별 / 옵션별. +2 이상만 묶어서 보여주고 +1은 개수만 */
@@ -1878,6 +1932,11 @@ document.addEventListener("click", e => {
   const d = b.dataset;
   if (d.tab || d.go){ const t = d.tab || d.go; if (OLD_TAB[t]){ S.tab="rec"; S.recSub=OLD_TAB[t]; } else S.tab = t; S.confirmSync=false; remember(); render(); scrollTo({top:0}); return; }
   if (d.ihb){ S.ih = {...(S.ih||{}), ["b_"+d.ihb]: +d.v}; ihSave(); render(); return; }
+  if (d.csub){ S.coordSub = d.csub; S.setOpen = null; remember(); render(); return; }
+  if (d.setf){ S.setF = d.setf; remember(); render(); return; }
+  if (d.setg){ S.setG = d.setg; remember(); render(); return; }
+  if (d.setpill){ S.setOpen = S.setOpen===d.setpill ? null : d.setpill; render(); return; }
+  if (d.setdone){ toggleClo(+d.setdone); return; }
   if (d.rsub){ S.recSub = d.rsub; S.confirmSync=false; remember(); render(); return; }
   if (d.hgo){ homeGo(d.hgo); return; }
   if (d.hopen !== undefined){ S.homeOpen = S.homeOpen===d.hopen ? "" : d.hopen; render(); return; }
@@ -2048,7 +2107,7 @@ document.addEventListener("click", e => {
   if (d.act==="reset-ok"){ resetAll(); return; }
 });
 let qT=null;
-document.addEventListener("compositionend", e => { if (["homeQ","facQ","cloQ","coordQ"].includes(e.target.id)) e.target.dispatchEvent(new Event("input", {bubbles:true})); });
+document.addEventListener("compositionend", e => { if (["homeQ","facQ","cloQ","coordQ","setQ"].includes(e.target.id)) e.target.dispatchEvent(new Event("input", {bubbles:true})); });
 document.addEventListener("input", e => {
   const id = e.target.id;
   if (/^ih-\w+$/.test(id)){ S.ih = {...(S.ih||{}), [id.slice(3)]: e.target.value.replace(/[^\d]/g,"")}; ihRefresh(); ihSave(); return; }
@@ -2069,7 +2128,7 @@ document.addEventListener("input", e => {
   if (/^bq-\d+$/.test(id)){ const cid = +id.slice(3); S.optDraft["bo-"+cid] = !!e.target.value; S.optDraft["bn-"+cid] = e.target.value; const el = document.getElementById("bn-"+cid); saveBattleValue(cid, e.target.value); return; }
   if (/^fa-(main|alt)-\d+$/.test(id)){ e.target.blur(); const [,key,oi] = id.match(/^fa-(main|alt)-(\d+)$/); const fid = +e.target.value; if (!fid) return; const cur = S.fcDraft[oi] || {main:checkMain(+oi).map(f=>f.id), alt:checkAlt(+oi).map(f=>f.id)}; if (!cur[key].includes(fid)) cur[key] = [...cur[key], fid]; S.fcDraft = {...S.fcDraft, [oi]:cur}; render(); return; }
   if (id==="rnOld"){ e.target.blur(); S.rnOld = e.target.value; S.rnErr=""; render(); return; }
-  if (!["homeQ","facQ","cloQ","coordQ"].includes(id)) return;
+  if (!["homeQ","facQ","cloQ","coordQ","setQ"].includes(id)) return;
   S[id] = e.target.value; if (id==="homeQ") S.homeOpen = ""; clearTimeout(qT); qT = setTimeout(render, 150);
 });
 document.addEventListener("change", e => {
