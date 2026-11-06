@@ -5,6 +5,19 @@
 
 ## 흐름
 
+### 2026-11-06 이후(클라우드 세션 기준)
+```
+tools/crawler/fetch.py        사이트 15쪽 → tools/crawler/cache/ (세션마다 없어지면 한 번만 다시 받음)
+tools/crawler/parse.py        cache → data/site/*.json
+tools/sheets/pull_firestore.py   Firestore ref/* → data/pulled/*.json
+tools/sheets/rekey_site_ids.py   data/pulled(노트 id) → data/tables(사이트 번호) + 엑셀 탭 xlsx_1~5
+tools/sheets/push_firestore.py   data/tables → Firestore ref/*
+```
+- 사이트 번호로 바꾸기 전 표 40개는 Firestore `backup/ref-2026-11-06-note-ids/tables/{표}`에 JSON 글자로 있다.
+- 지금 Firestore `ref/*`가 기준 데이터의 원본이다. 고칠 때는 pull → 수정 → push 순서로 한다.
+
+### 처음 만들 때(2026-11-06 오전, 참고)
+
 ```
 tools/crawler/fetch.py     사이트 15쪽 → tools/crawler/cache/ (한 번만, 3초 간격, Claude-User)
 tools/crawler/parse.py     cache → data/site/*.json      (사이트 원값, 30개 표)
@@ -29,7 +42,15 @@ ref/{표}/rows/{키}  한 행 = 한 문서
 
 ## 원칙
 - **사이트 번호가 id**다(2026-11-06 변경). 기존 노트 번호는 `legacyId` 열에 둔다. 예: 브이넥 스웨터 id 18(기존 노트 5). 사이트에 없는 손님 코디 요청 등은 노트 번호 그대로.
-- 지금 Firestore `ref/*`는 아직 노트 id 기준으로 올라가 있다. `build_tables.py`를 사이트 번호 기준으로 바꿔 다시 올려야 한다.
+- 2026-11-06 사이트 번호로 바꿔 다시 올렸다(rekey_site_ids.py).
+  - 옷 432벌(점원 유니폼 16벌 뺌, 카이로군 426·427 → #218·#459 확인 대기)
+  - 시설 140곳(노트 84 + 사이트에만 56: 마네킹 46~52, 바닥·조명 등)
+  - 패션 체크 = 사이트 목록 순서 1~44(노트 1~39 그대로, 모델 체크 100~104 → 40~44)
+  - 배틀 = 사이트 목록 순서 0~26(다른 가게 직원 0~11, 노트 b0~b14 → 12~26)
+  - 옷 값이 다른 칸 18개는 사이트 값으로 바꿨다. 옵션 33·42(노트 '(없음)')는 verify에 보류
+  - 코디 요청 77의 코튼 팬츠 = #144(아이비 룩 재킷과 같은 세트 131). 79는 verify에 보류
+- 배틀 `values` 3개 = (코디 합계) 품질, 매력, 능력치 순서(제제 확인)
+- 출처 우선순위: 사이트 > 엑셀(xlsx_*, 사이트에서 가져온 값) > guide(참고용)
 - 노트 값(사용자 수정 반영)은 덮어쓰지 않는다.
   - 사이트 값은 `site*`, `기본*` 열에 나란히 둔다.
   - 둘이 다르면 `*_diff` 표에 남긴다. `choice` 칸이 비어 있으면 노트 값을 쓴다.

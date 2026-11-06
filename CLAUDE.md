@@ -17,8 +17,9 @@
 ## 이미 준비된 것
 - GitHub CLI 로그인과 저장소 연결
 - Firebase 프로젝트, Firestore, Authentication의 Google 로그인 사용 설정(콘솔에서 사용자가 함)
-- `firebase login` 완료(맥, hj920619@gmail.com). 다시 로그인이 필요하면 사용자에게 `firebase login`을 요청한다.
-- 아직 안 한 것: Firebase 웹 앱 등록, 설정 값 연결, 보안 규칙 배포, 승인 도메인 추가. 이건 클로드 코드가 진행한다.
+- Firebase CLI 로그인 계정은 hj920619@gmail.com(프로젝트 주인). 클라우드 세션에서는 `firebase login --no-localhost`로 로그인 주소를 띄우고 사용자에게 인증 코드를 받는다.
+- 구글 드라이브 커넥터는 hj920619@knou.ac.kr(학교 계정) 드라이브다. reference 파일 두 개가 여기 있다.
+- Firebase 웹 앱 등록, 설정 값 연결, 승인 도메인, 보안 규칙(본인 uid) 배포까지 끝남(docs/firebase.md).
 
 ## 저장소 구조
 
@@ -59,6 +60,12 @@ tools/migrate  기존 노트 진행 데이터 → Firestore 이전 (새로 작�
    - 사이트 값과 다르면 "다른 점 목록"으로 뽑아 사용자가 고르게 한다. 타이핑 없이 고를 수 있는 형태가 좋다.
    - 2026-11-06 첫 다른 점 목록(옷 18칸)은 제제가 전부 사이트 값으로 골랐다. 옵션이 노트 "(없음)"인 33, 42는 게임에서 확인 대기.
 7. **이름은 게임 한국어판 화면 표기가 기준이다.** docs/plan.md 3절 참고.
+8. **출처 우선순위: 공략 사이트가 무조건 먼저다.** (2026-11-06 제제)
+   - 사이트 > reference 엑셀(사이트에서 가져온 값) > 종합 가이드 md(위키·검색 정리, 참고용).
+   - 가이드가 사이트와 다르거나, 가이드가 예측한 값이 사이트에 실제로 있으면 사이트 값을 쓴다.
+9. **웬만한 자료는 전부 Firestore에 둔다.** (2026-11-06 제제)
+   - 클라우드 세션은 끝나면 git에서 뺀 파일(data/, reference/, cache/)이 사라진다. 기준 데이터·엑셀·가이드는 Firestore `ref/*`에, 큰 변경 전 상태는 `backup/*`에 남긴다.
+   - 새 세션에서 data/가 없으면 `python3 tools/sheets/pull_firestore.py`로 Firestore에서 받는다(firebase 로그인 필요: `firebase login --no-localhost`, 사용자가 코드를 붙여 준다).
 
 ## 커밋과 배포
 - 커밋 메시지는 한국어로 짧게 쓰고, 기능 단위로 나눈다.
