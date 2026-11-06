@@ -1283,7 +1283,24 @@ const MQ_COLORS = (() => { const n = {}; DATA.clo.forEach(c => (c.site?.cols||[]
 const MQ_PAIR = (() => { const m = new Map(); const put = (a, b, v) => { m.set(a+":"+b, v); m.set(b+":"+a, v); };
   DATA.clo.forEach(c => { (c.site?.goodIds||[]).forEach(x => put(c.id, x, 1)); (c.site?.badIds||[]).forEach(x => put(c.id, x, -1)); }); return m; })();
 const mqPair = (a, b) => MQ_PAIR.get(a.id+":"+b.id) ?? 0;
-const mqNow = () => ({season:"봄·가을", trend:"", ...(S.now||{})});
+/* 월 → 계절: 제제가 게임에서 확인해 알려 주면 채운다(예: {1:"겨울", 2:"겨울", ...}). 비어 있으면 계절은 직접 고른다 */
+const MONTH_SEASON = {};
+const mqNow = () => { const n = {year:1, month:1, season:"봄·가을", trend:"", ...(S.now||{})}; if (MONTH_SEASON[n.month] && !n.seasonFix) n.season = MONTH_SEASON[n.month]; return n; };
+const TREND_HEX = {"검정":"#222","흰색":"#fff","파랑":"#3B82F6","빨강":"#E11D48","분홍":"#F9A8D4","갈색":"#92400E","초록":"#16A34A","보라":"#8B5CF6","주황":"#F97316","노랑":"#FACC15","회색":"#9CA3AF"};
+function nowBar(){
+  const n = mqNow(), o = !!S.nowOpen;
+  const line = `<button type="button" class="nowline" data-act="nowopen" aria-expanded="${o}"><span class="hint" style="margin:0">지금</span><b>${n.year}년 차</b><span class="sep">·</span><b>${n.month}월</b><span class="sep">·</span><b>${esc(n.season)}</b><span class="sep">·</span>${n.trend?`<span><i class="trdot" style="background:${TREND_HEX[n.trend]||"#ccc"}"></i>유행색 <b>${esc(n.trend)}</b></span>`:`<span class="hint" style="margin:0">유행색 모름</span>`}${ICON.chev}</button>`;
+  if (!o) return line;
+  return line + `<div class="nowedit">
+    <div class="sublbl">년 차 · 월 <span class="hint">${roundLabel()} 기준, 회차별 저장</span></div>
+    <div class="nowstep"><button class="chip sm" data-nowy="-1" aria-label="1년 빼기">−</button><b>${n.year}년</b><button class="chip sm" data-nowy="1" aria-label="1년 더하기">+</button>
+      <span style="width:12px"></span><button class="chip sm" data-nowm="-1" aria-label="한 달 빼기">−</button><b>${n.month}월</b><button class="chip sm" data-nowm="1" aria-label="한 달 더하기">+</button></div>
+    <div class="sublbl">계절 <span class="hint">${Object.keys(MONTH_SEASON).length ? "월에서 자동, 다르면 골라요" : "월 → 계절 자동은 게임에서 확인한 뒤 넣어요"}</span></div>
+    <div class="chips">${MQ_SEASONS.map(x => `<button class="chip ${n.season===x?"on":""}" data-nows="${x}" aria-pressed="${n.season===x}">${x}</button>`).join("")}</div>
+    <div class="sublbl">유행색</div>
+    <div class="chips">${[["","모름"], ...MQ_COLORS.map(c => [c,c])].map(([v,l]) => `<button class="chip sm ${n.trend===v?"on":""}" data-nowt="${esc(v)}" aria-pressed="${n.trend===v}">${v?`<i class="trdot" style="background:${TREND_HEX[v]||"#ccc"}"></i>`:""}${esc(l)}</button>`).join("")}</div>
+    <div class="hint" style="margin-top:8px">마네킹 추천 등에 같이 써요. 맥·아이폰·아이패드에 바로 동기화돼요.</div></div>`;
+}
 const mqSeasonOf = m => m.season || mqNow().season;
 /* 옷 계절과 목표 계절의 궁합(AppData.GetMatchSeason): 봄·가을 옷은 봄·가을에 +1, 여름·겨울 옷은 제 계절 +1 · 반대 계절 −1 */
 const mqMatch = (c, now) => { const se = c.s; if (!MQ_SEASONS.includes(se)) return 0;
@@ -1400,12 +1417,8 @@ function viewMannequin(){
   const n = mqNow(), cnt = mqN();
   const doneN = DATA.clo.filter(c => cloDone(c) && MQ_KIND[c.site?.kind]).length;
   return `<section class="card">
-    <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">지금 상태</span><span class="hint">마네킹 추천에 같이 써요 · 회차별 저장</span></span></div>
-    <div class="sublbl" style="margin:6px 0">계절 <span class="hint">월 → 계절 자동은 게임에서 확인한 뒤에 넣어요</span></div>
-    <div class="chips">${MQ_SEASONS.map(s => `<button class="chip ${n.season===s?"on":""}" data-nows="${s}" aria-pressed="${n.season===s}">${s}</button>`).join("")}</div>
-    <div class="sublbl" style="margin:10px 0 6px">유행색</div>
-    <div class="chips">${[["","없음/모름"], ...MQ_COLORS.map(c => [c,c])].map(([v,l]) => `<button class="chip sm ${n.trend===v?"on":""}" data-nowt="${esc(v)}" aria-pressed="${n.trend===v}">${esc(l)}</button>`).join("")}</div>
-    <div class="sublbl" style="margin:10px 0 6px">마네킹 수</div>
+    <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">마네킹</span><span class="hint">계절 ${esc(n.season)}${n.trend?` · 유행색 ${esc(n.trend)}`:""} · 맨 위 "지금" 줄에서 바꿔요</span></span></div>
+    <div class="sublbl" style="margin:6px 0">마네킹 수</div>
     ${seg(["1","2","3","4","5"], String(cnt), "mqn")}
     <div class="hint" style="margin-top:10px">완료한 옷 ${doneN}벌로 추천해요. 상의+하의(또는 셋업)에 아우터·액세서리까지 넣어요.
       확률은 사이트 빌더의 게임 식(계절·유행색·셋업·상하 궁합, 상의·하의만 계산)이고 손님이 좋아하는 색은 빠져 있어요. 다른 마네킹에 세운 옷은 흐리게 보여요. 출처: KairoHistory 코디 빌더</div>
@@ -2165,6 +2178,7 @@ function render(){
     if (focusId){ const el=document.getElementById(focusId); if(el){ el.focus({preventScroll:true}); try{el.setSelectionRange(caret,caret)}catch(e){} } }
   }
   renderSheet();
+  const nb = $("#nowbar"); if (nb) nb.innerHTML = nowBar();
   const qk = $("#quick");
   if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="memo" ? homeMemo(true) : upFinder(true, true)}</div>` : ""; qk.hidden = !S.quick; }
   document.querySelectorAll("#prefs [data-q]").forEach(b => { const on = S.quick===b.dataset.q; b.classList.toggle("on", on); b.setAttribute("aria-expanded", on); });
@@ -2202,7 +2216,10 @@ document.addEventListener("click", e => {
   if (d.mqopen){ S.mqOpen = S.mqOpen===+d.mqopen ? null : +d.mqopen; render(); return; }
   if (d.mqmore){ S.mqMore = +d.mqmore; render(); return; }
   if (d.mqn){ S.mqCfg = {n:+d.mqn}; render(); if (db) writeSerial(`${RUN}/ui/mqcfg`, {n:+d.mqn, t:Date.now()}).catch(() => {}); return; }
-  if (d.nows){ mqNowSave({season:d.nows}); return; }
+  if (d.act==="nowopen"){ S.nowOpen = !S.nowOpen; render(); return; }
+  if (d.nowy){ mqNowSave({year: Math.max(1, mqNow().year + +d.nowy)}); return; }
+  if (d.nowm){ const n = mqNow(); let m = n.month + +d.nowm, y = n.year; if (m > 12){ m = 1; y++; } if (m < 1){ m = y > 1 ? 12 : 1; if (y > 1) y--; } mqNowSave({month:m, year:y, seasonFix:false}); return; }
+  if (d.nows){ mqNowSave({season:d.nows, seasonFix: !!MONTH_SEASON[mqNow().month]}); return; }
   if (d.nowt !== undefined){ mqNowSave({trend:d.nowt}); return; }
   if (d.rsub){ S.recSub = d.rsub; S.confirmSync=false; remember(); render(); return; }
   if (d.hgo){ homeGo(d.hgo); return; }
