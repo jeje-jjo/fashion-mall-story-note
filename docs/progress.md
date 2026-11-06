@@ -68,7 +68,10 @@ tools/data_sync.sh          # → data/tables, data/pulled, data/site, tools/cra
    4) 빌더 `/ko/builder`: 전체 상하 궁합(제제: 필요 없음)
    받으면 `tools/crawler/cache/api/ko_{이름}.json`에 두고 데이터 저장소 `crawler-cache/api/`에 커밋
 9. 전투 이름 "성숙 챌린지 배틀"(예전 고저스 챌린지), "자신 있는 챌린지 배틀"(예전 특기 챌린지)은 **우선 사이트 이름 그대로 둠(제제 2026-11-06)**
-10. 데이터 이전(tools/migrate) — **제제가 말할 때 진행(기존 노트 사용 중)**: 기존 아티팩트 저장소(ArtifactData, url X6H5NaXw1k8pZD98Raioum) → Firestore `note/v2/...`, 옷·시설 번호를 `DATA.idMap`/`ref/id_map`으로 바꿔서. 백업 후 제제 확인 뒤 실행
+10. 데이터 이전(tools/migrate) — **제제가 말할 때 진행(기존 노트 사용 중)**: 기존 아티팩트 저장소(ArtifactData, url X6H5NaXw1k8pZD98Raioum) → Firestore `note/v2/...`. 백업 후 제제 확인 뒤 실행
+   - 옮길 경로(엔진이 읽는 것 전부): `meta/round`·`meta/verify`, 회차별 `runs/r7/{fac,clo,misc/coord,ui/recipes}`(지금 회차 r7, 이전 회차 runs/r1~r6도 보존용으로), `names/all`·`names/people`, `checks`, `clofix`, `coordfix`, `cbattle`, `battles`, `contest`, `chkscore`, `cyear`, `log`, `calc/clear`·`calc/carry`, `memo/reset`, `layslots/s1~5`, **`ui/slots`(의류 탭 선택 저장: 전체·줄별)**, **`ui/chiporder`(옷본·재료·옵션 칩 순서)**, `ui/coordopen`, `ui/layout`, `ui/optcnt`
+   - 번호: 옷 `c{id}`·시설 `f{id}`는 `DATA.idMap`(노트 id → 사이트 번호)으로 바꿔서 쓴다. 이름 값은 그대로 옮기고 새 노트가 읽을 때 `DATA.alias`로 바꿈(slots·chiporder·optcnt·recipes·fac put·battles·cbattle·coordfix·clofix·clo opt)
+   - 칩 순서: 새 노트에 `ui/chiporder`가 없으면 기존 노트 순서(엔진 `NOTE_CHIP_ORDER`, 2026-11-06 기준)를 씀. 이전하면 그 문서가 우선
 11. 맥·아이폰·아이패드에서 로그인·동기화 확인(제제)
 
 ## 데이터 메모

@@ -163,6 +163,8 @@ export function buildData(t: Tables) {
     c.tg = c.tgs.join(" · ");
   }
 
+  // 노트 옷본 "기모노" = 사이트 베이스 "전통 의상"(옷 표는 이미 전통 의상) → 저장된 칩 순서·선택을 잇기 위해 연결만
+  if (L.clo.some((c: any) => c.p === "전통 의상")) put("recipe", "기모노", "전통 의상");
   // 레시피 목록이 사이트에서 24벌까지만 보여서(+n 잘림) 옷마다 못 맞춘 옷은 같은 이름 바꾸기(띄어쓰기 등)를 그대로 적용
   for (const c of L.clo) for (const k of ["p", "m", "o"]) if (c[k] && alias.recipe[c[k]]) c[k] = alias.recipe[c[k]];
 

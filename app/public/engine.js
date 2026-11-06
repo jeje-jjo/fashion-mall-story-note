@@ -188,7 +188,7 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   db.doc("ui/slots").onSnapshot(s => {
     const remote = s.exists ? (s.data().slot || {}) : null;
     if (slotFirst && !remote && Object.keys(S.cloSlot||{}).length){ writeSerial("ui/slots", {slot:S.cloSlot}).catch(()=>{}); }
-    else if (remote) { S.cloSlot = remote; render(); }
+    else if (remote) { S.cloSlot = slotAlias(remote); render(); }
     slotFirst = false;
   }, fail);
   db.collection("battles").onSnapshot(s => { S.battleRec = Object.fromEntries(s.docs.map(d => { const v = {...d.data()}; const i = +d.id.slice(1);
@@ -203,7 +203,8 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   [1,2,3,4,5].forEach(n => db.doc(`layslots/s${n}`).onSnapshot(s => { S.laySlots = {...(S.laySlots||{}), [n]: s.exists ? s.data() : null}; render(); }, () => {}));
   db.doc("ui/coordopen").onSnapshot(s => { if (!s.exists) return; const v = s.data(); S.coordOpen = v.list || []; S.coordHideDone = !!v.hide; render(); }, () => {});
   db.doc("ui/layout").onSnapshot(s => { S.layout = {rects: (s.exists && s.data().rects) || []}; render(); }, () => {});
-  db.doc("ui/chiporder").onSnapshot(s => { const d = s.exists ? s.data() : {}; S.chipOrder = {pat:alArr("recipe", d.pat||[]), mat:alArr("recipe", d.mat||[]), opt:alArr("recipe", d.opt||[])}; render(); }, () => {});
+  db.doc("ui/chiporder").onSnapshot(s => { const d = s.exists ? s.data() : null, n = noteChipOrder();
+    S.chipOrder = d ? {pat:d.pat?.length ? alArr("recipe", d.pat) : n.pat, mat:d.mat?.length ? alArr("recipe", d.mat) : n.mat, opt:d.opt?.length ? alArr("recipe", d.opt) : n.opt} : n; render(); }, () => {});
   db.doc("ui/optcnt").onSnapshot(s => { const c = (s.exists && s.data().counts) || {}; S.optCnt = Object.fromEntries(Object.entries(c).map(([k, v]) => [al("recipe", k), v])); render(); }, () => {});
   db.doc("meta/verify").onSnapshot(s => { S.verifyDone = (s.exists && s.data().done) || {}; render(); }, () => {});
   db.doc(`${RUN}/ui/recipes`).onSnapshot(s => { const d = (s.exists && s.data()) || {}; S.own = {pat:alArr("recipe", d.pat||[]), mat:alArr("recipe", d.mat||[]), opt:alArr("recipe", d.opt||[])}; render(); }, () => {});
@@ -341,6 +342,9 @@ const isMulti = key => S.cloMulti || !!S.cloRowMulti[key];
 const allSel = (cur, key) => { const av = S.rowAvail?.[key] || []; return av.length > 0 && av.every(x => cur.includes(x)); };
 const pickChip = (cur, k, key) => k==="전체" ? (allSel(cur, key) ? [] : (S.cloMulti || (S.cloRowMulti = {...S.cloRowMulti, [key]:true}), [...(S.rowAvail?.[key] || [])])) : cur.includes(k) ? cur.filter(x => x!==k) : (isMulti(key) ? [...cur, k] : [k]);
 const ROWF = {cat:"cloCat", pat:"cloPat", mat:"cloMat", opt:"cloOpt"};
+/* 선택 저장 칸 값도 예전 표기를 사이트 이름으로 */
+const slotAlias = sl => { const f = v => Array.isArray(v) ? alArr("recipe", v) : v; const o = {}; for (const [k, v] of Object.entries(sl || {})) o[k] = (k==="all" && v && typeof v==="object") ? Object.fromEntries(Object.entries(v).map(([a, b]) => [a, f(b)])) : f(v); return o; };
+if (S.cloSlot) S.cloSlot = slotAlias(S.cloSlot);
 const slotBtns = key => { const has = S.cloSlot[key] != null;
   return `<button class="chip sm ghostchip" data-slot="save|${key}">${key==="all"?"전체 저장":"저장"}</button><button class="chip sm ghostchip" data-slot="load|${key}" ${has?"":'aria-disabled="true"'} style="${has?"":"opacity:.45"}">불러오기</button>${has?`<button class="chip sm ghostchip" data-slot="del|${key}" aria-label="저장 삭제">×</button>`:""}`; };
 const rowHead = (label, key, attr, cur, total) => { label = `<i class="rdot r-${key}" aria-hidden="true"></i>${label}`; const open = S.slotOpen===key, has = S.cloSlot[key] != null, exp = !!S.cloExp[key];
@@ -348,6 +352,11 @@ const rowHead = (label, key, attr, cur, total) => { label = `<i class="rdot r-${
   ${open ? `<div class="slotmenu">${slotBtns(key)}</div>` : ""}`; };
 /* 접힘: 칩을 모두 숨김(선택은 유지, 머리에 선택 개수 표시). 펼침: 전체 칩 */
 const ORDER_KEYS = ["pat","mat","opt"];
+/* 기존 노트에서 정해 둔 칩 순서(2026-11-06 기존 노트 ui/chiporder). 새 노트에 순서가 저장돼 있지 않으면 이 순서를 씀.
+   예전 표기는 사이트 이름으로 바꿔서 쓰고, 노트에 없던 새 값은 뒤에 붙는다 */
+const NOTE_CHIP_ORDER = {"pat": ["없음", "컷앤소", "팬츠", "스커트", "앞트임", "재킷", "원피스", "민소매", "카디건", "오버올", "베스트", "셋업", "코트", "판초", "기모노", "액세서리"], "mat": ["없음", "라운드넥", "스트레이트", "브이넥", "롤업", "A라인", "플레어", "스키니", "칼라", "플리츠", "와이드", "슬릿", "오프숄더", "센터프레스", "암커버", "타이트", "카고", "랩", "스탠드칼라", "퍼프소매", "슬릿넥", "크롭", "하이넥", "사루엘", "후드", "홀터넥", "세일러칼라", "벌룬", "원숄더", "나팔바지", "티어드", "세퍼레이트", "머메이드"], "opt": ["없음", "프린트", "데미지", "프릴", "라인", "넥타이", "리본", "스트라이프", "체크", "벨트", "체인", "보더", "퍼", "꽃·식물", "지퍼", "링거넥", "셔링", "기하학", "레이스업", "물방울", "레이스", "아가일", "오로라", "카모플라주", "폼폼", "자수", "레오파드", "보타이", "스터드", "고블랭", "게리코튼", "하네스", "자수 패치", "크로스", "나사와 볼트"]};
+const noteChipOrder = () => ({pat:alArr("recipe", NOTE_CHIP_ORDER.pat), mat:alArr("recipe", NOTE_CHIP_ORDER.mat), opt:alArr("recipe", NOTE_CHIP_ORDER.opt)});
+if (!S.chipOrder) S.chipOrder = noteChipOrder();
 /* 옷본·재료·옵션 칩 순서: ui/chiporder {pat:[],mat:[],opt:[]}. 목록에 없는 새 값은 기본 순서대로 뒤에 */
 const chipOrdered = (key, keys) => { const o = S.chipOrder?.[key]; if (!o || !o.length) return keys; const idx = new Map(o.map((k,i) => [k,i])); return [...keys].sort((a,b) => (idx.has(a) ? idx.get(a) : 1e6 + keys.indexOf(a)) - (idx.has(b) ? idx.get(b) : 1e6 + keys.indexOf(b))); };
 async function saveChipOrder(order){
