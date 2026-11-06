@@ -786,7 +786,7 @@ function fcFilterRow(){
   const nums = Array.from({length:FC_MAX}, (_,i) => i+1);
   return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">패션 체크</span>${sel.map(n => `<button class="chip sm on" data-fcn="${n}" title="${esc(checkName(n-1))}">${n}</button>`).join("")}<button class="chip sm fold" data-fexp="fc" aria-expanded="${open}">${open?"접기 ▴":"펼치기 ▾"}</button></span>
     <span class="fh-act"><button class="chip sm" data-act="fcreset" ${sel.length||open?"":'disabled style="opacity:.5"'}>초기화</button><button class="chip sm ${multi?"":"on"}" data-act="fcsingle" aria-pressed="${!multi}">단일</button><button class="chip sm ${multi?"on":""}" data-act="fcmulti" aria-pressed="${multi}">다중</button></span></div>
-  ${open ? `<div class="numpad">${nums.map(n => `<button class="${sel.includes(n)?"on":""}" data-fcn="${n}" aria-pressed="${sel.includes(n)}" title="${esc(checkName(n-1))}">${n}</button>`).join("")}</div>` : ""}`;
+  ${open ? `<div class="numpad">${nums.map(n => `<button class="${sel.includes(n)?"on":""}" data-fcn="${n}" aria-pressed="${sel.includes(n)}" title="${esc(checkName(n-1))}">${n}</button>`).join("")}</div>${(DATA.checksExtra||[]).length?`<div class="chips" style="margin-top:8px"><button class="chip sm ${S.fcExtra?"on":""}" data-act="fcextra" aria-pressed="${!!S.fcExtra}">모델 체크 ${(DATA.checksExtra||[]).length}</button></div>${S.fcExtra?fcExtraList():""}`:""}` : ""}`;
 }
 const fcTag = f => FC_OF[f.id] ? semTag("fc", `패션 체크 ${FC_OF[f.id].join("·")}`) + (S.facFcSel.length && S.facFcSel.every(n => (FC_ALT[f.id]||[]).includes(n)) ? `<span class="tag">대신 가능</span>` : "") : "";
 const dotFac = f => facDone(f) ? `<span class="fdot on" aria-label="완료">${ICON.check}</span>` : facPartial(f) ? `<span class="fdot part" aria-label="일부완료">${putOf(f).filter(x => needOf(f).includes(x)).length}/${needOf(f).length}</span>` : `<span class="fdot" aria-label="미완료"></span>`;
@@ -801,6 +801,11 @@ function fcEditForm(oi){
       ${any?`<div class="hint">비워 둔 칸은 그대로 두고, 적은 것만 한 번에 저장해요.</div>`:`<div class="hint">바꿀 것을 고르면 입력 칸이 열려요.</div>`}
     </form>`;
 }
+/* 패션 체크 사이트 기준: 평론가·상금·보상 옵션·등장 조건 */
+const fcSiteLine = st => !st ? "" : `<div class="cs-line fcsite">${st.critic?`<span class="tag plain">평론가 ${esc(st.critic)}</span>`:""}${st.prize!=null?`<span class="tag plain">상금 ¥${nf0(st.prize)}</span>`:""}${st.option && st.option!=="—"?semTag("sp", "보상 "+esc(st.option)):""}${st.win && (!st.option || st.option==="—")?`<span class="tag plain">${esc(st.win.replace(/\s*\/\s*/g," · ").replace(/(액세서리|옷):\s*(\d+)/g, (m, k, id) => { const c = CLO_BY_ID.get(+id); return c ? `${k}: ${cloName(c)}` : m; }))}</span>`:""}${st.appear?`<span class="tag plain">등장 ${esc(st.appear.replace(/^조건:\s*/,""))}</span>`:""}</div>`;
+function fcExtraList(){
+  return `<div class="btextra">${(DATA.checksExtra||[]).map(c => `<div class="fccard"><div class="fc-h"><span class="fcnum">${c.site?.id ?? ""}</span><b class="fc-n">${esc(c.name)}</b></div>${fcSiteLine(c.site)}</div>`).join("")}<div class="hint">모델 체크는 사이트에만 있어요(필요 시설 없음) · 출처: KairoHistory 패션 체크</div></div>`;
+}
 /* 패션 체크 정보 카드: 이름 옆에 수정·주석 아이콘, 아래는 요구·보상 태그 */
 function fcInfoCard(oi){
   const c = DATA.checks[oi]; if (!c) return "";
@@ -811,7 +816,8 @@ function fcInfoCard(oi){
       ${hybrid()?`<button class="iconbtn act" data-sheet="fc|${oi}" aria-label="이름·기록 수정">${ICON.pen}</button>`:""}${hasNote?`<button class="iconbtn act ${noteOpen?"on":""}" data-act="fcnote" aria-label="주석 보기" aria-expanded="${noteOpen}">${ICON.note}</button>`:""}
       <span class="fc-c">${main.length?`${n} / ${main.length}`:"대상 없음"}</span></div>
     <div class="fc-tags"><span class="tag key">요구</span>${reqTags(c.req)}${c.reward?`<span class="tag key" style="margin-left:6px">보상</span>${rewardTags(c.reward)}`:""}</div>
-    ${scoreLine(oi)}
+    ${fcSiteLine(c.site)}
+    ${scoreLine(oi) ? `<button type="button" class="linkbtn" data-fcrec="${oi}" aria-expanded="${S.fcRecOpen===oi}">${S.fcRecOpen===oi?"기록 접기":"기록 보기"}</button>${S.fcRecOpen===oi ? scoreLine(oi) : ""}` : ""}
     ${noteOpen ? `${alt.length?`<div class="altline">대신 가능: ${alt.map(f => `<span class="${facDone(f)?"altdone":""}">${esc(facName(f))}${facDone(f)?" ✓":""}</span>`).join(" · ")}</div>`:""}${c.note?`<div class="note-bar" style="margin-top:8px">${esc(c.note)}</div>`:""}` : ""}
     ${!hybrid() ? fcEditForm(oi) : ""}
   </div>`;
@@ -2184,6 +2190,8 @@ document.addEventListener("click", e => {
   if (d.setg){ S.setG = d.setg; remember(); render(); return; }
   if (d.setpill){ S.setOpen = S.setOpen===d.setpill ? null : d.setpill; render(); return; }
   if (d.setdone){ toggleClo(+d.setdone); return; }
+  if (d.act==="fcextra"){ S.fcExtra = !S.fcExtra; render(); return; }
+  if (d.fcrec){ S.fcRecOpen = S.fcRecOpen===+d.fcrec ? null : +d.fcrec; render(); return; }
   if (d.act==="btextra"){ S.btExtra = !S.btExtra; render(); return; }
   if (d.btrec){ S.btRecOpen = {...(S.btRecOpen||{}), [d.btrec]: !S.btRecOpen?.[d.btrec]}; render(); return; }
   if (d.clorec){ S.cloRecOpen = S.cloRecOpen===+d.clorec ? null : +d.clorec; render(); return; }
