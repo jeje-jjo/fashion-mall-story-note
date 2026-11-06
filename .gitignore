@@ -19,3 +19,7 @@ snapshots/
 
 # legacy 테스트용 npm 잠금 파일(legacy는 참고용이라 고정하지 않음)
 legacy/package-lock.json
+
+# 수집·조합 데이터(공개 저장소라 올리지 않음. Firestore ref/* 에 저장)
+data/site/
+data/tables/
