@@ -1,15 +1,14 @@
 rules_version = '2';
 
 // 본인만 읽고 쓸 수 있게 막아 둔 규칙.
-// 지금은 구글 로그인 이메일로 확인한다(아직 앱에서 로그인한 적이 없어 uid를 모름).
-// 처음 로그인하면 uid를 받아 isOwner()를 uid 비교로 바꾼다.
+// 새 노트에서 처음 로그인한 구글 계정의 uid로 고정한다(2026-11-06).
+// uid는 Firebase가 이 프로젝트 안에서 계정마다 한 번 만들어 주는 고유 번호라
+// 이메일 주소를 바꾸거나 다른 로그인 방식을 붙여도 바뀌지 않는다.
 service cloud.firestore {
   match /databases/{database}/documents {
     function isOwner() {
       return request.auth != null
-        && request.auth.token.email == 'hj920619@gmail.com'
-        && request.auth.token.email_verified == true
-        && request.auth.token.firebase.sign_in_provider == 'google.com';
+        && request.auth.uid == '9dlSV6iYolauEAhEkRIZJktyox32';
     }
 
     match /{document=**} {

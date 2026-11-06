@@ -26,9 +26,9 @@ export const firebaseConfig = {
 ```
 
 ## 보안 규칙 (`firestore.rules`)
-- 지금은 구글 로그인 이메일(`hj920619@gmail.com`, 인증된 이메일)인 사람만 모든 문서를 읽고 쓸 수 있다.
+- 본인 uid(`9dlSV6iYolauEAhEkRIZJktyox32`, hj920619@gmail.com 구글 로그인)만 모든 문서를 읽고 쓸 수 있다(2026-11-06 이메일 확인 → uid 고정).
 - 로그인하지 않은 요청은 읽기와 쓰기 모두 403으로 막히는 것을 확인했다.
-- **할 일**: 새 노트에서 처음 로그인하면 uid를 확인해서 규칙을 `request.auth.uid == '<uid>'`로 바꾸고 다시 배포한다.
+- 기준 데이터 스크립트(firebase CLI 토큰)는 IAM 권한으로 통과하므로 이 규칙과 무관하다.
 
 배포 명령:
 
