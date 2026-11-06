@@ -100,6 +100,11 @@ const coordName = c => curPerson(c.pb) + (c.ps ? c.ps : "");
 const withNames = text => { let t = text || ""; for (const [b, n] of Object.entries(S.people)) if (b !== n) t = t.split(b).join(n); return t; };
 const facName = f => S.names.fac[f.id] ?? f.name;
 const facDone = f => S.fac[f.id]?.done ?? f.done;
+/* 40P 우선개량 체크(새 노트): 태그 옆 작은 체크. 회차별 runs/rN/fac/f{id}.p40 */
+const p40Done = f => !!S.fac[f.id]?.p40;
+const p40Tag = f => `<span class="tag p40${p40Done(f)?" on":""}" title="40P로 포인트 2 업그레이드">40P<span class="p40ck" role="checkbox" tabindex="0" aria-checked="${p40Done(f)}" aria-label="${esc(facName(f))} 40P 업그레이드 했음" data-p40ck="${f.id}">${p40Done(f)?"✓":""}</span></span>`;
+function toggleP40(id){ const f = DATA.fac.find(x => x.id===id); if (!f) return; const on = !p40Done(f);
+  persist("fac", id, {p40: on}); toast(on?"40P 업그레이드 체크":"40P 체크 해제"); }
 const SP_OPTS = ["카모플라주","폼폼","자수","레오파드","보타이","스터드","고블랭","게리코튼","하네스","자수 패치","크로스","나사와 볼트"];
 const isSp = c => SP_OPTS.includes(c.o);
 /* 체크 대상: 추가옵션이 있는 옷(시트 반영) + 특수 옵션 옷(노트 전용). 예전 특수옵션 체크(sp)는 읽기만 하고 clo로 합쳐 씀 */
@@ -819,7 +824,7 @@ function missingShopSet(){
 function viewFac(){
   const types = ["전체", ...Object.keys(TYPE_COLOR)];
   const typeChips = types.map(t => { const g = DATA.fac.filter(f => t==="전체" || f.type===t); return [t, t, `${g.filter(facDone).length}/${g.length}`]; });
-  { const g = DATA.fac.filter(f => f.p40); typeChips.push(["우선개량", "우선개량", `${g.filter(facDone).length}/${g.length}`]); }
+  { const g = DATA.fac.filter(f => f.p40); typeChips.push(["우선개량", "우선개량", `40P ${g.filter(p40Done).length}/${g.length}`]); }
   let rows = DATA.fac.filter(f => S.facType==="전체" || (S.facType==="우선개량" ? f.p40 : f.type===S.facType));
   const stOf = f => facDone(f) ? "완료" : facPartial(f) ? "일부완료" : "미완료";
   if (facSts().length) rows = rows.filter(f => facSts().includes(stOf(f)));
@@ -856,7 +861,7 @@ function viewFac(){
         <div class="row ${d?"done":""} ${noStore(f)?"nostore":""}">
           <button data-tfac="${f.id}" aria-label="${esc(nm)} ${d?"미완료로":"전체 완료로"} 바꾸기">${ckFac(f)}</button>
           <button class="body" data-ofac="${f.id}" style="text-align:left">
-            <div class="t"><span class="n">${esc(nm)}</span>${noStore(f)?`<span class="tag nostore">아직 없는 매장</span>`:""}${typeTag(f.type)}${facPartial(f)?semTag("part","일부완료"):""}${fcTag(f)}${f.p40?`<span class="tag p40" title="40P로 포인트 2 업그레이드">40P</span>`:""}</div>
+            <div class="t"><span class="n">${esc(nm)}</span>${noStore(f)?`<span class="tag nostore">아직 없는 매장</span>`:""}${typeTag(f.type)}${facPartial(f)?semTag("part","일부완료"):""}${fcTag(f)}${f.p40?p40Tag(f):""}</div>
           </button>
           ${canPut ? `<button class="btn sm ghost" data-put="${f.id}|${esc(it)}">넣었어요</button>` : ""}
           ${opened && hybrid() ? `<button class="iconbtn act" data-sheet="fac|${f.id}" aria-label="${esc(nm)} 이름 수정">${ICON.pen}</button>` : ""}
@@ -1867,6 +1872,7 @@ function render(){
 
 /* ---------- events ---------- */
 document.addEventListener("click", e => {
+  const pk = e.target.closest("[data-p40ck]"); if (pk){ e.preventDefault(); toggleP40(+pk.dataset.p40ck); return; }
   const b = e.target.closest("button"); if (!b) return;
   if (b.id==="saveAll"){ saveAll(); return; }
   const d = b.dataset;
