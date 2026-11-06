@@ -25,4 +25,4 @@ for p in "${pairs[@]}"; do
     echo "받음  $SRC/$from → $to ($(ls "$to" | wc -l)개)"
   fi
 done
-(( push )) && echo "데이터 저장소에서 git add/commit/push 하세요."
+if (( push )); then echo "데이터 저장소에서 git add/commit/push 하세요."; fi
