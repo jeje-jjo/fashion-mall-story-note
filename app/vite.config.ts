@@ -1,5 +1,4 @@
 import { defineConfig, type Plugin } from "vite";
-import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -10,7 +9,7 @@ function mockTables(): Plugin {
     name: "mock-tables",
     apply: "serve",
     configureServer(server) {
-      server.middlewares.use("/__tables/", (req, res) => {
+      server.middlewares.use("/fashion-mall-story-note/__tables/", (req, res) => {
         const f = path.join(dir, path.basename(req.url ?? ""));
         if (!fs.existsSync(f)) { res.statusCode = 404; res.end(); return; }
         res.setHeader("Content-Type", "application/json");
@@ -22,5 +21,7 @@ function mockTables(): Plugin {
 
 export default defineConfig({
   base: "/fashion-mall-story-note/",
-  plugins: [react(), mockTables()],
+  plugins: [mockTables()],
+  define: { __BUILD__: JSON.stringify(Date.now().toString(36)) },
+  server: { fs: { allow: [".."] } },
 });

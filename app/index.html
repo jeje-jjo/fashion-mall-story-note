@@ -1302,6 +1302,16 @@ html body .cyl2{grid-template-columns:minmax(0,1fr) 100px}
 <div class="toast" id="toast" role="status"><span id="toastMsg"></span><button id="toastUndo">되돌리기</button></div>
 
 
+<style>
+/* 로그인·불러오기 화면과 출처 표기(새 노트에서 추가) */
+.gate{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:var(--bg);padding:24px}
+.gate[hidden]{display:none}
+.gate-in{max-width:360px;text-align:center;display:grid;gap:12px;justify-items:center}
+.gate h1{margin:0;font-size:22px}
+.gate-sub{margin:0;color:var(--fg3);font-size:13.5px}
+.srcnote{max-width:720px;margin:0 auto;padding:8px 16px calc(96px + env(safe-area-inset-bottom,0px));font-size:11.5px;color:var(--fg3);text-align:center}
+.srcnote a{color:inherit}
+</style>
 <div id="gate" class="gate"><div class="gate-in"><p class="eyebrow">패션몰스토리 노트</p><h1 id="gateMsg">불러오는 중…</h1><p id="gateSub" class="gate-sub"></p><button type="button" class="btn" id="gateLogin" hidden>구글로 로그인</button></div></div>
 <footer class="srcnote">출처: 기존 노트 기록, <a href="https://kairo.waterbeetles.dev/ko/fashion-mall-story/" target="_blank" rel="noreferrer">KairoHistory</a>(비공식 팬 위키) · 개인 참고용, 카이로소프트 공식 아님</footer>
 <script type="module" src="/src/main.ts"></script>

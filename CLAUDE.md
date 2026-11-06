@@ -18,7 +18,8 @@
 - GitHub CLI 로그인과 저장소 연결
 - Firebase 프로젝트, Firestore, Authentication의 Google 로그인 사용 설정(콘솔에서 사용자가 함)
 - Firebase CLI 로그인 계정은 hj920619@gmail.com(프로젝트 주인). 클라우드 세션에서는 `firebase login --no-localhost`로 로그인 주소를 띄우고 사용자에게 인증 코드를 받는다.
-- 구글 드라이브 커넥터는 hj920619@knou.ac.kr(학교 계정) 드라이브다. reference 파일 두 개가 여기 있다.
+- 구글 드라이브 커넥터는 **hj920619@gmail.com** 드라이브다(2026-11-06 학교 계정에서 바꿈). `claude` 폴더(id `1uQll2IZfAIaGc1T9yRLAMNle2_rm7ui3`)에 reference 파일 두 개와 예전 공략 대시보드가 있다.
+  - 읽기·쓰기 가능. 드라이브가 필요하면 이 폴더 안에 작업 폴더를 만들어 쓴다. 용량이 넉넉해서 보관할 자료를 둬도 된다.
 - Firebase 웹 앱 등록, 설정 값 연결, 승인 도메인, 보안 규칙(본인 uid) 배포까지 끝남(docs/firebase.md).
 
 ## 저장소 구조
