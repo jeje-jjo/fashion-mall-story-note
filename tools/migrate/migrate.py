@@ -9,7 +9,10 @@
 
 사용:
   python3 tools/migrate/migrate.py DUMP_DIR                 # 계획만 출력(쓰지 않음) → tools/migrate/out/plan.json
-  python3 tools/migrate/migrate.py DUMP_DIR --write         # Firestore에 쓰기(프록시가 인증을 넣어 줌)
+  python3 tools/migrate/migrate.py DUMP_DIR --write         # Firestore에 쓰기(프록시가 인증을 넣어 줌, 토큰 필요)
+  python3 tools/migrate/migrate.py DUMP_DIR --only runs,calc,meta --import OUT.json
+      # 앱의 "기존 노트에서 가져오기"용 파일(토큰 필요 없음). runs = 회차별(시설·의류 체크, 넣은 아이템, 추가옵션 메모,
+      #   코디 완료, 가진 재료), calc = 클리어 포인트·회차 연계, meta = 회차 정보
 """
 import json
 import pathlib
@@ -46,6 +49,14 @@ def fid(x):
 
 def transform(col, doc, d):
     """(컬렉션, 문서 id, 데이터) → (새 경로, 새 데이터). 바꿀 것 없으면 그대로."""
+    m = re.fullmatch(r"runs/(r\d+)/(fac|clo|misc|ui)", col)
+    if m:   # 회차별: 시설 f{노트id}·옷 c{노트id} → 사이트 번호
+        kind = m.group(2)
+        if kind == "fac" and re.fullmatch(r"f\d+", doc):
+            doc = f"f{fid(doc[1:])}"
+        elif kind == "clo" and re.fullmatch(r"c\d+", doc):
+            doc = f"c{cid(doc[1:])}"
+        return f"{col}/{doc}", d
     if col == "names" and doc == "all":
         d = dict(d)
         d["clo"] = {str(cid(k)): v for k, v in (d.get("clo") or {}).items()}
@@ -68,16 +79,25 @@ def transform(col, doc, d):
     return f"{col}/{doc}", d
 
 
-def load(dump):
+def load(dump, only=None):
     out = {}
-    for col in KEEP:
+    cols = list(KEEP)
+    rdir = dump / "runs"
+    if rdir.is_dir():   # runs/{rN}/{fac,clo,misc,ui}
+        for rd in sorted(rdir.iterdir()):
+            for sub in ("fac", "clo", "misc", "ui"):
+                if (rd / sub).is_dir():
+                    cols.append(f"runs/{rd.name}/{sub}")
+    if only:
+        cols = [c for c in cols if c.split("/")[0] in only]
+    for col in cols:
         for p in sorted((dump / col).glob("*.json")) if (dump / col).is_dir() else []:
             raw = json.load(open(p))
             data = raw["data"] if isinstance(raw, dict) and "data" in raw and "version" in raw else raw
             out[(col, p.stem)] = data
     # 최근 로그(정렬 조회로 받은 것) 합치기
     extra = dump / "log_recent"
-    if extra.is_dir():
+    if extra.is_dir() and (not only or "log" in only):
         for p in extra.glob("*.json"):
             raw = json.load(open(p))
             out[("log", p.stem)] = raw["data"] if isinstance(raw, dict) and "data" in raw and "version" in raw else raw
@@ -113,7 +133,11 @@ def commit(writes):
 def main(argv):
     dump = pathlib.Path(argv[0])
     write = "--write" in argv
-    src = load(dump)
+    only = None
+    if "--only" in argv:
+        only = set(argv[argv.index("--only") + 1].split(","))
+    imp = argv[argv.index("--import") + 1] if "--import" in argv else None
+    src = load(dump, only)
     plan = {}
     for (col, doc), d in src.items():
         if d is None:
@@ -129,6 +153,13 @@ def main(argv):
     for p in plan:
         cnt[p.split("/")[0]] = cnt.get(p.split("/")[0], 0) + 1
     print("옮길 문서:", sum(cnt.values()), cnt)
+    if imp:
+        import datetime
+        out = {"format": "fms-import", "version": 1, "made": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+               "note": "기존 노트 → 새 노트(번호는 사이트 번호로 바꿈)", "docs": plan}
+        pathlib.Path(imp).write_text(json.dumps(out, ensure_ascii=False))
+        print("가져오기 파일:", imp)
+        return
     if not write:
         print("계획만 만들었어요(쓰지 않음):", outdir / "plan.json")
         return

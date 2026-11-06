@@ -1786,10 +1786,59 @@ async function resetAll(){
   }catch(e){ showNotice("새 회차 시작 중 일부를 저장하지 못했어요. 다시 눌러 주세요."); }
 }
 
+/* ---------- 기존 노트에서 가져오기 (기록 탭 [관리]) ----------
+   Claude가 기존 노트 저장소를 읽어 만든 가져오기 파일(fms-import JSON)을 골라, 로그인한 본인 계정으로 저장소에 쓴다.
+   토큰 없이 아이패드에서도 된다(파일 앱 → 구글 드라이브). 경로는 정해진 것만 받고, 회차 정보(meta/round)는 마지막에 쓴다. */
+const IMP_OK = /^(runs\/r\d+\/(fac\/f\d+|clo\/c\d+|misc\/coord|ui\/(recipes|goals|now|mqcfg)|mannequins\/m\d)|calc\/(clear|carry)|meta\/(round|verify)|memo\/reset|names\/(all|people)|checks\/k\d+|coordfix\/k\d+|cbattle\/c\d+|battles\/b\d+|contest\/[\w-]+|chkscore\/k\d+|cyear\/[\w-]+|layslots\/s\d|ui\/(slots|chiporder|coordopen|layout|optcnt)|log\/[\w-]+)$/;
+const IMP_LABEL = {fac:"시설 체크", clo:"의류 체크·추가옵션", misc:"코디 완료", ui:"화면·가진 재료", calc:"클리어 포인트·회차 연계", meta:"회차 정보", memo:"메모", names:"이름", checks:"패션 체크 대상", coordfix:"코디 수정", cbattle:"추천 전투", battles:"전투 기록", contest:"콘테스트", chkscore:"패션 체크 점수", cyear:"출현 년도", layslots:"내 배치", log:"기록 로그", mannequins:"마네킹"};
+const impKind = p => { const a = p.split("/"); return a[0]==="runs" ? a[2] : a[0]; };
+function importCard(){
+  const m = S.imp || {};
+  const groups = {}; Object.keys(m.docs||{}).forEach(p => { const k = impKind(p); groups[k] = (groups[k]||0) + 1; });
+  const total = Object.keys(m.docs||{}).length;
+  return `<section class="card">
+    <div class="sec-h"><h2>기존 노트에서 가져오기</h2><span>${total ? `${total}건` : ""}</span></div>
+    <p style="margin:0;color:var(--fg2);font-size:14px">Claude가 만든 가져오기 파일(.json)을 고르면, 무엇을 넣을지 보여 준 뒤 이 계정으로 저장해요. 같은 칸은 파일 내용으로 바뀌어요.</p>
+    <label class="btn ghost" style="width:100%;margin-top:12px;justify-content:center;cursor:pointer">파일 고르기<input type="file" id="impFile" accept=".json,application/json" hidden></label>
+    ${m.err ? `<div class="err" style="margin-top:8px">${esc(m.err)}</div>` : ""}
+    ${total ? `<div class="cs-line"><small>${esc(m.name||"")}${m.made?` · 만든 때 ${esc(m.made)}`:""}${m.note?` · ${esc(m.note)}`:""}</small>${Object.entries(groups).map(([k,n]) => `<span class="tag plain">${esc(IMP_LABEL[k]||k)} ${n}</span>`).join("")}</div>
+      ${m.skip ? `<div class="hint" style="margin-top:6px">받지 않는 경로 ${m.skip}건은 뺐어요</div>` : ""}
+      ${m.done ? `<div class="hint" style="margin-top:8px;color:var(--green)">${m.done}건 저장했어요${m.reload?" · 회차가 바뀌어 곧 새로 고쳐져요":""}</div>`
+        : m.busy ? `<div class="hint" style="margin-top:8px">저장하는 중… ${m.prog||0}/${total}</div>`
+        : `<div class="ed-act" style="margin-top:10px"><button class="btn ghost" data-act="impclear">취소</button><button class="btn" data-act="impgo" style="flex:1">${total}건 가져오기</button></div>`}` : ""}
+  </section>`;
+}
+async function importRead(file){
+  S.imp = {err:""}; render();
+  try{
+    const j = JSON.parse(await file.text());
+    if (j?.format !== "fms-import" || !j.docs || typeof j.docs !== "object") throw new Error("가져오기 파일이 아니에요(format: fms-import)");
+    const docs = {}; let skip = 0;
+    for (const [p, d] of Object.entries(j.docs)) { if (IMP_OK.test(p) && d && typeof d === "object" && !Array.isArray(d)) docs[p] = d; else skip++; }
+    if (!Object.keys(docs).length) throw new Error("넣을 수 있는 내용이 없어요");
+    S.imp = {name:file.name, made:j.made||"", note:j.note||"", docs, skip};
+  }catch(e){ S.imp = {err: e.message || "파일을 읽지 못했어요"}; }
+  render();
+}
+async function importGo(){
+  const m = S.imp; if (!m?.docs || m.busy) return;
+  if (!db){ m.err = "저장소에 연결되지 않았어요"; render(); return; }
+  const list = Object.entries(m.docs).sort(([a],[b]) => (a==="meta/round") - (b==="meta/round"));
+  m.busy = true; m.prog = 0; render();
+  try{
+    for (const [p, d] of list){
+      if (p === "meta/round" && d.run && d.run !== RUN) m.reload = true;
+      await db.doc(p).set(d); m.prog++; if (m.prog % 20 === 0) render();
+    }
+    m.done = m.prog; m.busy = false; toast(`기존 노트 데이터 ${m.done}건을 가져왔어요`);
+    if (db.collection) db.collection("log").add({kind:"reset", name:"기존 노트에서 가져오기", from:"", to:`${m.done}건`, t:Date.now(), synced:true, by:"app"}).catch(()=>{});
+  }catch(e){ m.busy = false; m.err = `저장하다 멈췄어요(${m.prog}/${list.length}). 다시 누르면 처음부터 다시 써요.`; }
+  render();
+}
 function viewLog(){
   const pend = pendingList();
   const hist = S.logs.slice(0, S.logAll ? 500 : 30);
-  return `${renameCard()}${resetCard()}<section class="card">
+  return `${importCard()}${renameCard()}${resetCard()}<section class="card">
     <div class="sec-h"><h2>시트에 반영할 변경</h2><span>${pend.length}건</span></div>
     <p style="margin:0;color:var(--fg2);font-size:14px">여기 쌓인 변경은 아직 구글 시트에 들어가지 않았어요. 대화에서 "시트에 반영해줘"라고 하면 이 목록대로 넣어 드려요.</p>
     ${pend.length ? `<div class="flushlist" style="margin-top:12px">${pend.map(p => `<div class="log"><span class="ic">${ICON.up}</span><div class="body"><div class="t">${esc(p.kind==="rename"||p.kind==="person"||p.kind==="cloname"?p.from:p.name)}</div><div class="s">${kindLabel[p.kind]} · ${esc(valLabel(p,p.from))} → <b style="color:var(--fg)">${esc(valLabel(p,p.to))}</b></div></div><span class="s" style="font-size:12px;color:var(--fg3)">${fmtT(p.t)}</span></div>`).join("")}</div>
@@ -2324,6 +2373,8 @@ document.addEventListener("click", e => {
   if (d.mqmore){ S.mqMore = +d.mqmore; render(); return; }
   if (d.mqn){ S.mqCfg = {n:+d.mqn}; render(); if (db) writeSerial(`${RUN}/ui/mqcfg`, {n:+d.mqn, t:Date.now()}).catch(() => {}); return; }
   if (d.today){ todayGo(d.today); return; }
+  if (d.act==="impgo"){ importGo(); return; }
+  if (d.act==="impclear"){ S.imp = null; render(); return; }
   if (d.refk){ S.refKey = d.refk; S.refAll = false; render(); return; }
   if (d.act==="refall"){ S.refAll = true; render(); return; }
   if (d.goalsub){ S.goalSub = {"트로피":"tro","미션":"mis","랭크":"rank"}[d.goalsub]; render(); return; }
@@ -2529,6 +2580,7 @@ document.addEventListener("input", e => {
   S[id] = e.target.value; if (id==="homeQ") S.homeOpen = ""; clearTimeout(qT); qT = setTimeout(render, 150);
 });
 document.addEventListener("change", e => {
+  if (e.target.id==="impFile"){ const f = e.target.files?.[0]; if (f) importRead(f); e.target.value = ""; return; }
   if (/^bq-\d+$/.test(e.target.id)){ e.target.dispatchEvent(new Event("input",{bubbles:true})); return; } if (/^fa-(main|alt)-\d+$/.test(e.target.id)) return; if (e.target.tagName==="SELECT" && (["rnOld"].includes(e.target.id) || /^(ok|cf|cfp|bq)-\d+$/.test(e.target.id) || /^fa-(main|alt)-\d+$/.test(e.target.id)) && e.target.value !== ({rnOld:S.rnOld})[e.target.id] && !/^(ok|cf|cfp|bq|fa)-/.test(e.target.id)) e.target.dispatchEvent(new Event("input",{bubbles:true})); });
 document.addEventListener("submit", e => {
   if (e.target.id==="cyForm"){ e.preventDefault(); addYear(); return; }

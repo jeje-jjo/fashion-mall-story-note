@@ -74,7 +74,8 @@ tools/data_sync.sh          # → data/tables, data/pulled, data/site, tools/cra
    - 백업: 데이터 저장소 `legacy-backup/2026-11-06/` + Firestore `backup/legacy-2026-11-06/cols/*`
    - 스크립트 `tools/migrate/migrate.py DUMP_DIR [--write]`(옷·시설 번호 → 사이트 번호). 개수 대조 일치, 화면 엔진으로 읽기 확인
    - **제제가 기존 노트를 계속 쓰므로 완성 때 최신 저장으로 다시 받아 한 번 더 돌린다(같은 경로 덮어씀). 그때 runs/r7(회차별)도 같이 옮김.** 그 전에 새 노트에서 고친 회차 무관 기록은 덮어써질 수 있음
-   - Firestore 쓰기는 OAuth Playground(datastore 범위) 1시간 토큰을 network secret으로 넣어서 함
+   - Firestore 쓰기는 OAuth Playground(datastore 범위) 1시간 토큰을 network secret으로 넣어서 함(Claude가 직접 읽기·쓰기할 때만 필요, 앱 사용엔 불필요)
+   - **주말 마지막 이전(아이패드, 토큰 없이)**: ① Claude가 ArtifactData로 기존 노트 최신 `meta/round`·`runs/{현재 회차}/{fac,clo,misc,ui}`·`calc/*`를 받음 → ② `python3 tools/migrate/migrate.py DUMP --only runs,calc,meta --import fms-import-날짜.json` → ③ 구글 드라이브 `claude` 폴더에 올림(커넥터) → ④ 제제가 아이패드 새 노트 기록 탭 [관리] "기존 노트에서 가져오기"에서 파일 앱 → 드라이브로 고르고 가져오기(로그인 계정으로 저장, 회차 정보는 마지막에 써서 새로 고침)
 11. 맥·아이폰·아이패드에서 로그인·동기화 확인(제제)
 
 ## 데이터 메모
