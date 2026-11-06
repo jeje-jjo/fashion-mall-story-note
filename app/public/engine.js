@@ -192,6 +192,9 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   db.doc("ui/optcnt").onSnapshot(s => { S.optCnt = (s.exists && s.data().counts) || {}; render(); }, () => {});
   db.doc("meta/verify").onSnapshot(s => { S.verifyDone = (s.exists && s.data().done) || {}; render(); }, () => {});
   db.doc(`${RUN}/ui/recipes`).onSnapshot(s => { const d = (s.exists && s.data()) || {}; S.own = {pat:d.pat||[], mat:d.mat||[], opt:d.opt||[]}; render(); }, () => {});
+  db.collection(`${RUN}/mannequins`).onSnapshot(s => { S.mq = Object.fromEntries(s.docs.map(d => [+d.id.slice(1), d.data()])); render(); }, () => {});
+  db.doc(`${RUN}/ui/now`).onSnapshot(s => { S.now = (s.exists && s.data()) || null; render(); }, () => {});
+  db.doc(`${RUN}/ui/mqcfg`).onSnapshot(s => { S.mqCfg = (s.exists && s.data()) || null; render(); }, () => {});
   db.doc(`${RUN}/misc/coord`).onSnapshot(s => { S.coordDone = (s.exists && s.data().list) || []; render(); }, fail);
   db.collection("coordfix").onSnapshot(s => { S.cfix = Object.fromEntries(s.docs.map(d => [+d.id.slice(1), d.data()])); render(); }, fail);
   db.collection("chkscore").onSnapshot(s => { S.chkscore = Object.fromEntries(s.docs.map(d => [+d.id.slice(1), d.data()])); render(); }, fail);
@@ -1156,9 +1159,9 @@ function viewCoordReq(){
 
 /* ---------- 코디 탭: [손님 요청 | 코디 세트] ---------- */
 function viewCoord(){
-  const subs = [["req","손님 요청"],["set","코디 세트"]];
+  const subs = [["req","손님 요청"],["set","코디 세트"],["mq","마네킹"]];
   return `<section class="card subnav"><div class="seg wide">${subs.map(([k,l]) => `<button class="${S.coordSub===k?"on":""}" data-csub="${k}" aria-pressed="${S.coordSub===k}">${l}</button>`).join("")}</div></section>
-  ${S.coordSub==="set" ? viewSets() : viewCoordReq()}`;
+  ${S.coordSub==="set" ? viewSets() : S.coordSub==="mq" ? viewMannequin() : viewCoordReq()}`;
 }
 /* 코디 세트(사이트 207개 중 2파츠 이상 유효 세트): 구성 옷을 다 만들면 완성.
    세트 상태 = 노트에 있는 구성 옷의 완료 체크로 계산(따로 저장하지 않음). 노트에 없는 옷은 회색 표시, 계산에서는 남은 옷으로 셈 */
@@ -1206,6 +1209,151 @@ function viewSets(){
   </section>
   ${keys.length ? keys.map(k => `<section class="card"><div class="fhead rowhead"><span class="sublbl" style="margin:0">${esc(k)}</span><span class="hint">${groups[k].filter(x=>!x.left).length}/${groups[k].length}</span></div>${groups[k].map(card).join("")}</section>`).join("")
     : `<section class="card"><div class="empty">${q?"검색 결과가 없어요":"조건에 맞는 세트가 없어요"}</div></section>`}`;
+}
+
+/* ---------- 마네킹 플래너 (코디 탭 [마네킹]) ----------
+   완료한 옷으로 마네킹 코디를 추천한다. 상의+하의 또는 셋업에 아우터·액세서리까지 넣는다(제제 결정).
+   구매 확률은 사이트 빌더의 게임 식(AppData.MannequinPercent: 상의·셋업+하의만 봄)을 쓰고,
+   손님이 좋아하는 색(+10/벌)은 손님마다 달라 뺀다. 아우터·액세서리는 확률 식에 없고 세트·장르·계절에만 쓴다.
+   정렬: 반대 계절 옷 제외 → 마네킹 장르 옷 수 → 세트 완성 → 확률 → 장르 스타일 점수 → 인기+품질(사이트 값).
+   저장: 지금 상태 runs/rN/ui/now {season, trend} · 마네킹 runs/rN/mannequins/m1..m5 {genre, season, outfit, t} · 칸 수 runs/rN/ui/mqcfg {n} */
+const MQ_SEASONS = ["봄·가을","여름","겨울"];
+const MQ_SLOTS = [["t","상의"],["b","하의"],["o","아우터"],["a","액세서리"]];
+const MQ_KIND = {"상의":"t","셋업":"t","하의":"b","아우터":"o","액세서리":"a"};
+const SUB_GENRE = (() => { const m = {}; DATA.clo.forEach(c => { if (c.site?.sub) m[c.site.sub.replace(/\s/g,"")] = c.site.genre; }); return m; })();
+const MQ_COLORS = (() => { const n = {}; DATA.clo.forEach(c => (c.site?.cols||[]).forEach(x => { if (x !== "다색") n[x] = (n[x]||0) + 1; })); return Object.keys(n).sort((a,b) => n[b]-n[a]); })();
+const MQ_PAIR = (() => { const m = new Map(); const put = (a, b, v) => { m.set(a+":"+b, v); m.set(b+":"+a, v); };
+  DATA.clo.forEach(c => { (c.site?.goodIds||[]).forEach(x => put(c.id, x, 1)); (c.site?.badIds||[]).forEach(x => put(c.id, x, -1)); }); return m; })();
+const mqPair = (a, b) => MQ_PAIR.get(a.id+":"+b.id) ?? 0;
+const mqCut = (t, b) => !MQ_PAIR.has(t.id+":"+b.id) && (b.site?.pairCut || t.site?.pairCut);
+const mqNow = () => ({season:"봄·가을", trend:"", ...(S.now||{})});
+const mqSeasonOf = m => m.season || mqNow().season;
+/* 옷 계절과 목표 계절의 궁합(AppData.GetMatchSeason): 봄·가을 옷은 봄·가을에 +1, 여름·겨울 옷은 제 계절 +1 · 반대 계절 −1 */
+const mqMatch = (c, now) => { const se = c.s; if (!MQ_SEASONS.includes(se)) return 0;
+  if (se==="봄·가을") return now==="봄·가을" ? 1 : 0;
+  if (se===now) return 1; return (now==="봄·가을" || now===se) ? 0 : -1; };
+const mqStyle = (c, g) => Object.entries(c.site?.styles||{}).reduce((a,[k,v]) => a + (SUB_GENRE[k.replace(/\s/g,"")]===g ? v : 0), 0);
+const mqPop = c => (c.site?.pop||0) + (c.site?.q||0);
+const MQ_SETS = (DATA.sets||[]).filter(s => s.valid && (s.clothes||[]).every(id => CLO_BY_ID.get(id)));
+const MQ_SETS_OF = (() => { const m = new Map(); MQ_SETS.forEach(s => s.clothes.forEach(id => m.set(id, [...(m.get(id)||[]), s]))); return m; })();
+function mqEval(o, m){
+  const now = mqSeasonOf(m), trend = mqNow().trend, g = m.genre;
+  const pcs = MQ_SLOTS.map(([k]) => o[k]).filter(Boolean);
+  const top = o.t, bot = o.b, base = [top, bot].filter(Boolean);
+  const ms = base.reduce((a,c) => a + mqMatch(c, now), 0), hasSe = base.some(c => MQ_SEASONS.includes(c.s));
+  const setup = top?.site?.kind==="셋업";
+  const pair = setup ? 1 : (top && bot ? mqPair(top, bot) : 0);
+  const trendN = trend ? base.reduce((a,c) => a + (c.site?.cols||[]).filter(x => x===trend).length, 0) : 0;
+  const parts = [["계절", !hasSe ? 0 : ms>0 ? 30 : ms<0 ? -10 : 10], ["유행색", 20*trendN], ["셋업", setup ? 15 : 0], ["궁합", pair>=1 ? 10 : pair<0 ? -10 : 0]];
+  const pct = Math.max(5, Math.min(95, parts.reduce((a,p) => a + p[1], 0)));
+  const ids = new Set(pcs.map(c => c.id));
+  const sets = [...new Set(pcs.flatMap(c => MQ_SETS_OF.get(c.id) || []))].filter(s => s.clothes.every(id => ids.has(id)));
+  return { o, pcs, pct, parts, pair, cut: !setup && top && bot && mqCut(top, bot), setup, trendN, sets,
+    gN: pcs.filter(c => c.site?.genre===g).length, style: pcs.reduce((a,c) => a + mqStyle(c, g), 0), pop: pcs.reduce((a,c) => a + mqPop(c), 0),
+    bad: pcs.some(c => mqMatch(c, now) < 0), key: MQ_SLOTS.map(([k]) => o[k]?.id||"").join("-") };
+}
+const mqCmp = (a, b) => b.gN - a.gN || b.sets.length - a.sets.length || b.pct - a.pct || b.style - a.style || b.pop - a.pop;
+let _mqCache = {};
+function mqRank(m){
+  const doneKey = DATA.clo.filter(cloDone).map(c => c.id).join(",");
+  const ck = [m.genre, mqSeasonOf(m), mqNow().trend, doneKey].join("|");
+  if (_mqCache[ck]) return _mqCache[ck];
+  const now = mqSeasonOf(m), g = m.genre;
+  const ok = c => cloDone(c) && mqMatch(c, now) >= 0;
+  const by = {t:[], b:[], o:[], a:[]};
+  DATA.clo.forEach(c => { const k = MQ_KIND[c.site?.kind]; if (k && ok(c)) by[k].push(c); });
+  /* 바탕(상의+하의 / 셋업)을 먼저 고르고, 아우터·액세서리는 바탕마다 가장 좋은 것으로 채운다 */
+  const bases = [];
+  by.t.forEach(t => { if (t.site.kind==="셋업") bases.push({t}); else by.b.forEach(b => bases.push({t, b})); });
+  const quick = o => mqEval(o, m);
+  /* 바탕 2만여 개는 가벼운 점수(같은 정렬 순서를 숫자 하나로)로 먼저 120개만 남긴다 */
+  const trend = mqNow().trend;
+  const pre = c => ({g: c.site?.genre===g ? 1 : 0, se: MQ_SEASONS.includes(c.s), ms: mqMatch(c, now), tr: trend ? (c.site?.cols||[]).filter(x => x===trend).length : 0, st: mqStyle(c, g), pop: mqPop(c)});
+  const P = new Map(); [...by.t, ...by.b].forEach(c => P.set(c.id, pre(c)));
+  const score = o => { const a = P.get(o.t.id), b = o.b ? P.get(o.b.id) : null, setup = !o.b;
+    const ms = a.ms + (b ? b.ms : 0), hasSe = a.se || (b && b.se);
+    const pair = setup ? 1 : mqPair(o.t, o.b);
+    const pct = Math.max(5, Math.min(95, (!hasSe ? 0 : ms>0 ? 30 : ms<0 ? -10 : 10) + 20*(a.tr + (b ? b.tr : 0)) + (setup ? 15 : 0) + (pair>=1 ? 10 : pair<0 ? -10 : 0)));
+    const set2 = b && (MQ_SETS_OF.get(o.t.id)||[]).some(s => s.clothes.length===2 && s.clothes.includes(o.b.id)) ? 1 : 0;
+    return (a.g + (b ? b.g : 0))*1e12 + set2*1e10 + pct*1e7 + (a.st + (b ? b.st : 0))*1e4 + a.pop + (b ? b.pop : 0); };
+  const top = bases.map(o => [score(o), o]).sort((x, y) => y[0] - x[0]).slice(0, 120).map(x => x[1]);
+  /* 구성 옷이 다 완료된 세트는 그 조합을 바탕으로 넣는다(빠진 칸은 채움) */
+  MQ_SETS.forEach(s => { const o = {}; let fine = true;
+    s.clothes.forEach(id => { const c = CLO_BY_ID.get(id), k = MQ_KIND[c.site?.kind]; if (!k || !ok(c) || o[k]) fine = false; else o[k] = c; });
+    if (!fine) return;
+    if (o.t?.site.kind==="셋업") delete o.b;
+    if (!o.t && o.b) { const best = by.t.filter(t => t.site.kind!=="셋업").map(t => quick({...o, t})).sort(mqCmp)[0]; if (best) o.t = best.o.t; }
+    if (o.t && o.t.site.kind!=="셋업" && !o.b) { const best = by.b.map(b => quick({...o, b})).sort(mqCmp)[0]; if (best) o.b = best.o.b; }
+    if (o.t) top.push(o); });
+  /* 아우터·액세서리 후보: 장르·스타일·인기로 앞선 12벌 + 바탕 옷과 같은 세트에 든 옷 */
+  const indiv = c => (c.site?.genre===g ? 1e8 : 0) + mqStyle(c, g)*1e4 + mqPop(c);
+  const head = {o: [...by.o].sort((x, y) => indiv(y) - indiv(x)).slice(0, 12), a: [...by.a].sort((x, y) => indiv(y) - indiv(x)).slice(0, 12)};
+  const okSet = {o: new Set(by.o.map(c => c.id)), a: new Set(by.a.map(c => c.id))};
+  const cands = (o, k) => { const ex = []; MQ_SLOTS.forEach(([j]) => { if (o[j]) (MQ_SETS_OF.get(o[j].id)||[]).forEach(st => st.clothes.forEach(id => { if (okSet[k].has(id)) ex.push(CLO_BY_ID.get(id)); })); });
+    return [...new Set([...head[k], ...ex])]; };
+  const fill = (o, k) => { if (o[k]) return o; const best = cands(o, k).map(c => quick({...o, [k]:c})).sort(mqCmp)[0]; return best ? best.o : o; };
+  const seen = new Set(), out = [];
+  top.map(o => fill(fill(o, "o"), "a")).map(quick).sort(mqCmp).forEach(x => { if (!seen.has(x.key)){ seen.add(x.key); out.push(x); } });
+  if (Object.keys(_mqCache).length > 20) _mqCache = {};
+  return (_mqCache[ck] = out);
+}
+const mqN = () => Math.max(1, Math.min(5, +(S.mqCfg?.n) || 5));
+const mqOf = i => ({genre: LAY_G[i % LAY_G.length], season: "", outfit: null, ...(S.mq?.[i+1]||{})});
+const mqOutfit = m => { const o = {}; if (!m.outfit) return null; for (const [k] of MQ_SLOTS) { const id = m.outfit[k]; if (id != null){ const c = CLO_BY_ID.get(id); if (c) o[k] = c; } } return o; };
+const mqUsedElse = i => { const s = new Set(); for (let j = 0; j < mqN(); j++) if (j !== i) Object.values(mqOf(j).outfit||{}).forEach(id => s.add(id)); return s; };
+function mqSave(i, patch){ const cur = mqOf(i), next = {...cur, ...patch, t:Date.now()}; S.mq = {...(S.mq||{}), [i+1]: next}; render();
+  if (db) writeSerial(`${RUN}/mannequins/m${i+1}`, next).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); }
+function mqNowSave(patch){ S.now = {...mqNow(), ...patch, t:Date.now()}; render();
+  if (db) writeSerial(`${RUN}/ui/now`, S.now).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); }
+function mqTags(x, m){
+  const now = mqSeasonOf(m), t = [];
+  const sv = x.parts[0][1]; t.push(`<span class="tag ${sv>=30?"mq-ok":sv<0?"mq-ng":""}" title="상의·하의 기준">상하 계절 ${sv>=30?"✓":sv<0?"✕":"보통"}</span>`);
+  if (x.setup) t.push(`<span class="tag mq-ok">셋업</span>`);
+  else if (x.o.t && x.o.b) t.push(`<span class="tag ${x.pair>0?"mq-ok":x.pair<0?"mq-ng":""}" ${x.cut?`title="사이트 궁합 목록이 잘려 있어 모를 수 있어요"`:""}>궁합 ${x.pair>0?"+1":x.pair<0?"−1":x.cut?"?":"0"}</span>`);
+  if (x.trendN) t.push(`<span class="tag mq-ok">유행색 ${x.trendN}</span>`);
+  x.sets.forEach(s => t.push(semTag("done", `세트 ${s.id} 완성`)));
+  t.push(`<span class="tag">${esc(layGName(m.genre))} ${x.gN}/${x.pcs.length}벌</span>`);
+  if (x.pcs.some(c => mqMatch(c, now) < 0)) t.push(`<span class="tag mq-ng">반대 계절 옷</span>`);
+  return t.join("");
+}
+const mqPcs = (x, used) => MQ_SLOTS.map(([k,l]) => x.o[k] ? `<span class="mq-pc ${used?.has(x.o[k].id)?"dim":""}"><small>${x.o[k].site?.kind==="셋업"?"셋업":l}</small>${esc(cloName(x.o[k]))}</span>` : "").join("");
+function mqCard(i){
+  const m = mqOf(i), now = mqSeasonOf(m), used = mqUsedElse(i);
+  const saved = mqOutfit(m), sx = saved && saved.t ? mqEval(saved, m) : null;
+  const notDone = saved ? Object.values(saved).filter(c => !cloDone(c)) : [];
+  const open = S.mqOpen === i || !sx;
+  const list = open ? mqRank(m).slice(0, S.mqMore===i ? 10 : 3) : [];
+  const gChips = LAY_G.map(g => `<button class="chip sm ${m.genre===g?"on":""}" data-mqg="${i}|${g}" aria-pressed="${m.genre===g}">${esc(layGName(g))}</button>`).join("");
+  const sChips = [["", `지금(${mqNow().season})`], ...MQ_SEASONS.map(s => [s, s])].map(([v,l]) => `<button class="chip sm ${(m.season||"")===v?"on":""}" data-mqs="${i}|${v}" aria-pressed="${(m.season||"")===v}">${esc(l)}</button>`).join("");
+  return `<div class="fccard mqcard">
+    <div class="fc-h"><b class="fc-n">마네킹 ${i+1}</b>${catTagG(m.genre)}<span class="tag">${esc(now)}</span>${sx ? `<span class="fc-c">${sx.pct}%</span>` : ""}</div>
+    <div class="chips mq-chips">${gChips}</div><div class="chips mq-chips">${sChips}</div>
+    ${sx ? `<div class="mq-saved"><div class="sublbl" style="margin:0 0 6px">세운 코디</div><div class="mq-pcs">${mqPcs(sx)}</div><div class="mq-tags">${mqTags(sx, m)}</div>
+      ${sx.bad ? `<div class="mq-warn">${ICON.warn}지금 계절(${esc(now)})과 반대인 옷이 있어요. 바꿔 주세요.</div>` : ""}
+      ${notDone.length ? `<div class="mq-warn">${ICON.warn}완료 해제된 옷: ${notDone.map(c => esc(cloName(c))).join(", ")}</div>` : ""}
+      <div class="mq-act"><button class="chip sm" data-mqopen="${i}">${open?"추천 접기":"다른 코디 보기"}</button><button class="chip sm" data-mqclear="${i}">내리기</button></div></div>` : ""}
+    ${open ? (list.length ? `<div class="mq-list">${list.map((x, r) => `<div class="mq-row ${sx && x.key===sx.key?"on":""}"><div class="mq-rk">${r+1}</div><div class="mq-body"><div class="mq-pcs">${mqPcs(x, used)}</div><div class="mq-tags"><span class="tag mq-pct">${x.pct}%</span>${mqTags(x, m)}</div></div>
+        <button class="btn sm ${sx && x.key===sx.key?"ghost":""}" data-mqset="${i}|${x.key}">${sx && x.key===sx.key?"세움":"이 코디로 세움"}</button></div>`).join("")}</div>
+        ${S.mqMore!==i ? `<button class="linkbtn" data-mqmore="${i}">더 보기</button>` : ""}`
+      : `<div class="empty">이 계절에 쓸 수 있는 완료한 옷 조합이 없어요</div>`) : ""}
+  </div>`;
+}
+const catTagG = g => `<span class="tag cat" style="--c:${TYPE_COLOR[g]||"#6B7280"}">${esc(layGName(g))}</span>`;
+function viewMannequin(){
+  const n = mqNow(), cnt = mqN();
+  const doneN = DATA.clo.filter(c => cloDone(c) && MQ_KIND[c.site?.kind]).length;
+  return `<section class="card">
+    <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">지금 상태</span><span class="hint">마네킹 추천에 같이 써요 · 회차별 저장</span></span></div>
+    <div class="sublbl" style="margin:6px 0">계절 <span class="hint">월 → 계절 자동은 게임에서 확인한 뒤에 넣어요</span></div>
+    <div class="chips">${MQ_SEASONS.map(s => `<button class="chip ${n.season===s?"on":""}" data-nows="${s}" aria-pressed="${n.season===s}">${s}</button>`).join("")}</div>
+    <div class="sublbl" style="margin:10px 0 6px">유행색</div>
+    <div class="chips">${[["","없음/모름"], ...MQ_COLORS.map(c => [c,c])].map(([v,l]) => `<button class="chip sm ${n.trend===v?"on":""}" data-nowt="${esc(v)}" aria-pressed="${n.trend===v}">${esc(l)}</button>`).join("")}</div>
+    <div class="sublbl" style="margin:10px 0 6px">마네킹 수</div>
+    ${seg(["1","2","3","4","5"], String(cnt), "mqn")}
+    <div class="hint" style="margin-top:10px">완료한 옷 ${doneN}벌로 추천해요. 상의+하의(또는 셋업)에 아우터·액세서리까지 넣어요.
+      확률은 사이트 빌더의 게임 식(계절·유행색·셋업·상하 궁합, 상의·하의만 계산)이고 손님이 좋아하는 색은 빠져 있어요. 다른 마네킹에 세운 옷은 흐리게 보여요. 출처: KairoHistory 코디 빌더</div>
+  </section>
+  <section class="card">${Array.from({length: cnt}, (_, i) => mqCard(i)).join("")}</section>`;
 }
 
 /* ---------- 다음에 만들 옷 (의류 탭 맨 위) ----------
@@ -1979,6 +2127,16 @@ document.addEventListener("click", e => {
   if (d.setg){ S.setG = d.setg; remember(); render(); return; }
   if (d.setpill){ S.setOpen = S.setOpen===d.setpill ? null : d.setpill; render(); return; }
   if (d.setdone){ toggleClo(+d.setdone); return; }
+  if (d.mqg){ const [i, g] = d.mqg.split("|"); mqSave(+i, {genre:g}); return; }
+  if (d.mqs !== undefined){ const [i, v] = d.mqs.split("|"); mqSave(+i, {season:v}); return; }
+  if (d.mqset){ const [i, key] = d.mqset.split("|"); const ids = key.split("-"); const outfit = {};
+    MQ_SLOTS.forEach(([k], j) => { if (ids[j]) outfit[k] = +ids[j]; }); mqSave(+i, {outfit}); S.mqOpen = null; toast(`마네킹 ${+i+1}에 세웠어요`); return; }
+  if (d.mqclear){ mqSave(+d.mqclear, {outfit:null}); return; }
+  if (d.mqopen){ S.mqOpen = S.mqOpen===+d.mqopen ? null : +d.mqopen; render(); return; }
+  if (d.mqmore){ S.mqMore = +d.mqmore; render(); return; }
+  if (d.mqn){ S.mqCfg = {n:+d.mqn}; render(); if (db) writeSerial(`${RUN}/ui/mqcfg`, {n:+d.mqn, t:Date.now()}).catch(() => {}); return; }
+  if (d.nows){ mqNowSave({season:d.nows}); return; }
+  if (d.nowt !== undefined){ mqNowSave({trend:d.nowt}); return; }
   if (d.rsub){ S.recSub = d.rsub; S.confirmSync=false; remember(); render(); return; }
   if (d.hgo){ homeGo(d.hgo); return; }
   if (d.hopen !== undefined){ S.homeOpen = S.homeOpen===d.hopen ? "" : d.hopen; render(); return; }

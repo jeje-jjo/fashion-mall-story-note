@@ -25,6 +25,15 @@ export function buildData(t: Tables) {
   const L: any = structuredClone(legacy);
 
   // ---------------- 옷
+  // 상하 궁합: 사이트는 하의 쪽에만 목록이 있고 8개까지만 보인다(+n은 잘림). 이름 → 사이트 번호로 바꿔 둔다.
+  const idBySite = new Map<string, number>(t.clothes.map((r) => [r.siteName, r.id]));
+  const pairIds = (s: unknown) => String(s ?? "").replace(/\s*\+\d+\s*$/, "").split(",")
+    .map((x) => idBySite.get(x.trim())).filter((x): x is number => x != null);
+  const cut = (s: unknown) => /\+\d+\s*$/.test(String(s ?? ""));
+  // 색 표기 흔들림(검은·하얀 등)은 계산용 cols에서만 맞춘다. 화면 표기(col)는 그대로.
+  const COL_FIX: Record<string, string> = { "검은": "검정", "하얀": "흰색", "파란": "파랑", "노란": "노랑", "노란색": "노랑", "갈": "갈색" };
+  const cols = (s: unknown) => String(s ?? "").split("·").map((x) => x.trim()).filter(Boolean).map((x) => COL_FIX[x] ?? x);
+
   const cloByLegacy = new Map<number, Row>(t.clothes.filter((r) => r.legacyId != null).map((r) => [r.legacyId, r]));
   const cloMap = new Map<number, number>();
   L.clo = L.clo.map((c: any) => {
@@ -40,10 +49,14 @@ export function buildData(t: Tables) {
         q: r.siteQuality, pop: r.sitePop, price: r.sitePrice, stock: r.siteStock, tier: r.tier,
         cust: r.custType, custEx: r.custExamples, styles: r.styleScores, sets: r.sets ?? [],
         acquire: r.acquire, good: r.goodWith, bad: r.badWith, tags: r.siteTags,
+        goodIds: pairIds(r.goodWith), badIds: pairIds(r.badWith), pairCut: cut(r.goodWith) || cut(r.badWith),
+        cols: cols(r.color ?? c.col),
       },
     };
   });
   const cid = (id: number) => cloMap.get(id) ?? id;
+
+  for (const c of L.clo) if (c.s === "봄&가을") c.s = "봄·가을";   // 표기 통일
 
   // 기록한 품질·매력(2026-10-30 영상) → 사이트 번호
   if (L.gs?.items) L.gs.items = L.gs.items.map(([id, q, ch]: number[]) => [cid(id), q, ch]);
