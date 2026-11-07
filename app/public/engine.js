@@ -1294,7 +1294,7 @@ function viewCoordReq(){
     <div class="chips cfoldchips cochips">${all.filter(n => !S.coordHideDone || !cdone(n) || S.coordOpen.includes(n)).map(n => `<button class="chip ${S.coordOpen.includes(n)?"on":""} ${cdone(n)?"done":""}" data-coordp="${esc(n)}" aria-pressed="${S.coordOpen.includes(n)}">${cdone(n)?ICON.ok:""}${esc(n)}</button>`).join("") || `<span class="hint">검색 결과가 없어요</span>`}</div>
     <div class="tools toolsgap"><input class="search" id="coordQ" placeholder="인물, 요청, 옷 이름 검색" value="${esc(q)}" aria-label="코디 검색"></div>
   </section>
-  ${shownCards.length ? shownCards.map(card).join("") : `<section class="card"><div class="empty">${q?"검색 결과가 없어요":"위에서 손님을 누르면 요청이 나와요"}</div></section>`}`;
+  ${shownCards.length ? `<div class="cogrid">${shownCards.map(card).join("")}</div>` : `<section class="card"><div class="empty">${q?"검색 결과가 없어요":"위에서 손님을 누르면 요청이 나와요"}</div></section>`}`;
 }
 
 /* ---------- 코디 탭: [손님 요청 | 코디 세트] ---------- */
@@ -2278,17 +2278,17 @@ function viewGoals(){
     <div class="hint" style="margin-top:8px">회차마다 따로 체크해요(이전 회차 체크는 그대로 남아요) · 출처: KairoHistory 진행</div></section>`;
   if (sub === "mis"){
     const gs = misGroups();
-    return head + `<section class="card">${Object.entries(gs).map(([k, list]) => { const n = misNext(list), d = list.filter(m => G.mis[m.row]).length;
+    return head + `<section class="card"><div class="cardgrid">${Object.entries(gs).map(([k, list]) => { const n = misNext(list), d = list.filter(m => G.mis[m.row]).length;
       return `<div class="fccard"><div class="fc-h"><b class="fc-n">${esc(k)}</b><span class="fc-c">${d}/${list.length}</span></div>
         ${n ? `<div class="cs-line" style="margin-top:6px"><small>다음</small><b>${esc(n.c2)}</b>${n.c3?`<span class="tag plain">보상 ${esc(n.c3)}</span>`:""}</div>` : `<div class="cs-line">${semTag("done","모두 달성")}</div>`}
-        <div class="pills" style="margin-top:8px">${list.map(m => `<button type="button" class="pill ${G.mis[m.row]?"must":""}" data-gmis="${m.row}" aria-pressed="${!!G.mis[m.row]}" title="${esc(m.c2)} · ${esc(m.c3||"")}">${G.mis[m.row]?"✓ ":""}${esc(m.c1)}단계</button>`).join("")}</div></div>`; }).join("")}
+        <div class="pills" style="margin-top:8px">${list.map(m => `<button type="button" class="pill ${G.mis[m.row]?"must":""}" data-gmis="${m.row}" aria-pressed="${!!G.mis[m.row]}" title="${esc(m.c2)} · ${esc(m.c3||"")}">${G.mis[m.row]?"✓ ":""}${esc(m.c1)}단계</button>`).join("")}</div></div>`; }).join("")}</div>
       <div class="hint" style="margin-top:8px">단계를 누르면 그 단계까지 한 번에 체크돼요. 체크된 단계를 다시 누르면 그 단계부터 해제돼요.</div></section>`;
   }
   if (sub === "rank"){
     const cur = +G.rank || 0;
     return head + `<section class="card"><div class="sublbl" style="margin:0 0 6px">지금 랭크</div>
       <div class="chips">${GOAL_R.map(r => `<button class="chip sm ${cur===+r.c0?"on":""}" data-grank="${esc(r.c0)}" aria-pressed="${cur===+r.c0}">${esc(r.c0)}</button>`).join("")}</div>
-      <div class="list" style="margin-top:10px">${GOAL_R.map(r => { const n = +r.c0, st = n <= cur ? "done" : n === cur + 1 ? "next" : "";
+      <div class="cardgrid" style="margin-top:10px">${GOAL_R.map(r => { const n = +r.c0, st = n <= cur ? "done" : n === cur + 1 ? "next" : "";
         return `<div class="fccard ${st==="done"?"cdone":""}"><div class="fc-h"><b class="fc-n">랭크 ${esc(r.c0)}</b>${st==="done"?semTag("done","달성"):st==="next"?semTag("part","다음"):""}</div>
           ${r.c1 && r.c1!=="—" ? `<div class="cs-line"><small>조건</small>${r.c1.split(",").map(x => `<span class="tag plain">${esc(x.trim())}</span>`).join("")}</div>` : ""}
           ${r.c2 ? `<div class="cs-line"><small>랭크업 시</small>${esc(r.c2.replace(/\s*\/\s*/g, " · "))}</div>` : ""}</div>`; }).join("")}</div>

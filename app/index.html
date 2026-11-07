@@ -1513,6 +1513,17 @@ html.sheet-open .fab{display:none}
   :root[data-design="hybrid"] .csite.btsite > .cs-line{margin:0}
   :root[data-design="hybrid"] .csite.btsite > .cs-line:first-child,:root[data-design="hybrid"] .csite.btsite > .cs-facts,:root[data-design="hybrid"] .csite.btsite > .cs-line:has(+ .cs-facts),:root[data-design="hybrid"] .csite.btsite > .hint{grid-column:1/-1}
 }
+
+/* 코디 손님 요청(2026-11-07): 연 손님마다 흰 상자, 넓은 화면은 2열. 요청은 줄로 나눔 */
+:root[data-design="hybrid"] .cogrid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+:root[data-design="hybrid"] .cogrid > .cocard{margin:0;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 16px 6px;box-shadow:0 1px 2px rgba(60,30,40,.03)}
+:root[data-design="hybrid"] .cocard .fc-h{padding-bottom:8px;border-bottom:1px solid var(--line)}
+:root[data-design="hybrid"] .cocard .fc-n{font-size:16px}
+:root[data-design="hybrid"] .cocard .coord.sub{padding:10px 0;border-top:1px solid var(--line)}
+:root[data-design="hybrid"] .cocard .fc-h + .coord.sub{border-top:0}
+:root[data-design="hybrid"] .cocard .coord.sub .pills{margin-top:6px}
+:root[data-design="hybrid"] .cocard.cdone{opacity:.7}
+@media (min-width:740px){:root[data-design="hybrid"] .cogrid{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}}
 </style>
 <script type="module" src="/src/main.ts"></script>
 </body>
