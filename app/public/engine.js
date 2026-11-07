@@ -1078,7 +1078,6 @@ function cloSiteBlock(c, extra = ""){
     ${extra}
     <div class="cs-line"><small>종류</small>${esc([st.kind, st.genre && layGName(st.genre), st.sub].filter(Boolean).join(" · "))}${st.cust?` · 손님 ${esc(st.cust)}`:""}</div>
     ${styles ? `<div class="cs-line"><small>스타일 점수</small>${styles}</div>` : ""}
-    ${sets ? `<div class="cs-line"><small>코디 세트</small>${sets}</div>` : ""}
     ${good.length ? `<div class="cs-line"><small>잘 어울림</small>${pairList(good)}</div>` : ""}
     ${bad.length ? `<div class="cs-line"><small>안 어울림</small>${pairList(bad)}</div>` : ""}
     ${g ? `<button class="linkbtn" data-clorec="${c.id}" aria-expanded="${open}">${open?"기록 접기":"기록 보기"}</button>${open?`<div class="cs-line"><small>내 기록</small>품질 <b>${nf(g[1])}</b> · 매력 <b>${nf(g[2])}</b> <span class="hint">2026-10-30 게임 화면</span></div>`:""}` : ""}
@@ -1102,8 +1101,8 @@ function optSources(o){
 }
 function cloNeedBlock(c){
   const nm = new Set([c.n, cloName(c)]);
-  const sets = (c.site?.sets||[]).map(id => (DATA.sets||[]).find(x => x.id===id)).filter(Boolean).map(setInfo).filter(i => i.left > 0).sort((a,b) => a.left - b.left);
-  const pills = sets.slice(0, 4).map(i => `<span class="pill ${i.left===1?"need":"must"}">세트 ${i.s.id} ${i.left===1?"1벌 남음":`${i.done}/${i.total}`}</span>`);
+  const sets = (c.site?.sets||[]).map(id => (DATA.sets||[]).find(x => x.id===id)).filter(Boolean).map(setInfo).sort((a,b) => (a.left||99) - (b.left||99));
+  const pills = sets.slice(0, 6).map(i => `<span class="pill ${i.left===1?"need":i.left===0?"":"must"}">세트 ${i.s.id} ${i.left===0?"완성":i.left===1?"1벌 남음":`${i.done}/${i.total}`}</span>`);
   DATA.battles.forEach((b, i) => { if ((b.site?.clothes||[]).some(x => x.id===c.id)) pills.push(`<span class="pill">배틀 ${esc(bShort(i))}</span>`); });
   const guests = [...new Set(DATA.coord.filter(r => ["t","b","o","a"].some(k => String(cPart(r, k)||"").split("/").some(v => nm.has(v.replace(/\s*외$/,"").trim())))).map(coordName))];
   guests.forEach(g => pills.push(`<span class="pill">손님 ${esc(g)}</span>`));
@@ -1211,8 +1210,7 @@ function viewClo(){
           <button class="iconbtn" data-oclo="${c.id}" aria-label="자세히">${ICON.chev}</button>
         </div>
         ${opened ? `<div class="detail">${cloSiteBlock(c, cloNeedBlock(c)) || cloNeedBlock(c)}<dl class="kv">
-          <dt>분류</dt><dd>${esc(c.c)}</dd><dt>옷본</dt><dd>${esc(c.p)||"-"}</dd><dt>재료</dt><dd>${esc(c.m)||"-"}</dd>
-          <dt>옵션</dt><dd>${esc(c.o)||"-"}</dd><dt>색</dt><dd>${esc(c.col)||"-"}</dd><dt>계절</dt><dd>${esc(c.s)||"-"}</dd>
+          <dt>색</dt><dd>${esc(c.col)||"-"}</dd><dt>계절</dt><dd>${esc(c.s)||"-"}</dd>
           <dt>태그</dt><dd>${esc(c.tg)||"-"}</dd>${newLines(c).length?`<dt class="kv-new">신규</dt><dd class="kv-new">${newLines(c).map(([k,v])=>`<span class="kvn"><b>${k}</b>${esc(v)}</span>`).join("")}</dd>`:""}${battleOf(c)>=0?`<dt>전투 추천</dt><dd><b style="color:var(--fg)">${esc(DATA.battles[battleOf(c)].name)}</b>${S.cbattle[c.id]?"":" · 자동"}</dd>`:""}${X?`<dt>이전 추가옵션</dt><dd>${esc(X)}</dd>`:""}</dl>
           ${hybrid() ? "" : cloEditor(c)}</div>` : ""}
       </div>`; }).join("") : `<div class="empty">조건에 맞는 옷이 없어요</div>`}</div>

@@ -1479,6 +1479,27 @@ html.sheet-open .fab{display:none}
   :root[data-design="hybrid"] nav.tabs button.on::after{display:none}
   :root[data-design="hybrid"] .card{padding:18px 22px}
 }
+
+/* 옷 상세(2026-11-07): 상자 하나, 칸 나눠 나란히(휴대폰 1칸 · 중간 2칸 · 아이패드 세로 이상 3칸) */
+:root[data-design="hybrid"] .detail{display:grid;grid-template-columns:minmax(0,1fr);gap:14px 22px;align-items:start}
+:root[data-design="hybrid"] .detail > .csite,:root[data-design="hybrid"] .detail .cneed{display:contents}
+:root[data-design="hybrid"] .detail .cs-facts{grid-column:1/-1;order:0;display:flex;flex-wrap:wrap;gap:8px}
+:root[data-design="hybrid"] .detail .cs-f{display:inline-flex;align-items:baseline;gap:5px;padding:6px 12px;border-radius:12px;background:var(--card)}
+:root[data-design="hybrid"] .detail .cs-f small{margin:0;font-size:11.5px}
+:root[data-design="hybrid"] .detail .cs-f b{font-size:15px;font-weight:700}
+:root[data-design="hybrid"] .detail .cs-line{order:1;margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:5px;font-size:13.5px;min-width:0}
+:root[data-design="hybrid"] .detail .cs-line > small{flex-basis:100%;margin:0 0 2px;font-size:11.5px;font-weight:600;color:var(--fg3);letter-spacing:.01em}
+:root[data-design="hybrid"] .detail .cneed .cs-line:first-child > small,:root[data-design="hybrid"] .detail .cneed .cs-line > small{color:var(--blue-ink)}
+:root[data-design="hybrid"] .detail .pill{background:var(--card);color:var(--fg2);box-shadow:inset 0 0 0 1px var(--line)}
+:root[data-design="hybrid"] .detail .pill.must{background:var(--blue-soft);color:var(--blue-ink);box-shadow:none}
+:root[data-design="hybrid"] .detail .pill.need{background:var(--blue);color:var(--on-accent);box-shadow:none}
+:root[data-design="hybrid"] .detail .kv{order:2;margin:0;font-size:13px;gap:5px 12px;align-content:start}
+:root[data-design="hybrid"] .detail .csite > .linkbtn{order:3;grid-column:1/-1;justify-self:start;margin:0}
+:root[data-design="hybrid"] .detail .csite > .linkbtn + .cs-line{order:3;grid-column:1/-1}
+:root[data-design="hybrid"] .detail .csite > .hint{order:4;grid-column:1/-1;margin:0;font-size:11.5px}
+:root[data-design="hybrid"] .detail > :not(.csite):not(.kv){order:5;grid-column:1/-1}
+@media (min-width:560px){:root[data-design="hybrid"] .detail{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:740px){:root[data-design="hybrid"] .detail{grid-template-columns:repeat(3,minmax(0,1fr));padding:16px 18px}}
 </style>
 <script type="module" src="/src/main.ts"></script>
 </body>
