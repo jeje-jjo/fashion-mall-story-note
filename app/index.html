@@ -1500,6 +1500,19 @@ html.sheet-open .fab{display:none}
 :root[data-design="hybrid"] .detail > :not(.csite):not(.kv){order:5;grid-column:1/-1}
 @media (min-width:560px){:root[data-design="hybrid"] .detail{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (min-width:740px){:root[data-design="hybrid"] .detail{grid-template-columns:repeat(3,minmax(0,1fr));padding:16px 18px}}
+
+/* 묶음 카드(코디 세트·마네킹)와 배틀 정보: 안쪽 상자는 옅게, 넓은 화면은 칸 나눔(2026-11-07) */
+:root[data-design="hybrid"] .cardgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:4px}
+:root[data-design="hybrid"] .cardgrid > .fccard{margin:0;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line)}
+:root[data-design="hybrid"] .cardgrid > .fccard.cdone{opacity:.7}
+:root[data-design="hybrid"] .fccard .csite{background:transparent;padding:0;margin:8px 0 0}
+@media (min-width:740px){
+  :root[data-design="hybrid"] .cardgrid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+  :root[data-design="hybrid"] .cardgrid > .fccard:has(.setdet),:root[data-design="hybrid"] .cardgrid > .fccard:has(.mq-list){grid-column:1/-1}
+  :root[data-design="hybrid"] .csite.btsite{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px;align-items:start}
+  :root[data-design="hybrid"] .csite.btsite > .cs-line{margin:0}
+  :root[data-design="hybrid"] .csite.btsite > .cs-line:first-child,:root[data-design="hybrid"] .csite.btsite > .cs-facts,:root[data-design="hybrid"] .csite.btsite > .cs-line:has(+ .cs-facts),:root[data-design="hybrid"] .csite.btsite > .hint{grid-column:1/-1}
+}
 </style>
 <script type="module" src="/src/main.ts"></script>
 </body>

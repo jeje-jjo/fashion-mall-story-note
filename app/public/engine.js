@@ -1332,7 +1332,7 @@ function viewSets(){
     <div class="tools toolsgap">${seg(["전체","1벌 남음","미완성","완성"], S.setF, "setf")}<input class="search" id="setQ" placeholder="옷 이름, 세부 장르 검색" value="${esc(q)}" aria-label="코디 세트 검색"></div>
     <div class="hint" style="margin-top:8px">구성 옷을 모두 완료하면 세트 완성 · 옷을 누르면 정보와 완료 체크 · 출처: KairoHistory 코디 세트</div>
   </section>
-  ${keys.length ? keys.map(k => `<section class="card"><div class="fhead rowhead"><span class="sublbl" style="margin:0">${esc(k)}</span><span class="hint">${groups[k].filter(x=>!x.left).length}/${groups[k].length}</span></div>${groups[k].map(card).join("")}</section>`).join("")
+  ${keys.length ? keys.map(k => `<section class="card"><div class="fhead rowhead"><span class="sublbl" style="margin:0">${esc(k)}</span><span class="hint">${groups[k].filter(x=>!x.left).length}/${groups[k].length}</span></div><div class="cardgrid">${groups[k].map(card).join("")}</div></section>`).join("")
     : `<section class="card"><div class="empty">${q?"검색 결과가 없어요":"조건에 맞는 세트가 없어요"}</div></section>`}`;
 }
 
@@ -1478,7 +1478,7 @@ function viewMannequin(){
     <div class="hint" style="margin-top:10px">완료한 옷 ${doneN}벌로 추천해요. 상의+하의(또는 셋업)에 아우터·액세서리까지 넣어요.
       확률은 사이트 빌더의 게임 식(계절·유행색·셋업·상하 궁합, 상의·하의만 계산)이고 손님이 좋아하는 색은 빠져 있어요. 다른 마네킹에 세운 옷은 흐리게 보여요. 출처: KairoHistory 코디 빌더</div>
   </section>
-  <section class="card">${Array.from({length: cnt}, (_, i) => mqCard(i)).join("")}</section>`;
+  <section class="card"><div class="cardgrid mqgrid">${Array.from({length: cnt}, (_, i) => mqCard(i)).join("")}</div></section>`;
 }
 
 /* ---------- 다음에 만들 옷 (의류 탭 맨 위) ----------
