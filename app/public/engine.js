@@ -1062,7 +1062,7 @@ async function saveBtFull(i){
   if (db) try{ await writeSerial(`battles/b${i}`, rec); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
 /* 옷 상세 맨 위: 사이트 기준값 먼저(제제 원칙), 기록한 품질·매력(2026-10-30 영상)은 "기록 보기"로 연다 */
-function cloSiteBlock(c){
+function cloSiteBlock(c, extra = ""){
   const st = c.site; if (!st) return "";
   const nf = v => v==null || v==="" ? "-" : Number(v).toLocaleString("ko-KR");
   const styles = Object.entries(st.styles||{}).sort((a,b) => b[1]-a[1]).map(([k,v]) => `${catTag(k)}<b class="cs-v">${v}</b>`).join("");
@@ -1075,6 +1075,7 @@ function cloSiteBlock(c){
   const g = GS_BY[c.id], open = S.cloRecOpen === c.id;
   return `<div class="csite">
     <div class="cs-facts">${[["품질", st.q], ["인기", st.pop], ["가격", st.price!=null?nf(st.price)+"G":null], ["재고", st.stock], ["Tier", st.tier]].map(([k,v]) => `<span class="cs-f"><small>${k}</small><b>${v==null?"-":k==="가격"?v:nf(v)}</b></span>`).join("")}</div>
+    ${extra}
     <div class="cs-line"><small>종류</small>${esc([st.kind, st.genre && layGName(st.genre), st.sub].filter(Boolean).join(" · "))}${st.cust?` · 손님 ${esc(st.cust)}`:""}</div>
     ${styles ? `<div class="cs-line"><small>스타일 점수</small>${styles}</div>` : ""}
     ${sets ? `<div class="cs-line"><small>코디 세트</small>${sets}</div>` : ""}
@@ -1109,7 +1110,7 @@ function cloNeedBlock(c){
   for (let i = 0; i < mqN(); i++) if (Object.values(mqOf(i).outfit||{}).includes(c.id)) pills.push(`<span class="pill need">마네킹 ${i+1}</span>`);
   const src = optSources(c.o);
   if (!pills.length && !src.length) return "";
-  return `<div class="csite cneed">${pills.length?`<div class="cs-line" style="margin-top:0"><small>이 옷이 필요한 곳</small>${pills.join("")}</div>`:""}${src.length?`<div class="cs-line"><small>${esc(c.o)} 얻는 곳</small>${src.map(x => `<span class="pill">${esc(x)}</span>`).join("")}</div>`:""}</div>`;
+  return `<div class="cneed">${pills.length?`<div class="cs-line" style="margin-top:0"><small>이 옷이 필요한 곳</small>${pills.join("")}</div>`:""}${src.length?`<div class="cs-line"><small>${esc(c.o)} 얻는 곳</small>${src.map(x => `<span class="pill">${esc(x)}</span>`).join("")}</div>`:""}</div>`;
 }
 function viewClo(){
   const cats = ["전체", ...new Set(DATA.clo.map(c => c.c))];
@@ -1209,7 +1210,7 @@ function viewClo(){
           ${c.site ? `<span class="rowvals" aria-hidden="true"><span>품질 ${c.site.q ?? "-"}</span><span>인기 ${c.site.pop ?? "-"}</span><span>${c.site.price!=null ? Number(c.site.price).toLocaleString("ko-KR")+"G" : "-"}</span></span>` : ""}
           <button class="iconbtn" data-oclo="${c.id}" aria-label="자세히">${ICON.chev}</button>
         </div>
-        ${opened ? `<div class="detail">${cloSiteBlock(c)}${cloNeedBlock(c)}<dl class="kv">
+        ${opened ? `<div class="detail">${cloSiteBlock(c, cloNeedBlock(c)) || cloNeedBlock(c)}<dl class="kv">
           <dt>분류</dt><dd>${esc(c.c)}</dd><dt>옷본</dt><dd>${esc(c.p)||"-"}</dd><dt>재료</dt><dd>${esc(c.m)||"-"}</dd>
           <dt>옵션</dt><dd>${esc(c.o)||"-"}</dd><dt>색</dt><dd>${esc(c.col)||"-"}</dd><dt>계절</dt><dd>${esc(c.s)||"-"}</dd>
           <dt>태그</dt><dd>${esc(c.tg)||"-"}</dd>${newLines(c).length?`<dt class="kv-new">신규</dt><dd class="kv-new">${newLines(c).map(([k,v])=>`<span class="kvn"><b>${k}</b>${esc(v)}</span>`).join("")}</dd>`:""}${battleOf(c)>=0?`<dt>전투 추천</dt><dd><b style="color:var(--fg)">${esc(DATA.battles[battleOf(c)].name)}</b>${S.cbattle[c.id]?"":" · 자동"}</dd>`:""}${X?`<dt>이전 추가옵션</dt><dd>${esc(X)}</dd>`:""}</dl>
@@ -2350,7 +2351,7 @@ function viewTool(){
   if (["goal","layout","up","home"].includes(S.recSub)){ S.moreSub = S.recSub==="home" ? "todo" : S.recSub; S.recSub = "more"; }
   const cur = TOOL_SUBS.some(([k]) => k===S.recSub) ? S.recSub : "contest";
   const pc = pendingList().length;
-  return `<section class="card subnav"><div class="seg wide">${TOOL_SUBS.map(([k,l]) => `<button class="${cur===k?"on":""}" data-rsub="${k}" aria-pressed="${cur===k}">${l}${k==="log"&&pc?` <span class="badge-in">${pc}</span>`:""}</button>`).join("")}</div></section>
+  return `<section class="card subnav"><div class="seg wide">${TOOL_SUBS.map(([k,l]) => `<button class="${cur===k?"on":""}" data-rsub="${k}" aria-pressed="${cur===k}">${l}</button>`).join("")}</div></section>
   ${({contest:viewContest, calc:viewCalc, ref:viewRef, log:viewLog, set:viewSet, more:viewMore})[cur]()}`;
 }
 function viewCalc(){ return homeClear() + homeCarry(); }
@@ -2422,7 +2423,7 @@ function render(){
   window.__prefsApply?.();
   renderSum();
   const pc = pendingList().length;
-  $("#tabs").innerHTML = TABS.map(([k,l,ic]) => `<button class="${S.tab===k?"on":""}" data-tab="${k}" aria-current="${S.tab===k?"page":"false"}"><span class="tic">${ic}</span><span>${l}</span>${k==="tool"&&pc?`<span class="badge">${pc}</span>`:""}</button>`).join("");
+  $("#tabs").innerHTML = TABS.map(([k,l,ic]) => `<button class="${S.tab===k?"on":""}" data-tab="${k}" aria-current="${S.tab===k?"page":"false"}"><span class="tic">${ic}</span><span>${l}</span></button>`).join("");
 }
 
 /* 내려 볼 때 위에 붙는 요약줄(2026-11-06 제제: 고른 칩 요약만). 의류 = 고른 칩, 시설 = 장르·패션 체크(이전·다음)·아이템 */

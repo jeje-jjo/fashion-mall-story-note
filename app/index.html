@@ -62,6 +62,7 @@ label.btn{display:flex;align-items:center}
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 /* layout: 한 열 모바일 앱 셸, 상단 요약 카드 → 탭별 리스트, 하단 고정 탭바 */
 :root{
@@ -69,7 +70,7 @@ label.btn{display:flex;align-items:center}
   --soft:#F2F4F6; --blue:#3182F6; --blue-soft:#E8F3FF; --blue-ink:#1B64DA;
   --green:#03B26C; --green-soft:#E5F8EF; --red:#F04452; --amber-soft:#FFF4E0; --amber-ink:#B86E00;
   --press:rgba(2,32,71,.05); --sheet:rgba(0,0,0,.35);
-  --font:Pretendard,"Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
+  --font:"Pretendard Variable",Pretendard,"Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif;
   --r-lg:22px; --r-md:14px;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
@@ -1401,6 +1402,84 @@ html.sheet-open .fab{display:none}
 </style>
 <div id="gate" class="gate"><div class="gate-in"><p class="eyebrow">패션몰스토리 노트</p><h1 id="gateMsg">불러오는 중…</h1><p id="gateSub" class="gate-sub"></p><button type="button" class="btn" id="gateLogin" hidden>구글로 로그인</button></div></div>
 <footer class="srcnote">출처: 기존 노트 기록, <a href="https://kairo.waterbeetles.dev/ko/fashion-mall-story/" target="_blank" rel="noreferrer">KairoHistory</a>(비공식 팬 위키) · 개인 참고용, 카이로소프트 공식 아님</footer>
+
+<style id="polish">
+/* ---------- 2026-11-07 디자인 다듬기: 시안 방향(둥근 상자로 묶기 · 고른 칩은 로즈로 채우기 · 동그란 체크 · 알약 세그먼트) ---------- */
+:root[data-design="hybrid"]{ --r-lg:18px; --on-accent:var(--card) }
+:root[data-design="hybrid"] body{letter-spacing:-.01em}
+:root[data-design="hybrid"] .app{gap:12px;padding-left:0;padding-right:0}
+:root[data-design="hybrid"] .stack{gap:14px}
+/* 상자 */
+:root[data-design="hybrid"] .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin:0;box-shadow:0 1px 2px rgba(60,30,40,.03)}
+:root[data-design="hybrid"] .card.subnav{background:transparent;border:0;box-shadow:none;padding:0}
+:root[data-design="hybrid"] .card.flush{padding:6px 18px}
+:root[data-design="hybrid"] .fold-card{padding:4px 18px}
+:root[data-design="hybrid"] .hsearch-card{padding:12px}
+/* 머리줄 */
+:root[data-design="hybrid"] .hello{padding:6px 2px 4px}
+:root[data-design="hybrid"] .hello h1{font-size:25px;font-weight:800;letter-spacing:-.035em}
+:root[data-design="hybrid"] .hello #sub{color:var(--fg3)}
+:root[data-design="hybrid"] .hprog{height:3px;margin:7px 0 0;max-width:220px}
+/* 제목 줄 */
+:root[data-design="hybrid"] .sec-h h2{font-size:16.5px;font-weight:700;letter-spacing:-.02em}
+:root[data-design="hybrid"] .fhead.rowhead .sublbl{font-size:15px;font-weight:700;letter-spacing:-.02em}
+:root[data-design="hybrid"] .frowgap{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+:root[data-design="hybrid"] .ctools{margin-top:16px!important;padding-top:14px;border-top:1px solid var(--line)}
+/* 칩: 기본은 옅은 바탕, 고르면 로즈로 채움 */
+:root[data-design="hybrid"] .chip{height:32px;padding:0 12px;border-radius:999px;border:1px solid transparent;background:var(--soft);color:var(--fg2);font-size:13px;font-weight:500;gap:5px}
+:root[data-design="hybrid"] .chip.sm{height:30px;padding:0 11px;font-size:12.5px}
+:root[data-design="hybrid"] .chip b{font-size:11px;font-weight:600;color:inherit;opacity:.55}
+:root[data-design="hybrid"] .chip.on,:root[data-design="hybrid"] .chip.sm.on{background:var(--blue);color:var(--on-accent);border-color:var(--blue);font-weight:600;box-shadow:0 1px 3px color-mix(in srgb,var(--blue) 30%,transparent)}
+:root[data-design="hybrid"] .chip.on b{opacity:.75}
+:root[data-design="hybrid"] .chip.fold,:root[data-design="hybrid"] .ghostchip,:root[data-design="hybrid"] .chip.mbtn{background:transparent;border:1px solid var(--line);color:var(--fg3);box-shadow:none}
+:root[data-design="hybrid"] .chip.fold.on{background:var(--soft);color:var(--fg2)}
+:root[data-design="hybrid"] .chips,:root[data-design="hybrid"] .cfoldchips{gap:6px}
+/* 세그먼트: 알약 모양 */
+:root[data-design="hybrid"] .seg{background:var(--soft);padding:3px;gap:2px;border-radius:999px;flex-wrap:nowrap;border:0}
+:root[data-design="hybrid"] .seg button{height:32px;padding:0 13px;border-radius:999px;border:0;margin:0;color:var(--fg3);font-size:13px;font-weight:500}
+:root[data-design="hybrid"] .seg button.on{background:var(--card);color:var(--fg);font-weight:700;box-shadow:0 1px 3px rgba(60,30,40,.10)}
+:root[data-design="hybrid"] .seg.wide{display:flex;width:100%;border:0;gap:2px;overflow-x:auto;scrollbar-width:none}
+:root[data-design="hybrid"] .seg.wide::-webkit-scrollbar{display:none}
+:root[data-design="hybrid"] .seg.wide button{flex:1 0 auto;height:36px}
+:root[data-design="hybrid"] .pillseg{border-radius:999px}
+:root[data-design="hybrid"] .pillseg button{border-radius:999px}
+:root[data-design="hybrid"] .cloview .pillseg button.on{background:var(--blue);color:var(--on-accent);box-shadow:none}
+/* 입력 */
+:root[data-design="hybrid"] .search,:root[data-design="hybrid"] .field{border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+:root[data-design="hybrid"] .hsearch{border-radius:14px;background:var(--bg)}
+/* 목록 */
+:root[data-design="hybrid"] .list{margin-top:12px;border-top:1px solid var(--line)}
+:root[data-design="hybrid"] .row{padding:12px 0;min-height:58px;gap:12px}
+:root[data-design="hybrid"] .row .t{font-size:15px;font-weight:650}
+:root[data-design="hybrid"] .ck{width:24px;height:24px;border-radius:50%;border:1.6px solid color-mix(in srgb,var(--blue) 45%,var(--line));background:transparent}
+:root[data-design="hybrid"] .ck.on{background:var(--blue);border-color:var(--blue)}
+:root[data-design="hybrid"] .ck.on svg{color:var(--on-accent)}
+/* 펼친 상세: 옅은 상자 */
+:root[data-design="hybrid"] .detail,:root[data-design="hybrid"] .hrow .detail{background:color-mix(in srgb,var(--soft) 55%,var(--card));border:0;border-radius:14px;margin:0 0 12px 36px;padding:14px 16px;gap:12px}
+@media (max-width:420px){:root[data-design="hybrid"] .detail,:root[data-design="hybrid"] .hrow .detail{margin-left:0;padding:12px 14px}}
+:root[data-design="hybrid"] .open > .row{border-bottom-color:transparent}
+:root[data-design="hybrid"] .cneed{display:flex;flex-direction:column;gap:8px;padding:10px 12px;margin:8px 0 4px;border-radius:12px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
+:root[data-design="hybrid"] .cneed .cs-line{margin:0}
+:root[data-design="hybrid"] .pill{border-radius:999px;padding:4px 10px}
+:root[data-design="hybrid"] .tag{border-radius:999px;padding:2px 8px}
+/* 묶음 상자들 */
+:root[data-design="hybrid"] .needopt{background:var(--soft);box-shadow:none;border-radius:14px;padding:12px 14px}
+:root[data-design="hybrid"] .fccard{margin:12px 0 4px;border:0;border-radius:14px;padding:14px 16px}
+:root[data-design="hybrid"] .numpad{border-radius:14px;padding:10px;gap:6px}
+:root[data-design="hybrid"] .numpad button{border-radius:10px;height:34px}
+:root[data-design="hybrid"] .btn{border-radius:12px}
+:root[data-design="hybrid"] .btn.sm{border-radius:10px}
+:root[data-design="hybrid"] .btn.ghost{background:var(--card)}
+/* 탭 */
+:root[data-design="hybrid"] nav.tabs button.on::after{width:20px;height:3px;border-radius:2px}
+@media (min-width:740px){
+  :root[data-design="hybrid"] nav.tabs{background:var(--card);border-right:1px solid var(--line)}
+  :root[data-design="hybrid"] nav.tabs button{border-radius:16px;padding:10px 0 8px}
+  :root[data-design="hybrid"] nav.tabs button.on{background:var(--blue-soft)}
+  :root[data-design="hybrid"] nav.tabs button.on::after{display:none}
+  :root[data-design="hybrid"] .card{padding:18px 22px}
+}
+</style>
 <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
