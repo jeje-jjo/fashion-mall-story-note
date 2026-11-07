@@ -917,15 +917,30 @@ function viewFac(){
           <button class="iconbtn" data-ofac="${f.id}" aria-label="자세히">${ICON.chev}</button>
         </div>
         <div class="rowpills pills">${needOf(f).map(i=>`<button class="pill ${put.includes(i)?"need":"must"}" data-put="${f.id}|${esc(i)}" aria-pressed="${put.includes(i)}">${put.includes(i)?"✓ ":""}${i}</button>`).join("")||'<span class="hint">상성 좋음 항목 없음</span>'}</div>
-        ${opened ? `<div class="detail">
-                    <div><h4>상성 보통 ◯</h4><div class="pills">${goodOf(f).map(i=>`<span class="pill">${i}</span>`).join("")||'<span class="pill">없음</span>'}</div></div>
-          <div><h4>상성 나쁨 ×</h4><div class="pills">${badOf(f).map(i=>`<span class="pill bad">${i}</span>`).join("")||'<span class="pill">없음</span>'}</div></div>
-          ${hybrid() ? "" : facRenameForm(f)}
-        </div>` : ""}
+        ${opened ? `<div class="detail">${facDetail(f)}${hybrid() ? "" : facRenameForm(f)}</div>` : ""}
       </div>`; }).join("") : `<div class="empty">조건에 맞는 시설이 없어요</div>`}</div>
   </section>`;
 }
 
+/* 시설 상세(2026-11-07): 옷 상세와 같은 틀. 사이트 값 → 상성 보통·나쁨 · 패션 체크 · 효과 · 40P. 상성 좋음은 행 아래 칩에 이미 있어서 뺌 */
+function facDetail(f){
+  const st = f.site || {}, has = v => v!=null && v!=="";
+  const nf = v => Number(v).toLocaleString("ko-KR");
+  const facts = [["크기", has(st.w)&&has(st.h) ? `${st.w}×${st.h}` : null], ["건설비", has(st.cost) ? nf(st.cost)+"G" : null], ["유지비", has(st.upkeep) ? nf(st.upkeep)+"G" : null], ["매력", has(st.charm) ? nf(st.charm) : null], ["인기", has(st.pop) ? nf(st.pop) : null], ["평판", has(st.fame) ? nf(st.fame) : null]].filter(x => x[1]!=null);
+  const pl = (arr, cls="") => arr.length ? arr.map(i => `<span class="pill ${cls}">${esc(i)}</span>`).join("") : `<span class="hint">없음</span>`;
+  const fcs = (FC_OF[f.id]||[]).map(n => `<button class="pill ${S.facFcSel.includes(n)?"need":"must"}" data-fcn="${n}" title="이 패션 체크로 거르기">${n} ${esc(checkName(n-1))}${(FC_ALT[f.id]||[]).includes(n)?" · 대신 가능":""}</button>`).join("");
+  const kind = [st.group, st.category].filter(Boolean).join(" · ");
+  return `<div class="csite">
+    ${facts.length ? `<div class="cs-facts">${facts.map(([k,v]) => `<span class="cs-f"><small>${k}</small><b>${v}</b></span>`).join("")}</div>` : ""}
+    <div class="cs-line"><small>상성 보통 ◯</small>${pl(goodOf(f))}</div>
+    <div class="cs-line"><small>상성 나쁨 ×</small>${pl(badOf(f), "bad")}</div>
+    ${fcs ? `<div class="cs-line"><small>패션 체크</small>${fcs}</div>` : ""}
+    ${st.effect ? `<div class="cs-line"><small>효과</small>${esc(st.effect)}</div>` : ""}
+    ${kind ? `<div class="cs-line"><small>구분</small>${esc(kind)}</div>` : ""}
+    ${f.p40 ? `<div class="cs-line"><small>우선개량</small>${p40Tag(f)}<span class="hint">40P로 이용 포인트 2</span></div>` : ""}
+    ${st.name || facts.length ? `<div class="hint">기준값 출처: KairoHistory 시설</div>` : ""}
+  </div>`;
+}
 /* 게임에서 확인할 것: 경고 아이콘 → 펼침. 확인한 항목은 meta/verify {done:{k:true}}에 저장 */
 const verifyLeft = () => (DATA.verify||[]).filter(v => !S.verifyDone?.[v.k]);
 function verifyBtn(){ const n = verifyLeft().length, o = !!S.verifyOpen;
@@ -2430,14 +2445,16 @@ function sumHtml(){
   if (S.tab==="clo"){
     const cs = [...S.cloCat.map(v => chip("ccat", v, v)), ...S.cloPat.map(v => chip("cpat", v, v)), ...S.cloMat.map(v => chip("cmat", v, v)), ...S.cloOpt.map(v => chip("copt", v, (SP_OPTS.includes(v)?"★ ":"")+v))];
     const bt = S.cloBt != null && DATA.battles[S.cloBt] ? `<button class="chip sm on" data-cbt="${S.cloBt}">${esc(bShort(S.cloBt))} ×</button>` : "";
-    return `<div class="sum-chips">${cs.join("")}${bt}${!cs.length && !bt ? `<span class="hint">고른 조건 없음</span>` : ""}</div><button class="chip sm" data-act="sumtop">조건 ▴</button>`;
+    if (!cs.length && !bt) return "";
+    return `<div class="sum-chips">${cs.join("")}${bt}</div><button class="chip sm" data-act="sumtop">조건 ▴</button>`;
   }
   if (S.tab==="fac"){
     const sel = S.facFcSel, one = sel.length===1 && S.fcMode!=="multi";
     const fc = sel.length ? `${one?`<button class="chip sm ghostchip" data-act="fcprev" aria-label="이전 패션 체크">‹</button>`:""}${sel.map(n => chip("fcn", n, `체크 ${n}`)).join("")}${one?`<button class="chip sm ghostchip" data-act="fcnext" aria-label="다음 패션 체크">›</button>`:""}` : "";
     const ty = S.facType && S.facType!=="전체" ? `<button class="chip sm on" data-ftype="전체">${esc(S.facType)} ×</button>` : "";
     const it = S.itemPick ? `<button class="chip sm on" data-pick="">${esc(S.itemPick)} ×</button>` : "";
-    return `<div class="sum-chips">${ty}${fc}${it}${!ty && !fc && !it ? `<span class="hint">고른 조건 없음</span>` : ""}</div><button class="chip sm" data-act="sumtop">조건 ▴</button>`;
+    if (!ty && !fc && !it) return "";
+    return `<div class="sum-chips">${ty}${fc}${it}</div><button class="chip sm" data-act="sumtop">조건 ▴</button>`;
   }
   return "";
 }
