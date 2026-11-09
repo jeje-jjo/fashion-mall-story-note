@@ -156,6 +156,15 @@ export function buildData(t: Tables) {
     const inPlan = new Set(plan.map((p) => p.battle));
     t.battles.filter((b) => b.kind === "다른 가게 직원" && !inPlan.has(String(b.name).trim())).forEach((b) => plan.push(step(null, String(b.name).trim())));
     L.rankPlan = plan.filter((p) => p.genre);
+    // 해금 순서(옷본·재료·옵션 칩 순서용): 만든 옷 개수 기준으로 랭크(새 옷 베이스 → 새 스터디 재료·옵션)와 패션 체크 보상을 섞어 줄 세움.
+    // 랭크 1 스터디(접객 매너 강습)는 처음부터. 같은 개수면 랭크가 먼저.
+    const made = (s: unknown) => +((String(s ?? "").match(/만든 옷 (?:개수|수)\s*:?\s*(\d+)/) || [])[1] || 0);
+    const ev: { n: number; o: number; items: string[] }[] = [];
+    const firstStudy = t.site_studies.find((r) => +r.row === 1);
+    if (firstStudy) ev.push({ n: 0, o: 0, items: studyBy.get(String(firstStudy.c0).trim()) || [] });
+    ranks.forEach((r) => { const s = String(r.c2 ?? ""); ev.push({ n: made(r.c1), o: 0, items: [pick(s, "새 옷 베이스"), ...(studyBy.get(pick(s, "새 스터디")) || [])].filter(Boolean) }); });
+    t.fashion_checks.forEach((f) => { const rw = String(f.rewardOption || String(f.reward ?? "").split("&")[0] || "").trim(); if (rw) ev.push({ n: made(f.appear), o: 1, items: [rw] }); });
+    L.unlockOrder = ev.sort((a, b) => a.n - b.n || a.o - b.o).flatMap((e) => e.items);
   }
 
   // ================= 사이트 값으로 맞추기 (제제 결정 2026-11-06) =================

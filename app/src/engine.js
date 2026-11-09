@@ -241,8 +241,7 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   [1,2,3,4,5].forEach(n => db.doc(`layslots/s${n}`).onSnapshot(s => { S.laySlots = {...(S.laySlots||{}), [n]: s.exists ? s.data() : null}; render(); }, () => {}));
   db.doc("ui/coordopen").onSnapshot(s => { if (!s.exists) return; const v = s.data(); S.coordOpen = v.list || []; S.coordHideDone = !!v.hide; render(); }, () => {});
   db.doc("ui/layout").onSnapshot(s => { S.layout = {rects: (s.exists && s.data().rects) || []}; render(); }, () => {});
-  db.doc("ui/chiporder").onSnapshot(s => { const d = s.exists ? s.data() : null, n = noteChipOrder();
-    S.chipOrder = d ? {pat:d.pat?.length ? alArr("recipe", d.pat) : n.pat, mat:d.mat?.length ? alArr("recipe", d.mat) : n.mat, opt:d.opt?.length ? alArr("recipe", d.opt) : n.opt} : n; render(); }, () => {});
+  /* 칩 순서는 해금 순서로 고정(순서 수정 기능을 뺐으므로 ui/chiporder는 읽지 않음, 문서는 그대로 둠) */
   db.doc("ui/optcnt").onSnapshot(s => { const dd = (s.exists && s.data()) || {}, c = dd.counts || {}; S.optCnt = Object.fromEntries(Object.entries(c).map(([k, v]) => [al("recipe", k), v])); S.optPicks = (dd.picks || []).filter(id => CLO_BY_ID.has(id)); render(); }, () => {});
   db.doc("meta/verify").onSnapshot(s => { S.verifyDone = (s.exists && s.data().done) || {}; render(); }, () => {});
   db.doc(`${RUN}/ui/recipes`).onSnapshot(s => { const d = (s.exists && s.data()) || {}; S.own = {pat:alArr("recipe", d.pat||[]), mat:alArr("recipe", d.mat||[]), opt:alArr("recipe", d.opt||[])}; render(); }, () => {});
@@ -393,8 +392,16 @@ const ORDER_KEYS = ["pat","mat","opt"];
 /* 기존 노트에서 정해 둔 칩 순서(2026-11-06 기존 노트 ui/chiporder). 새 노트에 순서가 저장돼 있지 않으면 이 순서를 씀.
    예전 표기는 사이트 이름으로 바꿔서 쓰고, 노트에 없던 새 값은 뒤에 붙는다 */
 const NOTE_CHIP_ORDER = {"pat": ["없음", "컷앤소", "팬츠", "스커트", "앞트임", "재킷", "원피스", "민소매", "카디건", "오버올", "베스트", "셋업", "코트", "판초", "기모노", "액세서리"], "mat": ["없음", "라운드넥", "스트레이트", "브이넥", "롤업", "A라인", "플레어", "스키니", "칼라", "플리츠", "와이드", "슬릿", "오프숄더", "센터프레스", "암커버", "타이트", "카고", "랩", "스탠드칼라", "퍼프소매", "슬릿넥", "크롭", "하이넥", "사루엘", "후드", "홀터넥", "세일러칼라", "벌룬", "원숄더", "나팔바지", "티어드", "세퍼레이트", "머메이드"], "opt": ["없음", "프린트", "데미지", "프릴", "라인", "넥타이", "리본", "스트라이프", "체크", "벨트", "체인", "보더", "퍼", "꽃·식물", "지퍼", "링거넥", "셔링", "기하학", "레이스업", "물방울", "레이스", "아가일", "오로라", "카모플라주", "폼폼", "자수", "레오파드", "보타이", "스터드", "고블랭", "게리코튼", "하네스", "자수 패치", "크로스", "나사와 볼트", "찐빵"]};
-const noteChipOrder = () => ({pat:alArr("recipe", NOTE_CHIP_ORDER.pat), mat:alArr("recipe", NOTE_CHIP_ORDER.mat), opt:alArr("recipe", NOTE_CHIP_ORDER.opt)});
-if (!S.chipOrder) S.chipOrder = noteChipOrder();
+/* 해금 순서로 다시 줄 세움(제제 2026-11-09): 옷본은 랭크업 순서, 재료·옵션은 스터디 → 패션 체크 보상(만든 옷 개수 기준, DATA.unlockOrder).
+   해금 순서에 없는 값(처음부터 있는 것·재킷 등)은 기존 노트 순서에서 바로 앞 값 뒤에 붙어 다님 */
+function unlockSorted(list){
+  const nk2 = x => String(x || "").replace(/\s/g, ""), U = (DATA.unlockOrder || []).map(nk2);
+  const groups = [{i:-1, items:[]}];
+  list.forEach(v => { const i = U.indexOf(nk2(v)); if (i >= 0) groups.push({i, items:[v]}); else groups[groups.length-1].items.push(v); });
+  return groups.sort((a,b) => a.i - b.i).flatMap(g => g.items);
+}
+const noteChipOrder = () => ({pat:unlockSorted(alArr("recipe", NOTE_CHIP_ORDER.pat)), mat:unlockSorted(alArr("recipe", NOTE_CHIP_ORDER.mat)), opt:(l => [...l.filter(k => !SP_OPTS.includes(k)), ...l.filter(k => SP_OPTS.includes(k))])(unlockSorted(alArr("recipe", NOTE_CHIP_ORDER.opt)))});
+S.chipOrder = noteChipOrder();
 /* 옷본·재료·옵션 칩 순서: ui/chiporder {pat:[],mat:[],opt:[]}. 목록에 없는 새 값은 기본 순서대로 뒤에 */
 const chipOrdered = (key, keys) => { const o = S.chipOrder?.[key]; if (!o || !o.length) return keys; const idx = new Map(o.map((k,i) => [k,i])); return [...keys].sort((a,b) => (idx.has(a) ? idx.get(a) : 1e6 + keys.indexOf(a)) - (idx.has(b) ? idx.get(b) : 1e6 + keys.indexOf(b))); };
 async function saveChipOrder(order){
@@ -1297,10 +1304,11 @@ function viewClo(){
       if (!nextG) planBox = `<div class="ocplan"><div class="hint">${lastIdx > 0 ? "고른 장르가 마지막 장르예요" : "장르 줄에서 지금까지 연 장르를 골라 주세요. 가장 뒤 장르의 다음 장르를 보여 줘요."}</div></div>`;
       else {
         /* 다음 장르는 아직 안 열렸으니 전체기준이면 그 장르 옷 전부(완료 체크한 옷만 뺌) */
-        const pend = c => cntMode==="all" ? !(tracked(c) && cloDone(c)) : (tracked(c) && !cloDone(c));
+        const pm = S.planMode || cntMode;
+        const pend = c => pm==="all" ? !(tracked(c) && cloDone(c)) : (tracked(c) && !cloDone(c));
         const need = {}; DATA.clo.forEach(c => { if (c.c !== nextG || !pend(c)) return; const k = c.o || "없음"; if (k==="없음" || SP_OPTS.includes(k)) return; need[k] = (need[k]||0) + 1; });
         const list = Object.entries(need).sort((a,b) => (sel.includes(b[0]) - sel.includes(a[0])) || b[1]-a[1] || optRank(a[0]) - optRank(b[0]));
-        planBox = `<div class="ocplan"><div class="ochead"><b>다음 장르 ${esc(nextG)}</b><span class="hint">${cntMode==="all"?"전체기준":"옵션기준"} · 옵션 ${list.length}종 ${list.reduce((t,[,v]) => t+v, 0)}벌 · 누르면 옵션 줄에서 선택</span></div>
+        planBox = `<div class="ocplan"><div class="ochead"><b>다음 장르 ${esc(nextG)}</b><span class="seg mini cntseg" role="group" aria-label="필요예정 기준">${[["opt","옵션기준"],["all","전체기준"]].map(([v,l]) => `<button type="button" class="${pm===v?"on":""}" data-planmode="${v}" aria-pressed="${pm===v}">${l}</button>`).join("")}</span><span class="hint">옵션 ${list.length}종 ${list.reduce((t,[,v]) => t+v, 0)}벌 · 누르면 옵션 줄에서 선택</span></div>
           ${list.length ? `<div class="pills sm">${list.map(([k,v]) => `<button type="button" class="pill ${sel.includes(k)?"need":"must"}" data-copt="${esc(k)}" aria-pressed="${sel.includes(k)}">${esc(k)}<b>${v}</b></button>`).join("")}</div>` : `<div class="hint">필요한 일반 옵션이 없어요</div>`}</div>`;
       }
     }
@@ -2734,6 +2742,7 @@ document.addEventListener("click", e => {
     S.cloOpt = all ? S.cloOpt.filter(k => !sp.includes(k)) : [...S.cloOpt, ...sp.filter(k => !S.cloOpt.includes(k))];
     if (S.cloOpt.length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, opt:true}; remember(); render(); return; }
   if (d.act==="needopt"){ S.needOptOpen = !S.needOptOpen; render(); return; }
+  if (d.planmode){ S.planMode = d.planmode; render(); return; }
   if (d.act==="ocplan"){ S.ocPlan = !S.ocPlan; render(); return; }
   if (d.cntmode){ S.cntMode = d.cntmode; remember(); render(); return; }
   if (d.act==="foldall"){ S.cloExp = {}; remember(); render(); return; }
