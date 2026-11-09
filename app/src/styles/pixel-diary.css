@@ -416,3 +416,8 @@ nav.tabs { background: var(--card); }
 .request-heading h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; line-height: 1.4; }
 .request-heading h3 .request-stage { margin: 0; font-size: 13px; flex: none; }
 .request-heading h3 .tag { font-size: 11px; }
+
+/* 하단 메뉴(휴대폰): 탭 개수만큼 칸을 나눠 고르게 펼침(예전 5칸 격자에 4개라 왼쪽으로 몰렸음) */
+@media (max-width: 739px) {
+  nav.tabs .in { grid-template-columns: repeat(var(--tabn, 4), 1fr); }
+}
