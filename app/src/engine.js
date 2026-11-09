@@ -1985,7 +1985,7 @@ function resetCard(){
   const ns = SP.filter(c => c.done===null && cloDone(c)).length;
   return `<section class="card">
     <div class="sec-h"><h2>새 회차 시작</h2></div>
-    <p style="margin:0;color:var(--fg2);font-size:14px">시설 완료·일부완료 ${nf}곳, 추가옵션 의류 ${nc}벌, 특수 옵션 ${ns}벌, 코디 최종 완료 ${S.coordDone.length}명이 미완료가 돼요. 전투 결과와 재시도 기록은 "이전 회차 기록" 아래로 옮겨져요. 이름 수정, 패션 체크 기록, 콘테스트 기록은 그대로예요.</p>
+    <p style="margin:0;color:var(--fg2);font-size:14px">시설 완료·일부완료 ${nf}곳, 추가옵션 의류 ${nc}벌, 특수 옵션 ${ns}벌, 코디 최종 완료 ${S.coordDone.length}명이 미완료가 돼요. 전투 결과와 재시도 기록은 "이전 회차 기록" 아래로 옮겨져요. 이름 수정, 패션 체크 기록, 콘테스트 기록은 그대로예요. 의류 선택은 처음 값(모든 줄의 없음, 캐주얼·스트리트, 컷앤소·팬츠, 라운드넥·스트레이트)으로 돌아가요.</p>
     ${S.resetAsk ? `<div class="confirm"><span style="flex:1;min-width:160px">정말 전부 해제할까요? 되돌릴 수 없어요.</span><button class="btn sm ghost" data-act="reset-no">취소</button><button class="btn sm danger" data-act="reset-ok">초기화</button></div>`
       : `<div style="margin-top:12px"><button class="btn ghost" data-act="reset-ask" style="width:100%">체크 전부 해제</button></div>`}
   </section>`;
@@ -2001,10 +2001,15 @@ async function resetAll(){
   const nextRound = roundNo() + 1, newRun = `runs/r${nextRound}`;
   /* 새 추가옵션(opt)은 회차와 상관없는 노트 내용이라 새 위치로 옮김 */
   const carry = Object.entries(S.clo).filter(([, v]) => v && v.opt).map(([id, v]) => [id, {done:false, opt:v.opt}]);
+  /* 새 회차 의류 선택 초기값(제제 2026-11-09): 처음부터 가진 장르·옷본·재료와 모든 줄의 [없음] */
+  const selInit = {cat:["캐주얼","스트리트"], pat:["없음","컷앤소","팬츠"], mat:["없음","라운드넥","스트레이트"], opt:["없음"]};
+  Object.entries(ROWF).forEach(([k,f]) => { S[f] = [...selInit[k]]; if (S[f].length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, [k]:true}; });
+  selSig = JSON.stringify(curSel()); S.cloSlot = {...S.cloSlot, all:selInit, ...selInit}; remember();
   if (!db){ S.fac = {}; S.clo = Object.fromEntries(carry); S.coordDone = []; S.battleRec = {...S.battleRec, ...btNew}; S.roundNo = nextRound; render(); toast("새 회차를 시작했어요"); return; }
   try{
     for (const [id, v] of carry) await writeSerial(`${newRun}/clo/c${id}`, v);
     for (const [i, v] of Object.entries(btNew)) await writeSerial(`battles/b${i}`, v);
+    await writeSerial("ui/slots", {slot:S.cloSlot});
     await db.collection("log").add({kind:"reset", id:"all", name:"회차 초기화", from:`${roundNo()}회차 (${RUN})`, to:`${nextRound}회차 (${newRun})`, t:Date.now(), synced:false, by:"app"});
     await writeSerial("meta/round", {n: nextRound, run: newRun, prevRun: RUN, t: Date.now(), by: "app"});
     toast("새 회차를 시작했어요"); setTimeout(() => location.reload(), 600);
