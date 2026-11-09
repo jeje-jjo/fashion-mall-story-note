@@ -478,3 +478,6 @@ nav.tabs { background: var(--card); }
 }
 /* 손님 선택 해제 모드: 열린 손님 칩에 × 표시 */
 .cochips .chip .cox { font-weight: 700; margin-left: 2px; opacity: .85; }
+/* 필요예정: 다음 장르에 필요한 옵션 */
+.optcnt .ocplan { margin-top: 10px; padding: 10px 12px; border: 1px dashed color-mix(in srgb, var(--blue) 35%, var(--line)); border-radius: 12px; background: var(--card); }
+.optcnt .ocplan .ochead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-bottom: 8px; }

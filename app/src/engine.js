@@ -1257,7 +1257,23 @@ function viewClo(){
     const pk = S.ocPick && keys.includes(S.ocPick) ? S.ocPick : null;
     /* 옷으로 고르기: 추가옵션·전투 추천·코디 추천이 아닌 일반 옷 중 장르·옷본·재료 조건과 누른 옵션에 맞는 옷 */
     const cand = pk ? DATA.clo.filter(c => !tracked(c) && (c.o || "없음") === pk && (!S.cloCat.length || S.cloCat.includes(c.c)) && (!S.cloPat.length || S.cloPat.includes(c.p || "없음")) && (!S.cloMat.length || S.cloMat.includes(c.m || "없음")) && !(S.optPicks||[]).includes(c.id)) : [];
-    const modeSeg = `<div class="seg ocseg">${[["pick","옷으로 고르기"],["inc","+1"],["dec","−1"]].map(([v,l]) => `<button type="button" class="${mode===v?"on":""}" data-ocmode="${v}" aria-pressed="${mode===v}">${l}</button>`).join("")}</div>`;
+    const modeSeg = `<div class="seg ocseg">${[["pick","옷으로 고르기"],["inc","+1"],["dec","−1"]].map(([v,l]) => `<button type="button" class="${mode===v?"on":""}" data-ocmode="${v}" aria-pressed="${mode===v}">${l}</button>`).join("")}</div><button type="button" class="chip sm ${S.ocPlan?"on":""}" data-act="ocplan" aria-pressed="${!!S.ocPlan}" title="고른 장르의 다음 장르에서 필요한 옵션">필요예정</button>`;
+    /* 필요예정(제제 2026-11-09): 장르 줄에서 고른 장르 중 가장 뒤의 다음 장르 → 그 장르 옷에 필요한 옵션(특수 옵션·없음 제외).
+       옵션기준이면 체크가 필요한 옷 중 미완료, 전체기준이면 그 장르 옷 전부(완료 체크한 옷 제외) 기준으로 셈 */
+    let planBox = "";
+    if (S.ocPlan && o){
+      const lastIdx = Math.max(-1, ...(S.cloCat||[]).map(k => cats.indexOf(k)));
+      const nextG = lastIdx > 0 ? cats[lastIdx + 1] : null;
+      if (!nextG) planBox = `<div class="ocplan"><div class="hint">${lastIdx > 0 ? "고른 장르가 마지막 장르예요" : "장르 줄에서 지금까지 연 장르를 골라 주세요. 가장 뒤 장르의 다음 장르를 보여 줘요."}</div></div>`;
+      else {
+        /* 다음 장르는 아직 안 열렸으니 전체기준이면 그 장르 옷 전부(완료 체크한 옷만 뺌) */
+        const pend = c => cntMode==="all" ? !(tracked(c) && cloDone(c)) : (tracked(c) && !cloDone(c));
+        const need = {}; DATA.clo.forEach(c => { if (c.c !== nextG || !pend(c)) return; const k = c.o || "없음"; if (k==="없음" || SP_OPTS.includes(k)) return; need[k] = (need[k]||0) + 1; });
+        const list = Object.entries(need).sort((a,b) => (sel.includes(b[0]) - sel.includes(a[0])) || b[1]-a[1] || optRank(a[0]) - optRank(b[0]));
+        planBox = `<div class="ocplan"><div class="ochead"><b>다음 장르 ${esc(nextG)}</b><span class="hint">${cntMode==="all"?"전체기준":"옵션기준"} · 옵션 ${list.length}종 ${list.reduce((t,[,v]) => t+v, 0)}벌 · 누르면 옵션 줄에서 선택</span></div>
+          ${list.length ? `<div class="pills sm">${list.map(([k,v]) => `<button type="button" class="pill ${sel.includes(k)?"need":"must"}" data-copt="${esc(k)}" aria-pressed="${sel.includes(k)}">${esc(k)}<b>${v}</b></button>`).join("")}</div>` : `<div class="hint">필요한 일반 옵션이 없어요</div>`}</div>`;
+      }
+    }
     /* 옷본·재료·옵션을 이름 옆에 한 줄로, 장르는 색 태그로(제제 2026-11-09) */
     const ocSpec = c => esc([c.c, c.p, c.m, c.o ? (SP_OPTS.includes(c.o) ? "★ " : "") + c.o : ""].filter(Boolean).join(" · "));
     const pickRow = c => `<button type="button" class="ocrow" data-ocadd="${c.id}"><span class="ocb"><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${ocSpec(c)}</span></span><span class="ocplus" aria-hidden="true">＋</span></button>`;
@@ -1267,6 +1283,7 @@ function viewClo(){
       ${o && mode==="pick" && !pk && keys.length ? `<div class="hint" style="margin-top:6px">옵션을 누르면 그 옵션이 붙은 일반 옷(추가옵션·전투 추천·코디 추천 제외)이 나와요. 장르·옷본·재료에서 고른 조건도 같이 걸려요.</div>` : ""}
       ${o && pk ? `<div class="ocpick"><div class="ochead"><b>${SP_OPTS.includes(pk)?"★ ":""}${esc(pk)}</b><span class="hint">일반 옷 ${cand.length}벌${S.cloCat.length||S.cloPat.length||S.cloMat.length?" · 위 조건 적용":""} · 누르면 아래 목록에 들어가요</span><button type="button" class="chip sm fold" data-ocpick="">닫기</button></div>
         <div class="oclist">${cand.length ? cand.slice(0, 60).map(pickRow).join("") : `<div class="hint" style="padding:8px 2px">맞는 일반 옷이 없어요</div>`}</div></div>` : ""}
+      ${planBox}
       ${o && picks.length ? `<div class="ocgot"><div class="ochead"><b>만들 옷</b><span class="hint">누르면 만든 걸로 보고 목록에서 빼요(옷 완료 체크는 안 해요)</span></div><div class="oclist">${picks.map(doneRow).join("")}</div></div>` : ""}
     </div>`;
   }
@@ -2685,6 +2702,7 @@ document.addEventListener("click", e => {
     S.cloOpt = all ? S.cloOpt.filter(k => !sp.includes(k)) : [...S.cloOpt, ...sp.filter(k => !S.cloOpt.includes(k))];
     if (S.cloOpt.length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, opt:true}; remember(); render(); return; }
   if (d.act==="needopt"){ S.needOptOpen = !S.needOptOpen; render(); return; }
+  if (d.act==="ocplan"){ S.ocPlan = !S.ocPlan; render(); return; }
   if (d.cntmode){ S.cntMode = d.cntmode; remember(); render(); return; }
   if (d.act==="foldall"){ S.cloExp = {}; remember(); render(); return; }
   if (d.act==="openall"){ S.cloExp = {cat:true, pat:true, mat:true, opt:true}; remember(); render(); return; }
