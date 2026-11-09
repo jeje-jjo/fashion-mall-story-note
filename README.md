@@ -16,7 +16,7 @@
 cd app
 npm ci
 npm run dev                # Google 로그인 + 기존 Firestore
-npm run dev:preview        # 로그인 없이 UI 확인, 기준 데이터는 legacy 버전
+npm run dev:preview        # 로그인 없이 UI 확인, 기존 기준 데이터 + 상세 레이아웃 예시
 npm run build              # GitHub Pages 배포용 app/dist 생성
 npm run build:preview      # 독립 미리보기 app/preview-dist 생성
 npx playwright install chromium
@@ -24,7 +24,7 @@ npm test                   # 빌드된 미리보기로 기능·반응형 검증
 ```
 
 미리보기는 실제 Firestore에 연결하지 않으며 완료 체크는 창의 메모리에만 남습니다.
-미리보기의 번호·수치는 기존 노트 기준 데이터이므로 운영 사이트 기준 번호·진행률과 다릅니다.
+미리보기의 번호·수치는 기존 노트 기준 데이터와 일부 화면 검토용 예시입니다. 운영 사이트 기준 번호·진행률과 다르며, 예시 모듈은 운영 빌드에 포함되지 않습니다.
 `main`에 앱 변경을 push하면 기존 GitHub Actions가 배포용 빌드만 Pages에 올립니다.
 
 화면 구조와 이번 개편 범위: [픽셀 다이어리 개편](docs/pixel-diary.md).
