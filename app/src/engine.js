@@ -2382,7 +2382,7 @@ function viewSet(){
     ${row("기기", segB("device", [["auto","자동"],["phone","핸드폰"],["desk","PC·패드"]]))}
     ${row("테마", segB("mode", [["system","시스템"],["light","라이트"],["dark","다크"]]))}
     ${row("메인 색상", `<div class="pals">${[["rose","#955F64","빈티지 로즈"],["red","#994F53","뮤트 레드"],["taupe","#8E706E","로즈 토프"],["blue","#3182F6","기존 블루"]].map(([k,c,l]) => `<button type="button" class="pal" data-pal="${k}" style="--p:${c}"><i aria-hidden="true"></i>${l}</button>`).join("")}</div>`)}
-  </section>${homeLegend()}`;
+  </section>${clickLogCard()}${homeLegend()}`;
 }
 function viewMore(){
   const cur = MORE_SUBS.some(([k]) => k===S.moreSub) ? S.moreSub : "todo";
@@ -2518,6 +2518,8 @@ document.addEventListener("click", e => {
   if (d.nows){ mqNowSave({season:d.nows}); return; }
   if (d.nowt !== undefined){ mqNowSave({trend:d.nowt}); return; }
   if (d.rsub){ S.recSub = d.rsub; S.confirmSync=false; remember(); render(); return; }
+  if (d.act==="clkon" || d.act==="clkoff"){ try{ localStorage.setItem(CLK_KEY, d.act==="clkoff" ? "1" : "0"); }catch(e){} render(); return; }
+  if (d.act==="clkdown"){ clickLogDownload(); return; }
   if (d.msub){ S.moreSub = d.msub; remember(); render(); return; }
   if (d.act==="recent"){ S.recentOpen = !S.recentOpen; render(); return; }
   if (d.hgo){ homeGo(d.hgo); return; }
@@ -2910,6 +2912,71 @@ fmtNumInputs();
   document.addEventListener("pointerup", end);
   document.addEventListener("pointercancel", () => { st = null; render(); });
 })();
+
+/* ---------- 클릭 기록(2026-11-09 제제 요청: 마지막 회차 동안 새 노트에서 수집) ----------
+   누른 버튼의 data-* 값·글자·탭과 필터 상태(누르기 전후)·화면 폭·스크롤을 20초마다 모아 note/v2/uilog/{세션}-{순번}에 저장.
+   입력칸은 글자 수만 남김. 진행 데이터 경로는 건드리지 않음. 기기별로 도구 > 화면에서 끄고 켬(localStorage fms-clicklog-off) */
+const CLK_KEY = "fms-clicklog-off";
+const clkOff = () => { try{ return localStorage.getItem(CLK_KEY) === "1"; }catch(e){ return false; } };
+const CLK = { sid: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), seq: 0, buf: [], sent: 0 };
+function clickLogCard(){
+  const off = clkOff();
+  return `<section class="card prefs-card">
+    <div class="sec-h"><h2>클릭 기록</h2><span>${off ? "이 기기에서 꺼짐" : `기록 중 · 이번에 ${CLK.sent + CLK.buf.length}건`}</span></div>
+    <div class="setrow"><span class="setk">이 기기</span><div class="seg"><button type="button" class="${off?"":"on"}" data-act="clkon" aria-pressed="${!off}">켜기</button><button type="button" class="${off?"on":""}" data-act="clkoff" aria-pressed="${off}">끄기</button></div></div>
+    <p class="hint" style="margin:8px 0 0">화면 개편 참고용으로 누른 버튼과 화면 상태만 모아요(입력한 글자는 저장 안 함). 마지막 회차가 끝나면 Claude에게 말해 주세요.</p>
+    <div style="margin-top:10px"><button type="button" class="btn ghost sm" data-act="clkdown">모은 기록 파일로 받기</button></div>
+  </section>`;
+}
+(() => {
+  const ua = navigator.userAgent, touch = "ontouchend" in document;
+  const dev = /iPhone/.test(ua) ? "iphone" : (/iPad/.test(ua) || (/Macintosh/.test(ua) && touch)) ? "ipad" : /Macintosh/.test(ua) ? "mac" : "other";
+  let lastY = -1, lastScrollT = 0, typing = null;
+  const arr = v => Array.isArray(v) ? v.length : (v && v !== "전체" ? 1 : 0);
+  const st = () => { try{ return { tab:S.tab, rec:S.recSub, more:S.moreSub, co:S.coordSub, cs:S.cloSt, ck:(S.cloKind||[]).join(","), cc:arr(S.cloCat), cp:arr(S.cloPat), cm:arr(S.cloMat), cop:arr(S.cloOpt), cbt:S.cloBt, cbv:!!S.cloBtView, fs:Array.isArray(S.facSt)?S.facSt.join(","):S.facSt, ft:S.facType, fc:(S.facFcSel||[]).length, ip:S.itemPick||"", om:S.ocMode||"pick", op:S.ocPick||"", open:S.cloOpen??S.facOpen??null }; }catch(e){ return {}; } };
+  const push = ev => { if (clkOff()) return; ev.t = Date.now(); ev.w = innerWidth; ev.y = Math.round(scrollY); CLK.buf.push(ev); if (CLK.buf.length >= 60) flush(); };
+  const pick = el => {
+    const d = {}; for (const [k, v] of Object.entries(el.dataset || {})) d[k] = String(v).slice(0, 40);
+    const isInput = /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
+    return { el: el.tagName.toLowerCase() + (el.id ? "#" + el.id : ""), cls: typeof el.className === "string" ? el.className.split(/\s+/).slice(0, 3).join(".") : "", d,
+      x: isInput ? "" : (el.innerText || el.getAttribute("aria-label") || "").trim().replace(/\s+/g, " ").slice(0, 30) };
+  };
+  document.addEventListener("click", e => {
+    if (clkOff()) return;
+    const el = e.target.closest("button,a,input,select,textarea,label,summary,[role=button],[role=checkbox],[data-tab]");
+    const ev = { k:"c", ...(el ? pick(el) : { el:"(빈 곳)" }), s0:st() };
+    setTimeout(() => { ev.s1 = st(); push(ev); }, 0);
+  }, true);
+  document.addEventListener("change", e => { const el = e.target; if (el && (el.tagName === "SELECT" || el.type === "checkbox" || el.type === "radio")) push({ k:"ch", ...pick(el), s1:st() }); }, true);
+  document.addEventListener("input", e => { const el = e.target; if (!el || !el.id) return; clearTimeout(typing); typing = setTimeout(() => push({ k:"in", el:el.id, len:(el.value||"").length, s1:st() }), 1500); }, true);
+  document.addEventListener("toggle", e => { const el = e.target; if (el && el.tagName === "DETAILS") push({ k:"tg", el:"details", d:{...(el.dataset||{})}, open:el.open, s1:st() }); }, true);
+  addEventListener("scroll", () => { const now = Date.now(); if (now - lastScrollT < 2500) return; lastScrollT = now; const y = Math.round(scrollY); if (Math.abs(y - lastY) < 400) return; lastY = y; push({ k:"s", h:document.documentElement.scrollHeight, s1:{ tab:S.tab, rec:S.recSub, co:S.coordSub } }); }, { passive:true });
+  async function flush(){
+    if (!CLK.buf.length || !db) return;
+    const ev = CLK.buf; CLK.buf = [];
+    try{ await db.collection("uilog").doc(`${CLK.sid}-${String(CLK.seq++).padStart(3, "0")}`).set({ sid:CLK.sid, dev, ua:ua.slice(0, 120), round:roundNo(), run:RUN, skin:document.documentElement.dataset.skin || "", t:Date.now(), n:ev.length, ev }); CLK.sent += ev.length; }
+    catch(err){ CLK.buf = ev.concat(CLK.buf).slice(-400); }
+  }
+  setInterval(flush, 20000);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flush(); });
+  addEventListener("pagehide", flush);
+  push({ k:"open", s1:st(), dev, sh:screen.height, sw:screen.width });
+  window.__fmsClickFlush = flush;
+})();
+/* 모은 기록을 한 파일(JSON)로 받기: Claude에게 넘기거나 드라이브 claude 폴더에 올릴 때 */
+function clickLogDownload(){
+  if (!db){ toast("로그인한 상태에서 받을 수 있어요"); return; }
+  window.__fmsClickFlush?.();
+  let done = false;
+  const un = db.collection("uilog").onSnapshot(s => {
+    if (done) return; done = true; setTimeout(() => un?.(), 0);
+    const docs = s.docs.map(d => ({ id:d.id, ...d.data() }));
+    const blob = new Blob([JSON.stringify({ exported:new Date().toISOString(), docs }, null, 0)], { type:"application/json" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `fms-clicklog-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    toast(`클릭 기록 ${docs.length}묶음을 파일로 받았어요`);
+  }, () => toast("기록을 불러오지 못했어요"));
+}
 
 // Vite가 이 파일을 모듈로 묶어 엔진도 버전별 해시 자산으로 배포한다.
 export {};
