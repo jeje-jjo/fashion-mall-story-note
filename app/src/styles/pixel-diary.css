@@ -476,3 +476,5 @@ nav.tabs { background: var(--card); }
   :root:root .detail.item-detail { padding: 10px; border-radius: 12px; }
   :root:root .detail.item-detail .info-section { padding: 10px 12px; }
 }
+/* 손님 선택 해제 모드: 열린 손님 칩에 × 표시 */
+.cochips .chip .cox { font-weight: 700; margin-left: 2px; opacity: .85; }

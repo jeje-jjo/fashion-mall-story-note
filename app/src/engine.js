@@ -1386,8 +1386,8 @@ function viewCoordReq(){
     <div class="catalog-head"><div><p class="catalog-kicker">STYLING NOTE</p><h2>손님 코디</h2></div><p class="catalog-description">요청한 옷을 비교하고 손님별로 완료를 기록해요.</p></div>
     <div class="tools toolsgap"><input class="search" id="coordQ" placeholder="인물, 요청, 옷 이름 검색" value="${esc(q)}" aria-label="코디 검색"></div>
     <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">손님</span><span class="hint">${all.length}명 · 완료 ${all.filter(cdone).length}명</span></span>
-      <span class="fh-act">${S.coordOpen.length?`<button class="chip sm" data-act="coord-close">선택 해제</button>`:""}<button class="chip sm ${S.coordHideDone?"on":""}" data-act="coord-hidedone" aria-pressed="${!!S.coordHideDone}">완료 숨기기</button></span></div>
-    <div class="chips cfoldchips cochips">${all.filter(n => !S.coordHideDone || !cdone(n) || S.coordOpen.includes(n)).map(n => `<button class="chip ${S.coordOpen.includes(n)?"on":""} ${cdone(n)?"done":""}" data-cochip="${esc(n)}" aria-pressed="${S.coordOpen.includes(n)}">${cdone(n)?ICON.ok:""}${esc(n)}</button>`).join("") || `<span class="hint">검색 결과가 없어요</span>`}</div>
+      <span class="fh-act">${S.coordOpen.length?`<button class="chip sm ${S.coordUnsel?"on":""}" data-act="coord-unsel" aria-pressed="${!!S.coordUnsel}" title="켜고 손님을 누르면 그 손님만 닫혀요">${S.coordUnsel?"선택 해제 끝":"선택 해제"}</button><button class="chip sm" data-act="coord-close">전체 해제</button>`:""}<button class="chip sm ${S.coordHideDone?"on":""}" data-act="coord-hidedone" aria-pressed="${!!S.coordHideDone}">완료 숨기기</button></span></div>
+    <div class="chips cfoldchips cochips">${all.filter(n => !S.coordHideDone || !cdone(n) || S.coordOpen.includes(n)).map(n => `<button class="chip ${S.coordOpen.includes(n)?"on":""} ${cdone(n)?"done":""}" data-cochip="${esc(n)}" aria-pressed="${S.coordOpen.includes(n)}">${cdone(n)?ICON.ok:""}${esc(n)}${S.coordUnsel && S.coordOpen.includes(n)?` <span class="cox" aria-hidden="true">×</span>`:""}</button>`).join("") || `<span class="hint">검색 결과가 없어요</span>`}</div>
 
   </section>
   ${shownCards.length ? `<div class="cogrid">${shownCards.map(card).join("")}</div>` : `<section class="card"><div class="empty">${q?"검색 결과가 없어요":"위에서 손님을 누르면 요청이 나와요"}</div></section>`}`;
@@ -2773,12 +2773,15 @@ document.addEventListener("click", e => {
   if (d.act==="sync-cancel"){ S.confirmSync=false; render(); return; }
   if (d.act==="sync-ok"){ markSynced(); return; }
   if (d.cochip !== undefined){ const n = d.cochip;
-    if (S.coordOpen.includes(n)){ coordJump(n); return; }
+    if (S.coordOpen.includes(n)){
+      if (S.coordUnsel){ S.coordOpen = S.coordOpen.filter(x => x!==n); if (!S.coordOpen.length) S.coordUnsel = false; saveCoordOpen(); render(); return; }
+      coordJump(n); return; }
     S.coordOpen = [...S.coordOpen, n]; saveCoordOpen(); render(); requestAnimationFrame(() => coordJump(n)); return; }
-  if (d.coordp !== undefined){ const n = d.coordp; S.coordOpen = S.coordOpen.includes(n) ? S.coordOpen.filter(x => x!==n) : [...S.coordOpen, n]; saveCoordOpen(); render(); return; }
+  if (d.coordp !== undefined){ const n = d.coordp; S.coordOpen = S.coordOpen.includes(n) ? S.coordOpen.filter(x => x!==n) : [...S.coordOpen, n]; if (!S.coordOpen.length) S.coordUnsel = false; saveCoordOpen(); render(); return; }
   if (d.act==="coord-open"){ S.coordOpen = [...new Set(DATA.coord.map(c => curPerson(c.pb)))]; saveCoordOpen(); render(); return; }
   if (d.act==="coord-hidedone"){ S.coordHideDone = !S.coordHideDone; remember(); saveCoordOpen(); render(); return; }
-  if (d.act==="coord-close"){ S.coordOpen = []; saveCoordOpen(); render(); return; }
+  if (d.act==="coord-unsel"){ S.coordUnsel = !S.coordUnsel; render(); return; }
+  if (d.act==="coord-close"){ S.coordUnsel = false; S.coordOpen = []; saveCoordOpen(); render(); return; }
   if (d.act==="fcprev" || d.act==="fcnext"){ const cur = S.facFcSel[0] || 0, n = Math.min(FC_MAX, Math.max(1, cur + (d.act==="fcnext" ? 1 : -1))); S.facType="전체"; S.itemPick=""; S.facFcSel = [n]; S.fcNoteOpen = false; remember(); render(); return; }
   if (d.act==="sumtop"){ const el = document.querySelector("#view .card"); scrollTo({top:0, behavior:"smooth"}); return; }
   if (d.fcn !== undefined){ const n = +d.fcn; S.facType="전체"; S.itemPick=""; if (S.fcMode==="multi") S.facFcSel = S.facFcSel.includes(n) ? S.facFcSel.filter(x => x!==n) : [...S.facFcSel, n].sort((a,b)=>a-b); else { S.facFcSel = S.facFcSel.includes(n) && S.facFcSel.length===1 ? [] : [n]; } S.fcNoteOpen = false; remember(); render(); return; }
