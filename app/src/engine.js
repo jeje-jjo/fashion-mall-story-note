@@ -147,14 +147,20 @@ const isOptKind = c => c.done !== null || isSp(c);
 const isBtKind = c => battleOf(c) >= 0;
 /* 코디 추천: 코디 요청(수정 반영)에 들어 있는 옷. "A/B", "A 외" 같은 표기는 나눠서 비교 */
 let _coSet = null, _coKey = "";
+/* 이름이 같은 옷(예: 코튼 팬츠 #136 갈색·#144 파랑)이 있어서, 직접 고치지 않은 칸은 표의 옷 번호(c.ids)로 비교하고
+   번호가 없거나 직접 고친 칸만 이름으로 비교(2026-11-09) */
+const coordPartIds = (c, k) => (!S.cfix[c.id]?.["p"+k] && c.ids?.[k]?.length) ? c.ids[k] : null;
+const coordPartNames = (c, k) => String(cPart(c, k) || "").split("/").map(v => v.replace(/\s*외$/,"").trim()).filter(Boolean);
+const coordHasClo = (r, c) => { const names = [c.n, cloName(c)];
+  return ["t","b","o","a"].some(k => { const ids = coordPartIds(r, k); return ids ? ids.includes(c.id) : coordPartNames(r, k).some(v => names.includes(v)); }); };
 const coordCloSet = () => {
   const key = JSON.stringify(S.cfix) + JSON.stringify(S.names.clo);
   if (_coSet && _coKey === key) return _coSet;
-  const set = new Set();
-  DATA.coord.forEach(c => ["t","b","o","a"].forEach(k => String(cPart(c, k) || "").split("/").forEach(v => { v = v.replace(/\s*외$/,"").trim(); if (v) set.add(v); })));
-  _coSet = set; _coKey = key; return set;
+  const set = new Set(), ids = new Set();
+  DATA.coord.forEach(c => ["t","b","o","a"].forEach(k => { const pi = coordPartIds(c, k); if (pi) pi.forEach(x => ids.add(x)); else coordPartNames(c, k).forEach(v => set.add(v)); }));
+  set.ids = ids; _coSet = set; _coKey = key; return set;
 };
-const isCoKind = c => { const st = coordCloSet(); return st.has(c.n) || st.has(cloName(c)); };
+const isCoKind = c => { const st = coordCloSet(); return st.ids.has(c.id) || st.has(c.n) || st.has(cloName(c)); };
 /* 실제 전투 슬롯에 등록된 옷인지 */
 const btWorn = c => { const nm = [c.n, cloName(c)]; return Object.values(S.battleRec || {}).some(r => Object.values(r.slots || {}).some(v => v && nm.includes(v.n))); };
 /* 체크 대상: 추가옵션·특수 옵션 옷 + 전투 추천 옷 */
@@ -1174,7 +1180,7 @@ function cloNeedBlock(c){
   groups.push(usageRow("코디 세트", sets.map(x => `<span>세트 ${x.s.id}</span><span class="inline-progress ${x.left === 0 ? "is-done" : ""}">${x.done}/${x.total} 완료${x.left === 1 ? " · 1벌 남음" : ""}</span>`)));
   const battles = DATA.battles.flatMap((b,i) => (b.site?.clothes || []).some(x => x.id === c.id) ? [esc(bShort(i))] : []);
   groups.push(usageRow("챌린지", battles));
-  const guests = [...new Set(DATA.coord.filter(r => ["t","b","o","a"].some(k => String(cPart(r,k)||"").split("/").some(v => names.has(v.replace(/\s*외$/, "").trim())))).map(coordName))];
+  const guests = [...new Set(DATA.coord.filter(r => coordHasClo(r, c)).map(coordName))];
   groups.push(usageRow("손님 요청", guests.map(esc)));
   const mannequins = [];
   for (let i = 0; i < mqN(); i++) if (Object.values(mqOf(i).outfit || {}).includes(c.id)) mannequins.push(`마네킹 ${i+1}`);
@@ -1219,7 +1225,7 @@ function nextTargets(step, avail){
 const isChal = c => isBtKind(c) || DATA.battles.some(b => (b.site?.clothes || []).some(x => x.id === c.id));
 function cloUseTags(c){
   const names = new Set([c.n, cloName(c)]), out = [];
-  if (DATA.coord.some(r => ["t","b","o","a"].some(k => String(cPart(r,k)||"").split("/").some(v => names.has(v.replace(/\s*외$/, "").trim()))))) out.push(semTag("req", "손님 요청"));
+  if (DATA.coord.some(r => coordHasClo(r, c))) out.push(semTag("req", "손님 요청"));
   for (let i = 0; i < mqN(); i++) if (Object.values(mqOf(i).outfit || {}).includes(c.id)){ out.push(semTag("mq", "마네킹")); break; }
   if ((c.site?.sets || []).length) out.push(semTag("set", "코디 세트"));
   return out.join("");

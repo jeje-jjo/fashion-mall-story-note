@@ -110,11 +110,16 @@ export function buildData(t: Tables) {
   });
   L.battlesExtra = bts.filter((r) => !r.legacyId).map((r) => ({ name: r.name, site: btSite(r) }));
 
+  // 제제가 게임에서 확인한 코디 옷 번호(Firestore ref/coord_requests에 아직 반영 전이면 여기 값이 우선)
+  // 2026-11-09: 79 매옥준③ 데이트 추운 날 코튼 팬츠 = #144(파랑)
+  const COORD_ID_FIX: Record<number, { t?: number[]; b?: number[]; o?: number[]; a?: number[] }> = { 79: { b: [144] } };
   // ---------------- 코디 요청: 옷 번호 연결(77 코튼 팬츠 = #144 반영된 표)
   const cr = new Map<number, Row>(t.coord_requests.map((r) => [r.id, r]));
   L.coord = L.coord.map((c: any) => {
     const r = cr.get(c.id);
-    return r ? { ...c, ids: { t: r.topIds, b: r.bottomIds, o: r.outerIds, a: r.accIds } } : c;
+    if (!r) return c;
+    const fx = COORD_ID_FIX[c.id] || {};
+    return { ...c, ids: { t: fx.t ?? r.topIds, b: fx.b ?? r.bottomIds, o: fx.o ?? r.outerIds, a: fx.a ?? r.accIds } };
   });
 
   // ---------------- 게임에서 확인할 것: 기존 + 표에만 있는 것
@@ -215,7 +220,7 @@ export function buildData(t: Tables) {
   }
 
   // 게임에서 확인할 것: 사이트 값으로 답이 나온 항목은 뺀다(레시피·계절·색·번호)
-  const SITE_OK = new Set(["slit", "slit2", "q3", "opt_none", "bot", "acc", "kairo"]);
+  const SITE_OK = new Set(["slit", "slit2", "q3", "opt_none", "bot", "acc", "kairo", "coord79"]);  // coord79: 제제 확인(#144)
   L.verify = L.verify.filter((v: any) => !SITE_OK.has(v.k));
 
   // 옷의 신규 손님·좋아하는 매장 칸: 사이트 캐릭터·시설 이름(띄어쓰기만 다른 것)으로
