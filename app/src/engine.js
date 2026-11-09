@@ -786,7 +786,7 @@ function itemRow(){
   const it = S.itemPick, o = !!S.facExp.item, rel = S.itemAlt || "좋음";
   return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">아이템</span>${it?`<button class="chip sm on" data-pick="">${esc(it)} ×</button>`:""}<button class="chip sm fold" data-fexp="item" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span>
     ${it ? `<span class="fh-act"><span class="seg mini">${["좋음","보통","나쁨"].map(k=>`<button class="${rel===k?"on":""}" data-ialt="${k}" aria-pressed="${rel===k}">${k}</button>`).join("")}</span></span>` : ""}</div>
-  ${o ? `<div class="hint" style="margin:-2px 0 8px">완료 안 된 ${openF.length}곳 · 시설당 2개 기준 · 좋음은 아직 안 넣은 미완료 시설, 보통·나쁨은 완료 포함 전체</div>
+  ${o ? `<div class="hint" style="margin:-2px 0 8px">완료 안 된 ${openF.length}곳 · 시설당 2개 기준 · 좋음은 상태 '전체'면 아직 안 넣은 미완료 시설, 상태를 고르면 그 상태 전부 · 보통·나쁨은 완료 포함 전체</div>
   <div class="pills">${sorted.map(([k,v],i)=>`<button class="pill ${k===it?"need":i<3?"must":""}" data-pick="${esc(k)}" aria-pressed="${k===it}">${esc(k)}<b>${v*2}</b></button>`).join("")}${ITEMS.filter(k => !need[k]).map(k=>`<button class="pill ${k===it?"need":"off"}" data-pick="${esc(k)}" aria-pressed="${k===it}">${esc(k)}<b>0</b></button>`).join("")}</div>` : ""}`;
 }
 /* 장르 조건 */
@@ -956,9 +956,11 @@ function viewFac(){
   const stOf = f => facDone(f) ? "완료" : facPartial(f) ? "일부완료" : "미완료";
   if (facSts().length) rows = rows.filter(f => facSts().includes(stOf(f)));
   if (S.facFcSel.length) rows = rows.filter(f => (FC_OF[f.id]||[]).some(n => S.facFcSel.includes(n)));
-  /* 항목으로 찾기: 좋음은 아직 안 넣은 미완료 시설만, 보통·나쁨은 전체 */
+  /* 항목으로 찾기: 좋음은 상태가 '전체'일 때만 아직 안 넣은 미완료 시설로 좁힘.
+     미완료·일부완료·완료를 고르면 그 상태에서 상성 좋음인 시설을 전부 보여 줌(넣고 완료한 시설이 완료 탭에서 사라지던 문제, 2026-11-09) */
   const it = S.itemPick, idx = ITEMS.indexOf(it), rel = S.itemAlt || "좋음";
-  if (idx >= 0) rows = rows.filter(f => rel==="좋음" ? (f.m[idx]==="◎" && !facDone(f) && !putOf(f).includes(it)) : rel==="보통" ? f.m[idx]==="◯" : f.m[idx]==="×");
+  const notPut = f => !facDone(f) && !putOf(f).includes(it);
+  if (idx >= 0) rows = rows.filter(f => rel==="좋음" ? (f.m[idx]==="◎" && (facSts().length || notPut(f))) : rel==="보통" ? f.m[idx]==="◯" : f.m[idx]==="×");
   const q = S.facQ.trim();
   if (q) rows = rows.filter(f => facName(f).includes(q) || f.name.includes(q) || needOf(f).some(i => i.includes(q)));
   const TYPES = Object.keys(TYPE_COLOR);
@@ -982,7 +984,7 @@ function viewFac(){
     <div class="frowgap nol">${itemRow()}</div>
     <div class="tools toolsgap"><div class="seg">${["전체","미완료","일부완료","완료"].map(k => { const on = k==="전체" ? !facSts().length : facSts().includes(k); return `<button class="${on?"on":""}" data-fst="${k}" aria-pressed="${on}">${k}</button>`; }).join("")}</div></div>
     <div class="tools" style="margin-top:8px">${seg(["기본순","좋음 적은순","패션 체크순","장르순","이름순"], ["이름순","장르순","좋음 적은순","패션 체크순"].includes(S.facSort)?S.facSort:"기본순", "fsort")}<input class="search" id="facQ" placeholder="시설이나 항목 검색" value="${esc(S.facQ)}" aria-label="시설 검색"></div>
-    ${canPut && rows.length ? `<div class="bulkput"><span>보이는 ${rows.length}곳에 <b>${esc(it)}</b>을(를) 넣었다면</span><button class="btn sm" data-putall="${rows.map(f=>f.id).join(",")}|${esc(it)}">모두 넣었어요</button></div>` : ""}
+    ${canPut && rows.filter(notPut).length ? `<div class="bulkput"><span>보이는 ${rows.filter(notPut).length}곳에 <b>${esc(it)}</b>을(를) 넣었다면</span><button class="btn sm" data-putall="${rows.filter(notPut).map(f=>f.id).join(",")}|${esc(it)}">모두 넣었어요</button></div>` : ""}
     <div class="filterline"><span>${rows.filter(facDone).length} / ${rows.length} 완료${pc?` · 일부 ${pc}`:""}${it?` · ${esc(it)} 상성 ${rel}`:""}${fcOne!=null?` · 패션 체크 ${fcOne+1}`:S.facFcSel.length?` · 패션 체크 ${S.facFcSel.join("·")}`:""}</span></div>
     <div class="list">${rows.length ? rows.map(f => {
       const d = facDone(f), opened = S.facOpen===f.id, nm = facName(f), put = putShown(f);
@@ -992,7 +994,7 @@ function viewFac(){
           <button class="body" data-ofac="${f.id}" style="text-align:left">
             <div class="t"><span class="n">${esc(nm)}</span>${noStore(f)?`<span class="tag nostore">아직 없는 매장</span>`:""}${typeTag(f.type)}${facPartial(f)?semTag("part","일부완료"):""}${fcTag(f)}${f.p40?p40Tag(f):""}</div>
           </button>
-          ${canPut ? `<button class="btn sm ghost" data-put="${f.id}|${esc(it)}">넣었어요</button>` : ""}
+          ${canPut && notPut(f) ? `<button class="btn sm ghost" data-put="${f.id}|${esc(it)}">넣었어요</button>` : ""}
           ${opened && hybrid() ? `<button class="iconbtn act" data-sheet="fac|${f.id}" aria-label="${esc(nm)} 이름 수정">${ICON.pen}</button>` : ""}
           <button class="iconbtn" data-ofac="${f.id}" aria-label="자세히">${ICON.chev}</button>
         </div>
