@@ -1,3 +1,4 @@
+import { appearancePicker, validSkin } from "./ui/appearance.ts";
 import { metricStrip, factRows, infoSection, textList, usageRow, referenceBlock, installReferenceState } from "./ui/information.js";
 installReferenceState();
 /* 패션몰스토리 노트 화면 엔진 — legacy/app/post.html에서 옮겨 옴(2026-11-06). 이제 이 파일이 원본이다. */
@@ -2361,6 +2362,7 @@ function viewSet(){
   const segB = (attr, list) => `<div class="seg">${list.map(([v,l]) => `<button type="button" data-${attr}="${v}">${l}</button>`).join("")}</div>`;
   return `<section class="card prefs-card">
     <div class="sec-h"><h2>화면</h2><span>이 기기에만 저장돼요</span></div>
+    ${appearancePicker()}
     ${row("기기", segB("device", [["auto","자동"],["phone","핸드폰"],["desk","PC·패드"]]))}
     ${row("테마", segB("mode", [["system","시스템"],["light","라이트"],["dark","다크"]]))}
     ${row("메인 색상", `<div class="pals">${[["rose","#955F64","빈티지 로즈"],["red","#994F53","뮤트 레드"],["taupe","#8E706E","로즈 토프"],["blue","#3182F6","기존 블루"]].map(([k,c,l]) => `<button type="button" class="pal" data-pal="${k}" style="--p:${c}"><i aria-hidden="true"></i>${l}</button>`).join("")}</div>`)}
@@ -2762,21 +2764,25 @@ async function markSynced(){
 /* ---------- 테마 선택: 모드는 html[data-theme], 팔레트는 html[data-pal]. 선택은 이 기기 브라우저에만 저장 ---------- */
 (function(){
   const root = document.documentElement;
-  let pref = {mode:"system", pal:"rose", design:"hybrid", device:"auto"}; let palOpen = false;
+  let pref = {mode:"system", pal:"rose", design:"hybrid", device:"auto", skin:"classic"}; let palOpen = false;
   try{ Object.assign(pref, JSON.parse(localStorage.getItem("fms-theme")||"{}")); }catch(e){}
   function apply(){
     if (pref.mode==="system") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", pref.mode);
     if (pref.pal==="blue") root.removeAttribute("data-pal"); else root.setAttribute("data-pal", pref.pal);
     root.setAttribute("data-design", "hybrid");
+    pref.skin = validSkin(pref.skin);
+    root.setAttribute("data-skin", pref.skin);
+    document.querySelectorAll("button[data-skin]").forEach(b => { const on = b.dataset.skin === pref.skin; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });
     root.setAttribute("data-device", pref.device||"auto");
     document.querySelectorAll("[data-device]:not(html)").forEach(b => b.classList.toggle("on", b.dataset.device===(pref.device||"auto")));
-    document.querySelectorAll("button[data-mode]").forEach(b => b.classList.toggle("on", b.dataset.mode===pref.mode));
-    document.querySelectorAll("button[data-pal]").forEach(b => b.classList.toggle("on", b.dataset.pal===pref.pal));
+    document.querySelectorAll("button[data-mode]").forEach(b => { const on=b.dataset.mode===pref.mode; b.classList.toggle("on",on); b.setAttribute("aria-pressed",String(on)); });
+    document.querySelectorAll("button[data-pal]").forEach(b => { const on=b.dataset.pal===pref.pal; b.classList.toggle("on",on); b.setAttribute("aria-pressed",String(on)); });
     try{ localStorage.setItem("fms-theme", JSON.stringify(pref)); }catch(e){}
   }
   document.addEventListener("click", e => {
-    const b = e.target.closest("button[data-mode],button[data-pal],button[data-device]"); if (!b) return;
+    const b = e.target.closest("button[data-mode],button[data-pal],button[data-device],button[data-skin]"); if (!b) return;
     if (b.dataset.act==="palopen") palOpen = !palOpen;
+    else if (b.dataset.skin) pref.skin = validSkin(b.dataset.skin);
     else if (b.dataset.mode) pref.mode = b.dataset.mode; else if (b.dataset.design){ pref.design = b.dataset.design; S.sheet = null; } else if (b.dataset.device) pref.device = b.dataset.device; else pref.pal = b.dataset.pal;
     apply(); if (b.dataset.design || b.dataset.device) render();
   });
