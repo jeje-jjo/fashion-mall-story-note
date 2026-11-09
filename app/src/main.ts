@@ -1,7 +1,10 @@
 import "./styles/legacy.css";
 import "./styles/pixel-diary.css";
+import "./styles/appearance.css";
 import { installPixelIcons } from "./ui/pixel-icons";
+import { restoreAppearance } from "./ui/appearance";
 
+restoreAppearance();
 installPixelIcons();
 
 // 미리보기 빌드는 인증·Firestore 모듈을 시작하지 않는다.
