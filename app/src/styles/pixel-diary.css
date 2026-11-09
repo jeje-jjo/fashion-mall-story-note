@@ -492,3 +492,4 @@ nav.tabs { background: var(--card); }
 #fab .fabrank { font-size: 13px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 #fab [hidden] { display: none !important; }
 .rankpick .rankpad { grid-template-columns: repeat(5, 1fr); }
+.rankpick .rankpad { grid-template-columns: repeat(6, 1fr); }

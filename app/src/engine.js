@@ -1187,21 +1187,24 @@ function cloNeedBlock(c){
    그 단계의 장르·새 옷 베이스(옷본)·새 스터디 재료/옵션을 칩에서 은은하게 표시. 패션 체크 보상은 완료하면 자동 선택이라 제외 */
 /* 현재 랭크: runs/rN/ui/now.rank (제제 2026-11-09). 정하면 랭크+1 단계부터, 안 정했으면 장르 줄 기준.
    그 단계의 점선 칩(장르·옷본·재료·옵션)을 전부 선택하면 다음 단계로 넘어감 */
+/* 게임 랭크는 0부터 10까지(제제 2026-11-09). 사이트 진행 표는 1부터 11까지라 사이트 번호 = 게임 랭크 + 1.
+   저장(ui/now.rank)과 화면 표시는 게임 랭크, 진행 표를 찾을 때만 +1 */
 const RANK_MAX = 10;
-const curRank = () => +(S.now?.rank || 0);
+const curRank = () => { const v = S.now?.rank; return v === 0 || v ? +v : null; };
+const gRank = siteRank => siteRank - 1;
 function nextRankStep(avail){
-  const steps = (DATA.rankPlan || []).filter(p => p.rank != null && p.rank <= RANK_MAX).sort((a,b) => a.rank - b.rank), R = curRank(), opened = S.cloCat || [];
+  const steps = (DATA.rankPlan || []).filter(p => p.rank != null).sort((a,b) => a.rank - b.rank), R = curRank(), opened = S.cloCat || [];
   let list;
-  if (R) list = steps.filter(p => p.rank > R);
+  if (R != null) list = steps.filter(p => gRank(p.rank) > R);
   else { if (!opened.length) return null; const i = steps.findIndex(p => !opened.includes(p.genre)); list = i < 0 ? [] : steps.slice(i); }
   const allSel = st => { const t = nextTargets(st, avail); return Object.entries(t).every(([k, l]) => l.every(v => (S[ROWF[k]] || []).includes(v))); };
   return list.find(st => !allSel(st)) || null;
 }
 function rankPanel(){
   const R = curRank();
-  return `<div class="rankpick"><div class="sublbl" style="margin:0 0 8px">현재 랭크 <span class="hint">${R ? `${R}랭크` : "아직 안 정함"} · 10을 고르면 이 버튼은 사라져요</span></div>
-    <div class="numpad rankpad">${Array.from({length: RANK_MAX}, (_, i) => i+1).map(n => `<button type="button" class="${n===R?"on":""}" data-rankset="${n}" aria-pressed="${n===R}">${n}</button>`).join("")}</div>
-    ${R ? `<button type="button" class="linkbtn" data-rankset="0" style="margin-top:8px">랭크 지우기</button>` : ""}</div>`;
+  return `<div class="rankpick"><div class="sublbl" style="margin:0 0 8px">현재 랭크 <span class="hint">${R != null ? `${R}랭크` : "아직 안 정함"} · 게임 화면 숫자(0~10) · 10을 고르면 이 버튼은 사라져요</span></div>
+    <div class="numpad rankpad">${Array.from({length: RANK_MAX + 1}, (_, i) => i).map(n => `<button type="button" class="${n===R?"on":""}" data-rankset="${n}" aria-pressed="${n===R}">${n}</button>`).join("")}</div>
+    ${R != null ? `<button type="button" class="linkbtn" data-rankclr="1" style="margin-top:8px">랭크 지우기</button>` : ""}</div>`;
 }
 function nextTargets(step, avail){
   const out = {cat:[], pat:[], mat:[], opt:[]}; if (!step) return out;
@@ -1336,7 +1339,7 @@ function viewClo(){
     <div class="filter-row">${rowHead("재료","mat","cmat",S.cloMat)}${foldChips(matChips, S.cloMat, "cmat", "mat")}</div>
     <div class="filter-row">${rowHead("옵션","opt","copt",S.cloOpt)}${foldChips(optChips, S.cloOpt, "copt", "opt")}</div>
     </div>
-    ${rankStep ? `<div class="ranknext"><span class="rn-k">${curRank()?`현재 ${curRank()} · `:""}다음 랭크 ${rankStep.rank}</span><span class="rn-v">배틀 ${esc(rankStep.battle)} → ${esc(rankStep.char)} → <b>${esc(rankStep.genre)}</b>${rankStep.base?` · 옷본 <b>${esc(rankStep.base)}</b>`:""}${rankStep.study?` · 스터디 ${esc(rankStep.study)}${rankStep.studyItems?.length?`(<b>${rankStep.studyItems.map(esc).join("·")}</b>)`:""}`:""}</span><span class="rn-h">점선 칩이 다음에 열리는 것 · 모두 고르면 다음 단계</span></div>` : ""}
+    ${rankStep ? `<div class="ranknext"><span class="rn-k">${curRank()!=null?`현재 ${curRank()} · `:""}다음 랭크 ${gRank(rankStep.rank)}</span><span class="rn-v">배틀 ${esc(rankStep.battle)} → ${esc(rankStep.char)} → <b>${esc(rankStep.genre)}</b>${rankStep.base?` · 옷본 <b>${esc(rankStep.base)}</b>`:""}${rankStep.study?` · 스터디 ${esc(rankStep.study)}${rankStep.studyItems?.length?`(<b>${rankStep.studyItems.map(esc).join("·")}</b>)`:""}`:""}</span><span class="rn-h">점선 칩이 다음에 열리는 것 · 모두 고르면 다음 단계</span></div>` : ""}
     ${cntBox}
     <div class="frowgap">${battleRow()}</div>
     ${S.verifyOpen ? verifyBox() : ""}
@@ -2588,7 +2591,7 @@ function render(){
   }
   renderSheet();
   const qk = $("#quick");
-  { const rb = document.querySelector('#fab [data-q="rank"]'); if (rb){ const R = curRank(); rb.hidden = R >= RANK_MAX; rb.querySelector(".fabrank").textContent = R ? `R${R}` : "R?"; if (rb.hidden && S.quick==="rank") S.quick = null; } }
+  { const rb = document.querySelector('#fab [data-q="rank"]'); if (rb){ const R = curRank(); rb.hidden = R != null && R >= RANK_MAX; rb.querySelector(".fabrank").textContent = R != null ? `R${R}` : "R?"; if (rb.hidden && S.quick==="rank") S.quick = null; } }
   if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="memo" ? homeMemo(true) : S.quick==="rank" ? rankPanel() : upFinder(true, true)}</div>` : ""; qk.hidden = !S.quick; }
   document.querySelectorAll("#fab [data-q]").forEach(b => { const on = S.quick===b.dataset.q; b.classList.toggle("on", on); b.setAttribute("aria-expanded", on); });
   const rp = $("#recentPanel"); if (rp){ rp.innerHTML = S.recentOpen ? recentPanel() : ""; rp.hidden = !S.recentOpen; }
@@ -2759,7 +2762,8 @@ document.addEventListener("click", e => {
   if (d.act==="hlegend"){ S.homeLegend = !S.homeLegend; render(); return; }
   if (d.act==="huptbl"){ S.homeUpTbl = !S.homeUpTbl; render(); return; }
   if (d.act==="hcp"){ S.homeCp = !S.homeCp; render(); return; }
-  if (d.rankset !== undefined){ const n = +d.rankset; mqNowSave({rank: n || null}); if (n) S.quick = null; toast(n ? `현재 랭크 ${n}` : "랭크를 지웠어요"); render(); return; }
+  if (d.rankset !== undefined){ const n = +d.rankset; mqNowSave({rank: n}); S.quick = null; toast(`현재 랭크 ${n}`); render(); return; }
+  if (d.rankclr){ mqNowSave({rank: null}); toast("랭크를 지웠어요"); render(); return; }
   if (d.act==="quick"){ S.quick = S.quick===d.q ? null : d.q; render(); return; }
   if (d.act==="memoedit"){ S.memoEdit = !S.memoEdit; render(); return; }
   if (d.mpk){ const n = +d.mpk, cur = memoNow().pumpkin; memoSave({pumpkin: pumpkinMonths(cur).includes(n) ? null : n}); return; }
