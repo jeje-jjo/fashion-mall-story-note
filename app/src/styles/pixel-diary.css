@@ -488,3 +488,7 @@ nav.tabs { background: var(--card); }
 .ranknext .rn-k { font-weight: 700; color: var(--blue-ink); }
 .ranknext .rn-v b { color: var(--fg); font-weight: 650; }
 .ranknext .rn-h { margin-left: auto; font-size: 11px; color: var(--fg3); }
+/* 오른쪽 아래 랭크 버튼과 선택판 */
+#fab .fabrank { font-size: 13px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+#fab [hidden] { display: none !important; }
+.rankpick .rankpad { grid-template-columns: repeat(5, 1fr); }
