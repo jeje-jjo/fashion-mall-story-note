@@ -159,6 +159,10 @@ const goodOf = f => ITEMS.filter((_,i) => f.m[i] === "◯");
 
 /* ---------- db ---------- */
 let db = null;
+/* 클릭 기록 상태(아래 "클릭 기록" 참고). 시작할 때 도구 > 화면을 바로 그릴 수 있어서 맨 위에 둠 */
+const CLK_KEY = "fms-clicklog-off";
+const clkOff = () => { try{ return localStorage.getItem(CLK_KEY) === "1"; }catch(e){ return false; } };
+const CLK = { sid: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), seq: 0, buf: [], sent: 0 };
 const queue = {};
 function writeSerial(path, data){
   const prev = queue[path] || Promise.resolve();
@@ -2916,9 +2920,6 @@ fmtNumInputs();
 /* ---------- 클릭 기록(2026-11-09 제제 요청: 마지막 회차 동안 새 노트에서 수집) ----------
    누른 버튼의 data-* 값·글자·탭과 필터 상태(누르기 전후)·화면 폭·스크롤을 20초마다 모아 note/v2/uilog/{세션}-{순번}에 저장.
    입력칸은 글자 수만 남김. 진행 데이터 경로는 건드리지 않음. 기기별로 도구 > 화면에서 끄고 켬(localStorage fms-clicklog-off) */
-const CLK_KEY = "fms-clicklog-off";
-const clkOff = () => { try{ return localStorage.getItem(CLK_KEY) === "1"; }catch(e){ return false; } };
-const CLK = { sid: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), seq: 0, buf: [], sent: 0 };
 function clickLogCard(){
   const off = clkOff();
   return `<section class="card prefs-card">
