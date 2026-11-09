@@ -524,10 +524,12 @@ const optLine = c => { const o = optOf(c); const bi = battleOf(c); const bt = bi
   return `<div class="optline">${o.guest?semTag("guest", esc(o.guest)):""}${likeTag}${bt}</div>`; };
 /* 목록 행용 추가옵션 태그: 손님·매장·아이템만(전투 태그는 챌린지 태그로 합침, 제제 2026-11-09) */
 const rowOptTags = c => { const o = optOf(c); if (!o || (!o.guest && !o.like && !o.likeType)) return "";
-  const likeTag = o.like ? (o.likeType==="아이템" ? semTag("item", `${esc(o.likeDetail||SEED)}(${esc(o.like)})`)
-    : o.likeType==="신규 매장" ? semTag("shop", `${esc(o.likeDetail||"매장 미정")}(${esc(o.like)})`)
-    : `<span class="tag">${esc(o.like)}</span>`) : "";
-  return `${o.guest?semTag("guest", esc(o.guest)):""}${likeTag}`; };
+  /* 추가옵션 태그는 앞에 작은 종류 글자(손님·매장·아이템)를 붙여 다른 태그와 구분 */
+  const kt = k => `<span class="tk">${k}</span>`;
+  const likeTag = o.like ? (o.likeType==="아이템" ? semTag("item", `${kt("아이템")}${esc(o.likeDetail||SEED)}(${esc(o.like)})`)
+    : o.likeType==="신규 매장" ? semTag("shop", `${kt("매장")}${esc(o.likeDetail||"매장 미정")}(${esc(o.like)})`)
+    : `<span class="tag">${kt("선호")}${esc(o.like)}</span>`) : "";
+  return `${o.guest?semTag("guest", `${kt("손님")}${esc(o.guest)}`):""}${likeTag}`; };
 const optTags = c => { const h = optLine(c); return h ? h.replace(/^<div class="optline">/,"").replace(/<\/div>$/,"") : ""; };
 /* 새 추가옵션 요약: 상세의 '신규' 행 */
 const newLines = c => { const o = optOf(c), out = [];
@@ -536,7 +538,7 @@ const newLines = c => { const o = optOf(c), out = [];
     else if (o.likeType==="신규 매장") out.push(["매장", `${o.likeDetail||"매장 미정"}(${o.like})`]);
     else out.push(["선호", o.like]); }
   return out; };
-const LEGEND = `<div class="legend"><span><i style="background:${SEM_COLOR.guest}"></i>손님</span><span><i style="background:${SEM_COLOR.shop}"></i>매장</span><span><i style="background:${SEM_COLOR.item}"></i>아이템</span><span><i style="background:${SEM_COLOR.battle}"></i>전투 추천</span><button class="linkbtn" data-act="golegend" style="margin-left:auto;font-size:11.5px">장르 색 보기</button></div>`;
+const LEGEND = `<div class="legend"><span><i style="background:${SEM_COLOR.guest}"></i>손님</span><span><i style="background:${SEM_COLOR.shop}"></i>매장</span><span><i style="background:${SEM_COLOR.item}"></i>아이템</span><span><i style="background:${SEM_COLOR.battle}"></i>챌린지</span><span class="lg-sep">아래 줄 점:</span><span><i style="background:${SEM_COLOR.req}"></i>손님 요청</span><span><i style="background:${SEM_COLOR.set}"></i>코디 세트</span><span><i style="background:${SEM_COLOR.mq}"></i>마네킹</span><button class="linkbtn" data-act="golegend" style="margin-left:auto;font-size:11.5px">장르 색 보기</button></div>`;
 const LIKE_TYPES = ["신규 매장","아이템"];
 const SEED = "인기 UP 씨앗";
 /* 기본정보 수정: clofix/c{id} = {c?,p?,m?,o?,col?,s?,tg?}. 원본은 c._o에 보관, 스냅샷마다 원본 복원 후 덮어씀 */
@@ -1227,9 +1229,10 @@ function nextTargets(step, avail){
 const isChal = c => isBtKind(c) || DATA.battles.some(b => (b.site?.clothes || []).some(x => x.id === c.id));
 function cloUseTags(c){
   const names = new Set([c.n, cloName(c)]), out = [];
-  if (DATA.coord.some(r => coordHasClo(r, c))) out.push(semTag("req", "손님 요청"));
-  for (let i = 0; i < mqN(); i++) if (Object.values(mqOf(i).outfit || {}).includes(c.id)){ out.push(semTag("mq", "마네킹")); break; }
-  if ((c.site?.sets || []).length) out.push(semTag("set", "코디 세트"));
+  const um = (k, l) => `<span class="usemark" style="--c:${SEM_COLOR[k]}"><i aria-hidden="true"></i>${l}</span>`;
+  if (DATA.coord.some(r => coordHasClo(r, c))) out.push(um("req", "손님 요청"));
+  for (let i = 0; i < mqN(); i++) if (Object.values(mqOf(i).outfit || {}).includes(c.id)){ out.push(um("mq", "마네킹")); break; }
+  if ((c.site?.sets || []).length) out.push(um("set", "코디 세트"));
   return out.join("");
 }
 function viewClo(){
@@ -1364,8 +1367,8 @@ function viewClo(){
         <div class="row ${d?"done":""} ${btOn && btHits(c)===btCs.length && btCs.length ? "btfull" : ""}">
           ${tr ? `<button data-tclo="${c.id}" aria-pressed="${!!d}" aria-label="${esc(cloName(c))} 완료 바꾸기">${ck(d)}</button>` : `<span style="width:26px;flex:none"></span>`}
           <button class="body" data-oclo="${c.id}" aria-expanded="${opened}" style="text-align:left">
-            <div class="t"><span class="item-number">#${String(c.id).padStart(3,"0")}</span><span class="n">${esc(cloName(c))}</span>${catTag(c.c)}${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}${rowOptTags(c)}${isChal(c)?semTag("battle", btWorn(c) ? "챌린지 · ⚔️" : "챌린지"):""}${cloUseTags(c)}${btOn ? btMatchTag(c) : ""}${Object.keys(S.clofix[c.id]||{}).length?semTag("fix","수정됨"):""}${want?`<span class="tag blue">원함</span>`:shop?`<span class="tag amber">상점</span>`:""}</div>
-            <div class="s">${[c.p,c.m,c.o].filter(Boolean).map(esc).join(" · ")}${X?` — ${esc(X)}`:""}</div>
+            <div class="t"><span class="item-number">#${String(c.id).padStart(3,"0")}</span><span class="n">${esc(cloName(c))}</span>${catTag(c.c)}${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}${rowOptTags(c)}${isChal(c)?`<span class="tag chal">${btWorn(c) ? "챌린지 · ⚔️" : "챌린지"}</span>`:""}${btOn ? btMatchTag(c) : ""}${Object.keys(S.clofix[c.id]||{}).length?semTag("fix","수정됨"):""}${want?`<span class="tag blue">원함</span>`:shop?`<span class="tag amber">상점</span>`:""}</div>
+            <div class="s"><span class="sspec">${[c.p,c.m,c.o].filter(Boolean).map(esc).join(" · ")}${X?` — ${esc(X)}`:""}</span>${cloUseTags(c)}</div>
           </button>
 
           ${c.site ? `<span class="rowvals" aria-hidden="true"><span>품질 ${c.site.q ?? "-"}</span><span>인기 ${c.site.pop ?? "-"}</span><span>${c.site.price!=null ? Number(c.site.price).toLocaleString("ko-KR")+"G" : "-"}</span></span>` : ""}
