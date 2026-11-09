@@ -410,3 +410,9 @@ nav.tabs { background: var(--card); }
 /* 패션 체크 번호: 완료한 번호는 옅게(누를 수는 있음) */
 .numpad button.fcdone, .chip.fcdone { opacity: .4; }
 .numpad button.fcdone.on, .chip.fcdone.on { opacity: .6; }
+
+/* 손님 요청: 번호를 제목 옆에, 직접 수정·잘못된 정보는 제목 옆 태그로 */
+.request-heading { align-items: center; margin-bottom: 10px; }
+.request-heading h3 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; line-height: 1.4; }
+.request-heading h3 .request-stage { margin: 0; font-size: 13px; flex: none; }
+.request-heading h3 .tag { font-size: 11px; }

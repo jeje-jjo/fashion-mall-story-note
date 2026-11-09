@@ -1343,10 +1343,9 @@ function viewCoordReq(){
   const open = n => q ? true : S.coordOpen.includes(n);
   const allOpen = names.length && names.every(n => S.coordOpen.includes(n));
   const entry = c => `<article class="coord sub request-entry">
-    <div class="request-heading"><div><p class="request-stage">${esc(c.ps || "코디 요청")}</p><h3>${esc(cTitle(c))}</h3></div><button class="iconbtn coedit" data-cedit3="${c.id}" aria-label="${esc(cTitle(c))} 수정">${ICON.pen}</button></div>
+    <div class="request-heading"><h3>${c.ps?`<span class="request-stage">${esc(c.ps)}</span>`:""}<span class="request-title">${esc(cTitle(c))}</span>${S.cfix[c.id]?.title||hasPartFix(c)?semTag("fix","직접 수정"):""}${S.cfix[c.id]?.wrong?semTag("wrong","잘못된 정보"):""}</h3><button class="iconbtn coedit" data-cedit3="${c.id}" aria-label="${esc(cTitle(c))} 수정">${ICON.pen}</button></div>
     ${c.e?`<p class="request-note">${esc(c.e)}</p>`:""}
     ${factRows(PARTS.map(([k,l]) => [l,withClo(cPart(c,k),cm)]))}
-    ${S.cfix[c.id]?.title||hasPartFix(c)?'<p class="section-note">직접 수정한 요청</p>':""}${S.cfix[c.id]?.wrong?'<p class="err">잘못된 정보로 표시됨</p>':""}
   </article>`;
   const all = Object.keys(groups).sort(byAppear);
   const shownCards = q ? names : names.filter(n => S.coordOpen.includes(n));
