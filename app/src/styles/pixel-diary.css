@@ -378,3 +378,12 @@ nav.tabs { background: var(--card); }
 .optcnt .ocrow .ocb { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .optcnt .ocrow .ocb .ocn { max-width: none; white-space: normal; }
 .optcnt .ocrow .ocb .ocs { white-space: normal; }
+
+/* 시설 행: 마우스를 올렸을 때 행 배경이 아래 항목 칩을 덮지 않게, 행+칩을 한 덩어리로 칠함 */
+.rowpills { margin-top: 0; }
+.list > div:has(> .rowpills) > .row:hover, .list > div:has(> .rowpills) > .row:active { background: transparent; }
+:root:not([data-design="hybrid"]) .list > div:has(> .rowpills):hover { background: var(--press); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .list > div:has(> .rowpills):hover { background: color-mix(in srgb,var(--blue) 3%,var(--card)); }
+
+/* 손님 코디: 검색창과 손님 줄(선택 해제·완료 숨기기) 사이 간격 */
+.customer-catalog .tools + .fhead.rowhead { margin-top: 18px; }
