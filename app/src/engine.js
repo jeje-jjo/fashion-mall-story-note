@@ -1,3 +1,5 @@
+import { metricStrip, factRows, infoSection, textList, usageRow, referenceBlock, installReferenceState } from "./ui/information.js";
+installReferenceState();
 /* 패션몰스토리 노트 화면 엔진 — legacy/app/post.html에서 옮겨 옴(2026-11-06). 이제 이 파일이 원본이다. */
 const DATA = window.__FMS_DATA__;
 
@@ -591,7 +593,10 @@ const battleFor = c => DATA.battles[bGenreIdx(c)]?.name || DATA.battles[0]?.name
 /* PC·패드는 가운데 모달, 핸드폰은 바텀 시트. 설정이 auto면 화면 너비로 */
 /* 2026-11-06: 아래에서 올라오는 시트는 쓰지 않고 항상 가운데 창으로(제제: 올라오는 창은 불편) */
 const isDesk = () => true;
-const fld = (label, inner) => `<div class="fld"><span class="fl">${label}</span>${inner}</div>`;
+const fld = (label, inner) => {
+  const id = inner.match(/\bid="([^"]+)"/)?.[1];
+  return `<div class="fld">${id ? `<label class="fl" for="${id}">${label}</label>` : `<span class="fl">${label}</span>`}${inner}</div>`;
+};
 const dl = (id, vals) => `<datalist id="${id}">${vals.map(v => `<option value="${esc(v)}">`).join("")}</datalist>`;
 /* 옷 수정 전체 폼: 이름 · 기본정보 · 추가옵션 · 전투 추천을 한 번에, 저장하면 바뀐 것만 반영 */
 function cloFullForm(c){
@@ -844,7 +849,7 @@ function fcEditForm(oi){
     </form>`;
 }
 /* 패션 체크 사이트 기준: 평론가·상금·보상 옵션·등장 조건 */
-const fcSiteLine = st => !st ? "" : `<div class="cs-line fcsite">${st.critic?`<span class="tag plain">평론가 ${esc(st.critic)}</span>`:""}${st.prize!=null?`<span class="tag plain">상금 ${nf0(st.prize)}G</span>`:""}${st.option && st.option!=="—"?semTag("sp", "보상 "+esc(st.option)):""}${st.win && (!st.option || st.option==="—")?`<span class="tag plain">${esc(st.win.replace(/\s*\/\s*/g," · ").replace(/(액세서리|옷):\s*(\d+)/g, (m, k, id) => { const c = CLO_BY_ID.get(+id); return c ? `${k}: ${cloName(c)}` : m; }))}</span>`:""}${st.appear?`<span class="tag plain">등장 ${esc(st.appear.replace(/^조건:\s*/,"").replace(/['‘’]/g,""))}</span>`:""}</div>`;
+const fcSiteLine = st => !st ? "" : `<div class="check-facts">${factRows([["평론가", st.critic], ["상금", st.prize == null ? null : nf0(st.prize) + " G"], ["보상", st.option && st.option !== "—" ? st.option : st.win && st.win.replace(/\s*\/\s*/g, " · ").replace(/(액세서리|옷):\s*(\d+)/g, (m,k,id) => { const c = CLO_BY_ID.get(+id); return c ? `${k}: ${cloName(c)}` : m; })], ["등장 조건", st.appear && st.appear.replace(/^조건:\s*/, "").replace(/['‘’]/g, "")]])}</div>`;
 function fcExtraList(){
   return `<div class="btextra">${(DATA.checksExtra||[]).map(c => `<div class="fccard"><div class="fc-h"><span class="fcnum">${c.site?.id ?? ""}</span><b class="fc-n">${esc(c.name)}</b></div>${fcSiteLine(c.site)}</div>`).join("")}<div class="hint">모델 체크는 사이트에만 있어요(필요 시설 없음) · 출처: KairoHistory 패션 체크</div></div>`;
 }
@@ -857,7 +862,7 @@ function fcInfoCard(oi){
     <div class="fc-h"><span class="fcnum">${oi+1}</span><b class="fc-n">${esc(checkName(oi))}</b>
       ${hybrid()?`<button class="iconbtn act" data-sheet="fc|${oi}" aria-label="이름·기록 수정">${ICON.pen}</button>`:""}${hasNote?`<button class="iconbtn act ${noteOpen?"on":""}" data-act="fcnote" aria-label="주석 보기" aria-expanded="${noteOpen}">${ICON.note}</button>`:""}
       <span class="fc-c">${main.length?`${n} / ${main.length}`:"대상 없음"}</span></div>
-    <div class="fc-tags"><span class="tag key">요구</span>${reqTags(c.req)}${c.reward?`<span class="tag key" style="margin-left:6px">보상</span>${rewardTags(c.reward)}`:""}</div>
+    <div class="check-overview">${factRows([["요구 조건",c.req],["보상",c.reward]])}</div>
     ${fcSiteLine(c.site)}
     ${scoreLine(oi) ? `<button type="button" class="linkbtn" data-fcrec="${oi}" aria-expanded="${S.fcRecOpen===oi}">${S.fcRecOpen===oi?"기록 접기":"기록 보기"}</button>${S.fcRecOpen===oi ? scoreLine(oi) : ""}` : ""}
     ${noteOpen ? `${alt.length?`<div class="altline">대신 가능: ${alt.map(f => `<span class="${facDone(f)?"altdone":""}">${esc(facName(f))}${facDone(f)?" ✓":""}</span>`).join(" · ")}</div>`:""}${c.note?`<div class="note-bar" style="margin-top:8px">${esc(c.note)}</div>`:""}` : ""}
@@ -898,7 +903,8 @@ function viewFac(){
   const pc = rows.filter(facPartial).length;
   const fcOne = S.facFcSel.length===1 && S.facFcSel[0] <= FC_MAX ? S.facFcSel[0]-1 : null;
   const canPut = idx >= 0 && rel==="좋음";
-  return `<section class="card">
+  return `<section class="card facility-catalog">
+    <div class="catalog-head"><div><p class="catalog-kicker">MY MALL</p><h2>시설 관리 <span>${rows.length}곳</span></h2></div><p class="catalog-description">아이템 상성을 보고, 넣은 항목을 바로 체크해요.</p></div>
     ${genreRow(typeChips)}
     <div class="frowgap nol">${fcFilterRow()}</div>
     ${fcOne!=null ? fcInfoCard(fcOne) : ""}
@@ -920,29 +926,18 @@ function viewFac(){
           <button class="iconbtn" data-ofac="${f.id}" aria-label="자세히">${ICON.chev}</button>
         </div>
         <div class="rowpills pills">${needOf(f).map(i=>`<button class="pill ${put.includes(i)?"need":"must"}" data-put="${f.id}|${esc(i)}" aria-pressed="${put.includes(i)}">${put.includes(i)?"✓ ":""}${i}</button>`).join("")||'<span class="hint">상성 좋음 항목 없음</span>'}</div>
-        ${opened ? `<div class="detail">${facDetail(f)}${hybrid() ? "" : facRenameForm(f)}</div>` : ""}
+        ${opened ? `<div class="detail item-detail">${facDetail(f)}${hybrid() ? "" : facRenameForm(f)}</div>` : ""}
       </div>`; }).join("") : `<div class="empty">조건에 맞는 시설이 없어요</div>`}</div>
   </section>`;
 }
 
 /* 시설 상세(2026-11-07): 옷 상세와 같은 틀. 사이트 값 → 상성 보통·나쁨 · 패션 체크 · 효과 · 40P. 상성 좋음은 행 아래 칩에 이미 있어서 뺌 */
 function facDetail(f){
-  const st = f.site || {}, has = v => v!=null && v!=="";
-  const nf = v => Number(v).toLocaleString("ko-KR");
-  const facts = [["크기", has(st.w)&&has(st.h) ? `${st.w}×${st.h}` : null], ["건설비", has(st.cost) ? nf(st.cost)+"G" : null], ["유지비", has(st.upkeep) ? nf(st.upkeep)+"G" : null], ["매력", has(st.charm) ? nf(st.charm) : null], ["인기", has(st.pop) ? nf(st.pop) : null], ["평판", has(st.fame) ? nf(st.fame) : null]].filter(x => x[1]!=null);
-  const pl = (arr, cls="") => arr.length ? arr.map(i => `<span class="pill ${cls}">${esc(i)}</span>`).join("") : `<span class="hint">없음</span>`;
-  const fcs = (FC_OF[f.id]||[]).map(n => `<button class="pill ${S.facFcSel.includes(n)?"need":"must"}" data-fcn="${n}" title="이 패션 체크로 거르기">${n} ${esc(checkName(n-1))}${(FC_ALT[f.id]||[]).includes(n)?" · 대신 가능":""}</button>`).join("");
-  const kind = [st.group, st.category].filter(Boolean).join(" · ");
-  return `<div class="csite">
-    ${facts.length ? `<div class="cs-facts">${facts.map(([k,v]) => `<span class="cs-f"><small>${k}</small><b>${v}</b></span>`).join("")}</div>` : ""}
-    <div class="cs-line"><small>상성 보통 ◯</small>${pl(goodOf(f))}</div>
-    <div class="cs-line"><small>상성 나쁨 ×</small>${pl(badOf(f), "bad")}</div>
-    ${fcs ? `<div class="cs-line"><small>패션 체크</small>${fcs}</div>` : ""}
-    ${st.effect ? `<div class="cs-line"><small>효과</small>${esc(st.effect)}</div>` : ""}
-    ${kind ? `<div class="cs-line"><small>구분</small>${esc(kind)}</div>` : ""}
-    ${f.p40 ? `<div class="cs-line"><small>우선개량</small>${p40Tag(f)}<span class="hint">40P로 이용 포인트 2</span></div>` : ""}
-    ${st.name || facts.length ? `<div class="hint">기준값 출처: KairoHistory 시설</div>` : ""}
-  </div>`;
+  const st = f.site || {};
+  const money = v => v == null ? null : Number(v).toLocaleString("ko-KR") + " G";
+  const metrics = metricStrip([["크기", st.w != null && st.h != null ? `${st.w} × ${st.h}` : null], ["건설비", money(st.cost)], ["유지비", money(st.upkeep)], ["매력", st.charm], ["인기", st.pop], ["평판", st.fame]], "시설 기준 수치");
+  const checks = (FC_OF[f.id] || []).map(n => `<li><button class="text-action" data-fcn="${n}">${n}. ${esc(checkName(n-1))}</button>${(FC_ALT[f.id] || []).includes(n)?'<span class="inline-progress">대신 가능</span>':""}</li>`).join("");
+  return `${metrics}<div class="detail-layout"><div class="detail-column">${infoSection("시설 정보",factRows([["구분",[st.group,st.category].filter(Boolean).join(" · ")],["효과",st.effect]]))}${checks ? infoSection("이 시설이 필요한 패션 체크", `<ul class="info-list">${checks}</ul>`) : ""}${f.p40?infoSection("우선개량",`<div class="upgrade-line">${p40Tag(f)}<p>40P로 이용 포인트 2</p></div>`):""}</div><div class="detail-column">${infoSection("아이템 상성",`<div class="pair-grid"><div class="pair-group"><h4>상성 보통 ◯</h4>${textList(goodOf(f))}</div><div class="pair-group negative"><h4>상성 나쁨 ×</h4>${textList(badOf(f))}</div></div>`)}</div></div><div class="detail-footer"><span class="source-caption">${f.site?.preview?"화면 검토용 예시 수치":f.site?"기준값: KairoHistory 시설":"기준값: 기존 노트"}</span><button class="text-action" data-sheet="fac|${f.id}">시설 이름 수정</button></div>`;
 }
 /* 게임에서 확인할 것: 경고 아이콘 → 펼침. 확인한 항목은 meta/verify {done:{k:true}}에 저장 */
 const verifyLeft = () => (DATA.verify||[]).filter(v => !S.verifyDone?.[v.k]);
@@ -985,24 +980,12 @@ const btTryRow = (t, n, b) => `<div class="bttry-row"><span class="k">${n+1}차<
 /* 전투 사이트 기준(제제 원칙: 기준값 먼저): 요청·의류 조건·기준값(품질·매력·능력치, 코디 합계)·참가비·보상, 일치 의류·추천 세트 */
 function btSiteBlock(st, mine, noSrc){
   if (!st) return "";
-  const V = st.values || [], lab = ["품질","매력","능력치"];
-  const cmp = (j) => { const t = V[j]; if (t==null) return ""; const m = mine?.[j];
-    const d = m ? m - t : null;
-    return `<span class="cs-f"><small>${lab[j]}</small><b>${nf0(t)}</b>${d!=null?` <span class="${d>=0?"bt-ok":"bt-ng"}">내 ${nf0(m)} (${d>=0?"+":"−"}${nf0(Math.abs(d))})</span>`:""}</span>`; };
-  const clo = (st.clothes||[]).map(x => ({x, c: CLO_BY_ID.get(x.id)})).filter(y => y.c);
-  const uniq = [...new Map(clo.map(y => [y.c.id, y])).values()].sort((a,b) => cloDone(b.c) - cloDone(a.c));
-  const sets = (st.sets||[]).map(x => { const s = (DATA.sets||[]).find(z => z.id===x.setId); const inf = s && setInfo(s);
-    return `<span class="pill ${inf && !inf.left?"must":""}" title="${esc(x.unmet||"")}">세트 ${x.setId} · ${esc(x.result||"")}${inf?` <b>${inf.done}/${inf.total}</b>`:""}</span>`; }).join("");
-  return `<div class="csite btsite">
-    ${st.request ? `<div class="cs-line" style="margin-top:0">${esc(st.request)}</div>` : ""}
-    ${st.clothCond ? `<div class="cs-line"><small>의류 조건</small>${st.clothCond.split(";").map(t => `<span class="tag plain">${esc(t.trim())}</span>`).join("")}</div>` : ""}
-    ${V.length ? `<div class="cs-line"><small>기준값(코디 합계) · 내 값은 아래 슬롯 합계</small></div><div class="cs-facts">${[0,1,2].map(cmp).join("")}</div>` : ""}
-    <div class="cs-line"><small>${st.fee!=null?"참가비 · ":""}보상 · 등장</small>${st.fee!=null?`<span class="tag plain">${nf0(st.fee)}G</span>`:""}${st.win?`<span class="tag plain">${esc(st.win.replace(/\s*\/\s*/g," "))}</span>`:""}${st.appear?`<span class="tag plain">${esc(st.appear)}</span>`:""}</div>
-    ${st.opponentOutfit ? `<div class="cs-line"><small>상대 코디</small>${esc(st.opponentOutfit.replace(/\s*#\d+/g,""))}</div>` : ""}
-    ${uniq.length ? `<div class="cs-line"><small>일치 의류 ${uniq.filter(y => cloDone(y.c)).length}/${uniq.length} 완료</small>${uniq.map(({x,c}) => `<span class="pill ${cloDone(c)?"must":""}" title="${esc(x.source)}">${cloDone(c)?"✓ ":""}${esc(cloName(c))}</span>`).join("")}</div>` : ""}
-    ${sets ? `<div class="cs-line"><small>추천 세트(사이트, 세트 조건 결합은 미확정)</small>${sets}</div>` : ""}
-    ${noSrc ? "" : `<div class="hint">출처: KairoHistory 배틀·코디 세트</div>`}
-  </div>`;
+  const values = st.values || [];
+  const labels = ["품질", "매력", "능력치"];
+  const comparisons = values.map((v,i) => v == null ? "" : `<div class="comparison-row"><span>${labels[i]}</span><strong>${nf0(v)}</strong><span>${mine?.[i] == null ? "미기록" : `내 ${nf0(mine[i])}`}</span>${mine?.[i] == null ? "" : `<span class="${mine[i]>=v?"bt-ok":"bt-ng"}">${mine[i]>=v?"+":"−"}${nf0(Math.abs(mine[i]-v))}</span>`}</div>`).join("");
+  const clothes = [...new Map((st.clothes || []).map(x => ({x,c:CLO_BY_ID.get(x.id)})).filter(x => x.c).map(x => [x.c.id,x])).values()].sort((a,b) => cloDone(b.c)-cloDone(a.c));
+  const sets = (st.sets || []).map(x => { const set = (DATA.sets || []).find(s => s.id===x.setId), inf = set && setInfo(set); return `세트 ${x.setId} · ${x.result || ""}${inf?` · ${inf.done}/${inf.total} 완료`:""}`; });
+  return `<div class="battle-detail">${st.request?`<p class="battle-request">${esc(st.request)}</p>`:""}<div class="detail-layout"><div class="detail-column">${st.clothCond?infoSection("의류 조건",textList(st.clothCond.split(";").map(x=>x.trim()).filter(Boolean))):""}${comparisons?infoSection("상대 기준과 내 기록",`<div class="comparison-table"><div class="comparison-label"><span>항목</span><span>상대 기준</span><span>내 기록</span><span>차이</span></div>${comparisons}</div>`):""}${infoSection("보상과 참가 조건",factRows([["참가비",st.fee==null?null:nf0(st.fee)+" G"],["보상",st.win&&st.win.replace(/\s*\/\s*/g," · ")],["등장",st.appear]]))}</div><div class="detail-column">${clothes.length?infoSection(`조건에 맞는 의류 · ${clothes.filter(x=>cloDone(x.c)).length}/${clothes.length} 완료`,`<ul class="info-list">${clothes.map(({c})=>`<li><span class="inline-state ${cloDone(c)?"is-done":""}">${cloDone(c)?"✓":"○"}</span>${esc(cloName(c))}</li>`).join("")}</ul>`):""}${sets.length?infoSection("추천 세트",textList(sets)+`<p class="section-note">사이트 추천입니다. 세트 조건 결합은 미확정이에요.</p>`):""}${st.opponentOutfit?referenceBlock(`opponent-${st.id}`,"상대 코디",`<p>${esc(st.opponentOutfit.replace(/\s*#\d+/g,""))}</p>`):""}</div></div>${noSrc?"":`<p class="source-caption">${st.preview?"화면 검토용 예시 수치":"기준값: KairoHistory 배틀·코디 세트"}</p>`}</div>`;
 }
 function battleCard(i){
   const b = DATA.battles[i], r = bRec(i), cs = bCond(i), noteOpen = !!S.btNote;
@@ -1017,9 +1000,7 @@ function battleCard(i){
       <button class="iconbtn act" data-sheet="bt|${i}" aria-label="전투 기록 수정">${ICON.pen}</button>${b.note?`<button class="iconbtn act ${noteOpen?"on":""}" data-act="btnote" aria-label="코멘트 보기" aria-expanded="${noteOpen}">${ICON.note}</button>`:""}
       ${ov?`<span class="tag ${ov.cls}">${ov.t}</span>`:""}<span class="fc-c">추천 ${rec}벌</span></div>
     ${btSiteBlock(b.site, [qsum||null, sum||null, r.stat ?? null])}
-    <div class="fc-tags"><span class="tag key">조건</span>${cs.length ? cs.map(t => `<span class="tag plain">${esc(t)}</span>`).join("") : `<span class="tag plain">없음</span>`}
-      <span class="tag key" style="margin-left:6px">보상</span>${semTag("sp", esc(b.reward))}
-      <span class="tag key" style="margin-left:6px">능력</span><span class="tag plain">${esc(b.stat)}</span></div>
+    <div class="battle-notebook">${infoSection("내 전투 준비",factRows([["노트 조건",cs.length?cs.join(" · "):"조건 없음"],["보상 옵션",b.reward],["점원 능력",b.stat]]))}</div>
     ${slots.length || r.stat || tries.length || prev.length || r.res ? `<div class="btslots">${slots.map(x => `<div class="btslot"><span class="k">${x.l}</span><span class="n">${esc(x.n||"-")}</span>${x.q?`<span class="v">품질 <b>${nf0(+x.q)}</b></span>`:""}${x.charm?`<span class="v">매력 <b>${nf0(+x.charm)}</b></span>`:""}</div>`).join("")}
       <div class="btslot sum"><span class="k">합계</span><span class="btres">${resBtn("q","품질",qsum||"")}${resBtn("c","매력",sum||"")}${resBtn("s",esc(b.stat),r.stat)}</span><button class="btn sm ghost bttry" data-bttry="${i}" title="지금 합계와 결과를 아래 기록에 남기고 결과를 비워요">재시도</button></div>
       ${tries.length || prev.length ? `<button type="button" class="linkbtn" data-btrec="${i}" aria-expanded="${!!S.btRecOpen?.[i]}">${S.btRecOpen?.[i]?"기록 접기":`시도 기록 보기 ${tries.length + prev.length}건`}</button>` : ""}
@@ -1080,27 +1061,26 @@ async function saveBtFull(i){
   if (db) try{ await writeSerial(`battles/b${i}`, rec); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
 /* 옷 상세 맨 위: 사이트 기준값 먼저(제제 원칙), 기록한 품질·매력(2026-10-30 영상)은 "기록 보기"로 연다 */
-function cloSiteBlock(c, extra = ""){
-  const st = c.site; if (!st) return "";
-  const nf = v => v==null || v==="" ? "-" : Number(v).toLocaleString("ko-KR");
-  const styles = Object.entries(st.styles||{}).sort((a,b) => b[1]-a[1]).map(([k,v]) => `${catTag(k)}<b class="cs-v">${v}</b>`).join("");
-  const sets = (st.sets||[]).map(id => { const s = (DATA.sets||[]).find(x => x.id===id); if (!s) return `#${id}`; const inf = setInfo(s);
-    return `<span class="pill ${inf.left?"":"must"}">세트 ${id} <b>${inf.done}/${inf.total}</b></span>`; }).join("");
-  const pairList = ids => ids.map(id => CLO_BY_ID.get(id)).filter(Boolean).map(x => `<span class="pill ${cloDone(x)?"must":""}">${cloDone(x)?"✓ ":""}${esc(cloName(x))}</span>`).join("");
-  /* 궁합은 사이트가 하의 쪽에만 적어 둠: 상의·셋업이면 하의 목록에서 거꾸로 찾음 */
-  const rev = v => DATA.clo.filter(x => (v>0 ? x.site?.goodIds : x.site?.badIds)?.includes(c.id)).map(x => x.id);
-  const good = [...new Set([...(st.goodIds||[]), ...rev(1)])], bad = [...new Set([...(st.badIds||[]), ...rev(-1)])];
-  const g = GS_BY[c.id], open = S.cloRecOpen === c.id;
-  return `<div class="csite">
-    <div class="cs-facts">${[["품질", st.q], ["인기", st.pop], ["가격", st.price!=null?nf(st.price)+"G":null], ["재고", st.stock], ["Tier", st.tier]].map(([k,v]) => `<span class="cs-f"><small>${k}</small><b>${v==null?"-":k==="가격"?v:nf(v)}</b></span>`).join("")}</div>
-    ${extra}
-    <div class="cs-line"><small>종류</small>${esc([st.kind, st.genre && layGName(st.genre), st.sub].filter(Boolean).join(" · "))}${st.cust?` · 손님 ${esc(st.cust)}`:""}</div>
-    ${styles ? `<div class="cs-line"><small>스타일 점수</small>${styles}</div>` : ""}
-    ${good.length ? `<div class="cs-line"><small>잘 어울림</small>${pairList(good)}</div>` : ""}
-    ${bad.length ? `<div class="cs-line"><small>안 어울림</small>${pairList(bad)}</div>` : ""}
-    ${g ? `<button class="linkbtn" data-clorec="${c.id}" aria-expanded="${open}">${open?"기록 접기":"기록 보기"}</button>${open?`<div class="cs-line"><small>내 기록</small>품질 <b>${nf(g[1])}</b> · 매력 <b>${nf(g[2])}</b> <span class="hint">2026-10-30 게임 화면</span></div>`:""}` : ""}
-    <div class="hint">기준값 출처: KairoHistory 옷 목록</div>
-  </div>`;
+function cloSiteBlock(c){
+  const st = c.site || {};
+  const money = v => v == null ? null : Number(v).toLocaleString("ko-KR") + " G";
+  const rev = positive => DATA.clo.filter(x => (positive ? x.site?.goodIds : x.site?.badIds)?.includes(c.id)).map(x => x.id);
+  const related = positive => [...new Set([...(positive ? st.goodIds || [] : st.badIds || []), ...rev(positive)])].map(id => CLO_BY_ID.get(id)).filter(Boolean);
+  const pairing = (title, list, tone) => list.length ? `<div class="pair-group ${tone}"><h4>${title}<span>${list.length}벌</span></h4><ul>${list.map(x => `<li><span class="inline-state ${cloDone(x)?"is-done":""}" aria-label="${cloDone(x)?"완료":"미완료"}">${cloDone(x)?"✓":"○"}</span><span>${esc(cloName(x))}</span></li>`).join("")}</ul></div>` : "";
+  const styleRows = Object.entries(st.styles || {}).sort((a,b) => b[1]-a[1]);
+  const g = GS_BY[c.id], recordOpen = S.cloRecOpen === c.id;
+  const recipe = factRows([["옷본", c.p || "없음"], ["재료", c.m || "없음"], ["옵션", c.o || "없음"]]);
+  const basic = factRows([["종류", [st.kind, st.genre && layGName(st.genre), st.sub].filter(Boolean).join(" · ")], ["색", c.col || "미확인"], ["계절", c.s || "미확인"], ["손님 성향", st.cust], ["태그", c.tg]]);
+  const newInfo = newLines(c);
+  const battle = battleOf(c) >= 0 ? factRows([["전투 추천", DATA.battles[battleOf(c)].name + (S.cbattle[c.id] ? "" : " · 자동")]]) : "";
+  const good = related(true), bad = related(false);
+  const metrics = metricStrip([["품질", st.q], ["인기", st.pop], ["가격", money(st.price)], ["재고", st.stock], ["Tier", st.tier]], "의류 기준 수치");
+  const records = g ? `<button class="text-action" data-clorec="${c.id}" aria-expanded="${recordOpen}">${recordOpen?"내 기록 접기":"내 기록 보기"}</button>${recordOpen ? factRows([["품질", g[1]], ["매력", g[2]], ["확인일", "2026-10-30 게임 화면"]]) : ""}` : "";
+  return `${metrics}<div class="detail-layout clothing-layout">
+    <div class="detail-column">${infoSection("만드는 법", recipe)}${newInfo.length ? infoSection("새로 열리는 것", factRows(newInfo)) : ""}${battle ? infoSection("전투", battle) : ""}</div>
+    <div class="detail-column">${cloNeedBlock(c) || '<p class="info-empty">연결된 손님 요청이나 코디 세트가 없어요.</p>'}</div>
+    <div class="detail-column">${infoSection("의류 정보", basic)}${styleRows.length ? infoSection("스타일 점수", `<div class="style-scores">${styleRows.map(([k,v]) => `<div><span>${esc(k)}</span><strong>${esc(v)}</strong></div>`).join("")}</div>`) : ""}</div>
+  </div>${good.length || bad.length ? `<div class="detail-secondary">${infoSection("상의·하의 궁합", `<div class="pair-grid">${pairing("잘 어울리는 옷",good,"positive")}${pairing("피해야 할 조합",bad,"negative")}</div>${st.pairCut?'<p class="section-note">위키에서 일부 조합이 생략되어 있어요.</p>':""}`)}</div>` : ""}<div class="detail-footer"><span class="source-caption">${c.site?.preview ? "화면 검토용 예시 수치" : c.site ? "기준값: KairoHistory 옷 목록" : "기준값: 기존 노트"}</span>${records}</div>${c.x ? referenceBlock(`clo-${c.id}-notes`, "기존 추가옵션 메모", `<p>${esc(withNames(c.x))}</p>`) : ""}`;
 }
 /* 옷 상세: 이 옷이 필요한 곳 · 옵션 얻는 곳(2026-11-06 개편). 기준 표와 진행 상태를 이어서 보여 주기만 하고 따로 저장하지 않음 */
 const optToks = v => String(v||"").split(/[,、·\/]/).map(x => x.replace(/^★\s*/,"").trim()).filter(Boolean);
@@ -1118,16 +1098,20 @@ function optSources(o){
   return (_optSrc[o] = [...new Set(out)]);
 }
 function cloNeedBlock(c){
-  const nm = new Set([c.n, cloName(c)]);
-  const sets = (c.site?.sets||[]).map(id => (DATA.sets||[]).find(x => x.id===id)).filter(Boolean).map(setInfo).sort((a,b) => (a.left||99) - (b.left||99));
-  const pills = sets.slice(0, 6).map(i => `<span class="pill ${i.left===1?"need":i.left===0?"":"must"}">세트 ${i.s.id} ${i.left===0?"완성":i.left===1?"1벌 남음":`${i.done}/${i.total}`}</span>`);
-  DATA.battles.forEach((b, i) => { if ((b.site?.clothes||[]).some(x => x.id===c.id)) pills.push(`<span class="pill">배틀 ${esc(bShort(i))}</span>`); });
-  const guests = [...new Set(DATA.coord.filter(r => ["t","b","o","a"].some(k => String(cPart(r, k)||"").split("/").some(v => nm.has(v.replace(/\s*외$/,"").trim())))).map(coordName))];
-  guests.forEach(g => pills.push(`<span class="pill">손님 ${esc(g)}</span>`));
-  for (let i = 0; i < mqN(); i++) if (Object.values(mqOf(i).outfit||{}).includes(c.id)) pills.push(`<span class="pill need">마네킹 ${i+1}</span>`);
-  const src = optSources(c.o);
-  if (!pills.length && !src.length) return "";
-  return `<div class="cneed">${pills.length?`<div class="cs-line" style="margin-top:0"><small>이 옷이 필요한 곳</small>${pills.join("")}</div>`:""}${src.length?`<div class="cs-line"><small>${esc(c.o)} 얻는 곳</small>${src.map(x => `<span class="pill">${esc(x)}</span>`).join("")}</div>`:""}</div>`;
+  const names = new Set([c.n, cloName(c)]);
+  const sets = (c.site?.sets || []).map(id => (DATA.sets || []).find(x => x.id === id)).filter(Boolean).map(setInfo).sort((a,b) => (a.left || 99) - (b.left || 99));
+  const groups = [];
+  groups.push(usageRow("코디 세트", sets.map(x => `<span>세트 ${x.s.id}</span><span class="inline-progress ${x.left === 0 ? "is-done" : ""}">${x.done}/${x.total} 완료${x.left === 1 ? " · 1벌 남음" : ""}</span>`)));
+  const battles = DATA.battles.flatMap((b,i) => (b.site?.clothes || []).some(x => x.id === c.id) ? [esc(bShort(i))] : []);
+  groups.push(usageRow("챌린지", battles));
+  const guests = [...new Set(DATA.coord.filter(r => ["t","b","o","a"].some(k => String(cPart(r,k)||"").split("/").some(v => names.has(v.replace(/\s*외$/, "").trim())))).map(coordName))];
+  groups.push(usageRow("손님 요청", guests.map(esc)));
+  const mannequins = [];
+  for (let i = 0; i < mqN(); i++) if (Object.values(mqOf(i).outfit || {}).includes(c.id)) mannequins.push(`마네킹 ${i+1}`);
+  groups.push(usageRow("세운 코디", mannequins));
+  const uses = groups.filter(Boolean).join("");
+  const sources = optSources(c.o);
+  return `${uses ? infoSection("이 옷이 필요한 곳", uses) : ""}${sources.length ? infoSection(`${c.o} 얻는 곳`, textList(sources)) : ""}`;
 }
 function viewClo(){
   const cats = ["전체", ...new Set(DATA.clo.map(c => c.c))];
@@ -1223,14 +1207,11 @@ function viewClo(){
             <div class="t"><span class="item-number">#${String(c.id).padStart(3,"0")}</span><span class="n">${esc(cloName(c))}</span>${btOn ? btMatchTag(c) : ""}${catTag(c.c)}${optTags(c)}${Object.keys(S.clofix[c.id]||{}).length?semTag("fix","수정됨"):""}${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}${want?`<span class="tag blue">원함</span>`:shop?`<span class="tag amber">상점</span>`:""}</div>
             <div class="s">${[c.p,c.m,c.o].filter(Boolean).map(esc).join(" · ")}${X?` — ${esc(X)}`:""}</div>
           </button>
-          ${opened && hybrid() ? `<button class="iconbtn act" data-sheet="clo|${c.id}" aria-label="${esc(cloName(c))} 수정">${ICON.pen}</button><button class="iconbtn act ${battleOf(c)>=0?"on":""}" data-sheet="battle|${c.id}" aria-label="전투 추천 ${battleOf(c)>=0?"해제":"켜기"}" aria-pressed="${battleOf(c)>=0}">${ICON.sword}</button>` : ""}
+
           ${c.site ? `<span class="rowvals" aria-hidden="true"><span>품질 ${c.site.q ?? "-"}</span><span>인기 ${c.site.pop ?? "-"}</span><span>${c.site.price!=null ? Number(c.site.price).toLocaleString("ko-KR")+"G" : "-"}</span></span>` : ""}
           <button class="iconbtn" data-oclo="${c.id}" aria-label="자세히">${ICON.chev}</button>
         </div>
-        ${opened ? `<div class="detail">${cloSiteBlock(c, cloNeedBlock(c)) || cloNeedBlock(c)}<dl class="kv">
-          <dt>색</dt><dd>${esc(c.col)||"-"}</dd><dt>계절</dt><dd>${esc(c.s)||"-"}</dd>
-          <dt>태그</dt><dd>${esc(c.tg)||"-"}</dd>${newLines(c).length?`<dt class="kv-new">신규</dt><dd class="kv-new">${newLines(c).map(([k,v])=>`<span class="kvn"><b>${k}</b>${esc(v)}</span>`).join("")}</dd>`:""}${battleOf(c)>=0?`<dt>전투 추천</dt><dd><b style="color:var(--fg)">${esc(DATA.battles[battleOf(c)].name)}</b>${S.cbattle[c.id]?"":" · 자동"}</dd>`:""}${X?`<dt>이전 추가옵션</dt><dd>${esc(X)}</dd>`:""}</dl>
-          ${hybrid() ? "" : cloEditor(c)}</div>` : ""}
+        ${opened ? `<div class="detail item-detail">${cloSiteBlock(c)}<div class="detail-actions"><button class="btn ghost" data-sheet="clo|${c.id}">${ICON.pen}정보 수정</button><button class="btn ghost" data-sheet="battle|${c.id}">${ICON.sword}전투 추천 ${battleOf(c)>=0?"관리":"추가"}</button></div>${hybrid()?"":cloEditor(c)}</div>` : ""}
       </div>`; }).join("") : `<div class="empty">조건에 맞는 옷이 없어요</div>`}</div>
     ${rows.length>200?`<div class="empty" style="padding:12px">200벌까지 보여요. 검색으로 좁혀 주세요.</div>`:""}
   </section>${nextMakeCard()}`;
@@ -1277,10 +1258,12 @@ function viewCoordReq(){
   const names = Object.keys(groups).sort((a,b) => (cdone(a) - cdone(b)) || a.localeCompare(b, "ko"));
   const open = n => q ? true : S.coordOpen.includes(n);
   const allOpen = names.length && names.every(n => S.coordOpen.includes(n));
-  const entry = c => `<div class="coord sub">
-    <div class="who" style="font-size:14px"><button class="iconbtn coedit" data-cedit3="${c.id}" aria-label="${esc(c.ps||"")} ${esc(cTitle(c))} 수정">${ICON.pen}</button><span class="tag">${esc(c.ps || "-")}</span>${esc(cTitle(c))}${c.e?`<small class="desc">${esc(c.e)}</small>`:""}${S.cfix[c.id]?.title||hasPartFix(c)?semTag("fix","수정됨"):""}${S.cfix[c.id]?.wrong?semTag("wrong","잘못된 정보"):""}</div>
-    <div class="pills">${PARTS.map(([k,l]) => [l, withClo(cPart(c,k),cm), !!S.cfix[c.id]?.[PK(k)]]).filter(x=>x[1]).map(([k,v,fx])=>`<span class="pill ${fx?"fixed":""}"><span style="color:var(--fg3);margin-right:6px">${k}</span>${esc(v)}</span>`).join("")}</div>
-  </div>`;
+  const entry = c => `<article class="coord sub request-entry">
+    <div class="request-heading"><div><p class="request-stage">${esc(c.ps || "코디 요청")}</p><h3>${esc(cTitle(c))}</h3></div><button class="iconbtn coedit" data-cedit3="${c.id}" aria-label="${esc(cTitle(c))} 수정">${ICON.pen}</button></div>
+    ${c.e?`<p class="request-note">${esc(c.e)}</p>`:""}
+    ${factRows(PARTS.map(([k,l]) => [l,withClo(cPart(c,k),cm)]))}
+    ${S.cfix[c.id]?.title||hasPartFix(c)?'<p class="section-note">직접 수정한 요청</p>':""}${S.cfix[c.id]?.wrong?'<p class="err">잘못된 정보로 표시됨</p>':""}
+  </article>`;
   const all = Object.keys(groups).sort((a,b) => a.localeCompare(b, "ko"));
   const shownCards = q ? names : names.filter(n => S.coordOpen.includes(n));
   const card = n => { const dn = cdone(n), fo = !!S.coordFixOpen[n]; return `<div class="fccard cocard ${dn?"cdone":""}">
@@ -1289,13 +1272,15 @@ function viewCoordReq(){
       <button class="iconbtn act ${dn?"on":""}" data-cdone="${esc(n)}" aria-label="${esc(n)} ${dn?"완료 취소":"최종 완료"}" aria-pressed="${dn}">${ICON.ok}</button>
       <span class="fc-c">${dn?"완료":`${groups[n].length}건`}</span>
       <button class="iconbtn" data-coordp="${esc(n)}" aria-label="닫기">${ICON.x}</button></div>
-    ${groups[n].map(entry).join("")}${!hybrid() && fo ? coordFixBox(n, groups[n]) : ""}
+    <div class="request-grid">${groups[n].map(entry).join("")}</div>${!hybrid() && fo ? coordFixBox(n, groups[n]) : ""}
   </div>`; };
-  return `<section class="card">
+  return `<section class="card customer-catalog">
+    <div class="catalog-head"><div><p class="catalog-kicker">STYLING NOTE</p><h2>손님 코디</h2></div><p class="catalog-description">요청한 옷을 비교하고 손님별로 완료를 기록해요.</p></div>
+    <div class="tools toolsgap"><input class="search" id="coordQ" placeholder="인물, 요청, 옷 이름 검색" value="${esc(q)}" aria-label="코디 검색"></div>
     <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">손님</span><span class="hint">${all.length}명 · 완료 ${all.filter(cdone).length}명</span></span>
       <span class="fh-act">${S.coordOpen.length?`<button class="chip sm" data-act="coord-close">선택 해제</button>`:""}<button class="chip sm ${S.coordHideDone?"on":""}" data-act="coord-hidedone" aria-pressed="${!!S.coordHideDone}">완료 숨기기</button></span></div>
     <div class="chips cfoldchips cochips">${all.filter(n => !S.coordHideDone || !cdone(n) || S.coordOpen.includes(n)).map(n => `<button class="chip ${S.coordOpen.includes(n)?"on":""} ${cdone(n)?"done":""}" data-coordp="${esc(n)}" aria-pressed="${S.coordOpen.includes(n)}">${cdone(n)?ICON.ok:""}${esc(n)}</button>`).join("") || `<span class="hint">검색 결과가 없어요</span>`}</div>
-    <div class="tools toolsgap"><input class="search" id="coordQ" placeholder="인물, 요청, 옷 이름 검색" value="${esc(q)}" aria-label="코디 검색"></div>
+
   </section>
   ${shownCards.length ? `<div class="cogrid">${shownCards.map(card).join("")}</div>` : `<section class="card"><div class="empty">${q?"검색 결과가 없어요":"위에서 손님을 누르면 요청이 나와요"}</div></section>`}`;
 }
@@ -1338,7 +1323,7 @@ function viewSets(){
     const facts = [["옷본", c.p], ["재료", c.m], ["옵션", c.o], ["계절", c.s], ["품질", st.q], ["인기", st.pop], ["가격", st.price], ["Tier", st.tier]].filter(([,v]) => v!=null && v!=="");
     return `<div class="edl setdet"><div class="edl-h"><span class="fl">${esc(cloName(c))} <small class="desc">${esc(c.c||"")}</small></span>
       <button type="button" class="btn ${d?"ghost":""}" data-setdone="${c.id}">${d?"완료 취소":"완료 체크"}</button></div>
-      <div class="pills">${facts.map(([k,v]) => `<span class="pill"><span style="color:var(--fg3);margin-right:6px">${k}</span>${esc(v)}</span>`).join("")}</div></div>`;
+      ${factRows(facts)}</div>`;
   };
   const card = x => `<div class="fccard setcard ${x.left?"":"cdone"}">
     <div class="fc-h"><b class="fc-n">세트 ${x.s.id}</b>${x.left===1?semTag("part","1벌 남음"):""}${x.left===0?semTag("done","완성"):""}<span class="fc-c">${x.done}/${x.total}</span></div>
@@ -2350,7 +2335,7 @@ function viewRef(){
     <div class="tools toolsgap"><input class="search" id="refQ" placeholder="${esc(cur.label)} 안에서 검색" value="${esc(q)}" aria-label="자료 검색"></div>
     <div class="hint" style="margin-top:8px">출처: KairoHistory(개인 참고용, 카이로소프트 공식 아님)</div>
   </section>
-  <section class="card"><div class="list">${shown.map(r => `<div class="refrow"><div class="rh">${esc(moneyG(r[cols[0]]))}</div>${cols.slice(1).filter(k => r[k]!=null && r[k]!=="").map(k => `<span class="rv"><span class="rk">${esc(lab[k]||"")}</span>${esc(moneyG(r[k]))}</span>`).join("")}</div>`).join("") || `<div class="empty">검색 결과가 없어요</div>`}</div>
+  <section class="card"><div class="list">${shown.map(r => `<div class="refrow"><div class="rh">${esc(moneyG(r[cols[0]]))}</div>${factRows(cols.slice(1).filter(k => r[k]!=null && r[k]!=="").map(k => [lab[k] || k, moneyG(r[k])]))}</div>`).join("") || `<div class="empty">검색 결과가 없어요</div>`}</div>
     ${rows.length > shown.length ? `<button class="linkbtn" data-act="refall">${rows.length - shown.length}개 더 보기</button>` : ""}</section>`;
 }
 function viewRec(){

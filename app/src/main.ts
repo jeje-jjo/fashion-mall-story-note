@@ -1,5 +1,4 @@
 import "./styles/legacy.css";
-import "./styles/components.css";
 import "./styles/pixel-diary.css";
 import { installPixelIcons } from "./ui/pixel-icons";
 

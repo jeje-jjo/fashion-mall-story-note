@@ -22,10 +22,10 @@
 | `app/src/engine-loader.ts` | 데이터·저장소 주입 후 엔진 import |
 | `app/src/engine.js` | 기존 화면·상태·저장 동작. public에서 Vite 모듈로 이동 |
 | `app/src/styles/legacy.css` | 기존 기능 화면 호환 스타일 |
-| `app/src/styles/components.css` | 기존 공통 컴포넌트·상세 반응형 스타일 |
+| `app/src/ui/information.js` | 주요 수치·항목/값·활용처·참고 정보의 공통 표현 |
 | `app/src/styles/pixel-diary.css` | 신규 색상 토큰·도트 표현·도감 배치 |
 | `app/src/ui/pixel-icons.ts` | 16×16 공통 벡터 아이콘 |
-| `app/src/preview.ts` | 별도 미리보기 진입점, 기존 공개 기준 데이터와 메모리 저장소 |
+| `app/src/preview.ts` | 별도 미리보기 진입점, 기존 공개 기준 데이터·명시적인 레이아웃 예시·메모리 저장소 |
 
 인증·Firestore 경로·항목 ID 변환·기존 사용자 수정값 처리·보안 규칙은 유지한다.
 화면 엔진 전체를 새 프레임워크로 다시 쓰지는 않았다. 기존 기능 회귀를 줄이면서
@@ -50,3 +50,5 @@ KairoHistory의 패션몰스토리 홈에서 옷·재료·코디·시설·게임
 
 서체: [Galmuri](https://github.com/quiple/galmuri), SIL Open Font License 1.1.
 라이선스 사본은 `app/public/licenses/Galmuri-OFL.txt`에 포함한다.
+
+후속 개편: [한 화면에서 비교하는 정보 구조](readable-information.md).
