@@ -367,3 +367,14 @@ nav.tabs { background: var(--card); }
 .btset-items { list-style: none; margin: 6px 0 0; padding: 0 0 0 4px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; }
 .btset.is-done { opacity: .75; }
 .setcard.focus { box-shadow: inset 0 0 0 2px var(--blue) !important; }
+
+/* 손님 카드 바로가기: 펼친 손님 칩을 다시 누르면 테두리 깜빡임 */
+@keyframes coflash { 0%,100% { box-shadow: 0 0 0 0 transparent; } 25%,75% { box-shadow: 0 0 0 3px var(--accent, #2563EB); } 50% { box-shadow: 0 0 0 1px var(--accent, #2563EB); } }
+.cocard.flash { animation: coflash 1.6s ease-in-out; scroll-margin-top: 80px; }
+.cocard { scroll-margin-top: 80px; }
+.optcnt .ocrow .tag { flex: none; }
+.cntseg { margin-left: 2px; }
+/* 필요한 옵션 목록: 이름 아래 줄에 옷본·재료·옵션(잘리지 않게) */
+.optcnt .ocrow .ocb { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.optcnt .ocrow .ocb .ocn { max-width: none; white-space: normal; }
+.optcnt .ocrow .ocb .ocs { white-space: normal; }

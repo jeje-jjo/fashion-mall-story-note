@@ -31,7 +31,7 @@ const SEM_COLOR = {guest:"#2563EB", shop:"#059669", item:"#D97706", battle:"#DC2
 const semTag = (k, label) => `<span class="tag sem" style="--c:${SEM_COLOR[k]}">${label}</span>`;
 const typeTag = t => `<span class="tag cat" style="--c:${TYPE_COLOR[t]||"#6B7280"}">${esc(t)}</span>`;
 const catTag = k => `<span class="tag cat" style="--c:${CAT_COLOR[k]||"#6B7280"}">${esc(k)}</span>`;
-const TYPE_COLOR = {"쿨":"#3B82F6","내추럴":"#D97706","큐트":"#EC4899","성숙":"#8B5CF6","레트로":"#EA580C","하드":"#475569","서브컬쳐":"#0891B2"};
+const TYPE_COLOR = {"내추럴":"#D97706","쿨":"#3B82F6","큐트":"#EC4899","성숙":"#8B5CF6","레트로":"#EA580C","하드":"#475569","서브컬쳐":"#0891B2"};
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ICON = {
@@ -89,7 +89,18 @@ if (Array.isArray(S.cloOpt)){ const RN = {"호피":"레오파드","와펜":"자�
 /* 메인 클리어 포인트·회차 연계는 항상 접힌 상태로 시작 */
 S.homeCp = false; S.homeIh = false; S.cpCapOpen = false; S.ihStaffOpen = false;
 const facSts = () => Array.isArray(S.facSt) ? S.facSt : (S.facSt && S.facSt!=="전체" ? [S.facSt] : []);
-const remember = () => { try{ localStorage.setItem("fms-ui", JSON.stringify({tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
+/* 의류 선택 자동 저장(제제 2026-11-09): 장르·옷본·재료·옵션 선택이 바뀌면 ui/slots의 slot.all에 바로 저장, 다른 기기 변경은 바로 반영.
+   selSig = 마지막으로 저장/반영한 선택. 서버 첫 응답 전(null)에는 저장하지 않음 */
+let selSig = null, selTimer = null, selPending = false;
+const curSel = () => ({cat:[...S.cloCat], pat:[...S.cloPat], mat:[...S.cloMat], opt:[...S.cloOpt]});
+function autoSaveSel(){
+  if (!db || selSig === null) return;
+  const sig = JSON.stringify(curSel()); if (sig === selSig) return;
+  selSig = sig; selPending = true; clearTimeout(selTimer);
+  selTimer = setTimeout(() => { const all = curSel(); S.cloSlot = {...S.cloSlot, all, ...all};
+    writeSerial("ui/slots", {slot:S.cloSlot}).catch(() => showNotice("선택을 저장하지 못했어요. 도구 > 화면에서 수동 저장해 주세요.")).finally(() => { selPending = false; }); }, 400);
+}
+const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
 if (S.facType!=="전체" && S.facType!=="우선개량" && !(S.facType in TYPE_COLOR)) S.facType = "전체";
 if (!Array.isArray(S.cloCat)) S.cloCat = S.cloCat && S.cloCat!=="전체" ? [S.cloCat] : [];
 if (!Array.isArray(S.cloPat)) S.cloPat = S.cloPat && S.cloPat!=="전체" ? [S.cloPat] : [];
@@ -129,7 +140,7 @@ const p40Done = f => !!S.fac[f.id]?.p40;
 const p40Tag = f => `<span class="tag p40${p40Done(f)?" on":""}" title="40P로 포인트 2 업그레이드">40P<span class="p40ck" role="checkbox" tabindex="0" aria-checked="${p40Done(f)}" aria-label="${esc(facName(f))} 40P 업그레이드 했음" data-p40ck="${f.id}">${p40Done(f)?"✓":""}</span></span>`;
 function toggleP40(id){ const f = DATA.fac.find(x => x.id===id); if (!f) return; const on = !p40Done(f);
   persist("fac", id, {p40: on}); toast(on?"40P 업그레이드 체크":"40P 체크 해제"); }
-const SP_OPTS = ["카모플라주","폼폼","자수","레오파드","보타이","스터드","고블랭","게리코튼","하네스","자수 패치","크로스","나사와 볼트"];
+const SP_OPTS = ["카모플라주","폼폼","자수","레오파드","보타이","스터드","고블랭","게리코튼","하네스","자수 패치","크로스","나사와 볼트","찐빵"];
 const isSp = c => SP_OPTS.includes(c.o);
 /* 체크 대상: 추가옵션이 있는 옷(시트 반영) + 특수 옵션 옷(노트 전용). 예전 특수옵션 체크(sp)는 읽기만 하고 clo로 합쳐 씀 */
 const isOptKind = c => c.done !== null || isSp(c);
@@ -209,7 +220,13 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   db.doc("ui/slots").onSnapshot(s => {
     const remote = s.exists ? (s.data().slot || {}) : null;
     if (slotFirst && !remote && Object.keys(S.cloSlot||{}).length){ writeSerial("ui/slots", {slot:S.cloSlot}).catch(()=>{}); }
-    else if (remote) { S.cloSlot = slotAlias(remote); render(); }
+    else if (remote) { S.cloSlot = slotAlias(remote);
+      const a = S.cloSlot.all;
+      if (a && typeof a === "object" && !selPending){ const sig = JSON.stringify({cat:a.cat||[], pat:a.pat||[], mat:a.mat||[], opt:a.opt||[]});
+        if (sig !== JSON.stringify(curSel())){ Object.entries(ROWF).forEach(([k,f]) => { S[f] = [...(a[k]||[])]; if (S[f].length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, [k]:true}; }); }
+        selSig = sig; }
+      render(); }
+    if (selSig === null) selSig = JSON.stringify(curSel());
     slotFirst = false;
   }, fail);
   db.collection("battles").onSnapshot(s => { S.battleRec = Object.fromEntries(s.docs.map(d => { const v = {...d.data()}; const i = +d.id.slice(1);
@@ -369,13 +386,13 @@ if (S.cloSlot) S.cloSlot = slotAlias(S.cloSlot);
 const slotBtns = key => { const has = S.cloSlot[key] != null;
   return `<button class="chip sm ghostchip" data-slot="save|${key}">${key==="all"?"전체 저장":"저장"}</button><button class="chip sm ghostchip" data-slot="load|${key}" ${has?"":'aria-disabled="true"'} style="${has?"":"opacity:.45"}">불러오기</button>${has?`<button class="chip sm ghostchip" data-slot="del|${key}" aria-label="저장 삭제">×</button>`:""}`; };
 const rowHead = (label, key, attr, cur, total) => { label = `<i class="rdot r-${key}" aria-hidden="true"></i>${label}`; const open = S.slotOpen===key, has = S.cloSlot[key] != null, exp = !!S.cloExp[key];
-  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${label}${has?`<i class="savedot" title="저장된 선택 있음"></i>`:""}</span><button class="chip sm ${allSel(cur, key)?"on":""}" data-${attr}="전체" aria-pressed="${allSel(cur, key)}" title="${allSel(cur, key)?"전체 해제":"이 줄 전체 선택"}">전체${total!=null?`<b>${total}</b>`:""}</button>${key==="opt" && S.spAvail?.length ? (() => { const all = S.spAvail.every(k => cur.includes(k)); return `<button class="chip sm spchip ${all?"on":""}" data-act="spall" aria-pressed="${all}" title="${all?"특수 옵션만 해제":"특수 옵션만 전체 선택"}">★ 특수${all?" 해제":" 전체"}</button>`; })() : ""}<button class="chip sm fold" data-cfold="${key}" aria-expanded="${exp}">${exp?"접기 ▴":`펼치기 ▾${cur.length?` <b>${cur.length}</b>`:""}`}</button></span><span class="fh-act">${cur.length?`<button class="chip sm" data-cclear="${key}">전체해제</button>`:""}<button class="chip sm ${isMulti(key)?"on":""}" data-rmulti="${key}" aria-pressed="${isMulti(key)}">${isMulti(key)?"다중":"단일"}</button></span></div>
+  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${label}</span><button class="chip sm ${allSel(cur, key)?"on":""}" data-${attr}="전체" aria-pressed="${allSel(cur, key)}" title="${allSel(cur, key)?"전체 해제":"이 줄 전체 선택"}">전체${total!=null?`<b>${total}</b>`:""}</button>${key==="opt" && S.spAvail?.length ? (() => { const all = S.spAvail.every(k => cur.includes(k)); return `<button class="chip sm spchip ${all?"on":""}" data-act="spall" aria-pressed="${all}" title="${all?"특수 옵션만 해제":"특수 옵션만 전체 선택"}">★ 특수${all?" 해제":" 전체"}</button>`; })() : ""}<button class="chip sm fold" data-cfold="${key}" aria-expanded="${exp}">${exp?"접기 ▴":`펼치기 ▾${cur.length?` <b>${cur.length}</b>`:""}`}</button></span><span class="fh-act">${cur.length?`<button class="chip sm" data-cclear="${key}">전체해제</button>`:""}<button class="chip sm ${isMulti(key)?"on":""}" data-rmulti="${key}" aria-pressed="${isMulti(key)}">${isMulti(key)?"다중":"단일"}</button></span></div>
   `; };
 /* 접힘: 칩을 모두 숨김(선택은 유지, 머리에 선택 개수 표시). 펼침: 전체 칩 */
 const ORDER_KEYS = ["pat","mat","opt"];
 /* 기존 노트에서 정해 둔 칩 순서(2026-11-06 기존 노트 ui/chiporder). 새 노트에 순서가 저장돼 있지 않으면 이 순서를 씀.
    예전 표기는 사이트 이름으로 바꿔서 쓰고, 노트에 없던 새 값은 뒤에 붙는다 */
-const NOTE_CHIP_ORDER = {"pat": ["없음", "컷앤소", "팬츠", "스커트", "앞트임", "재킷", "원피스", "민소매", "카디건", "오버올", "베스트", "셋업", "코트", "판초", "기모노", "액세서리"], "mat": ["없음", "라운드넥", "스트레이트", "브이넥", "롤업", "A라인", "플레어", "스키니", "칼라", "플리츠", "와이드", "슬릿", "오프숄더", "센터프레스", "암커버", "타이트", "카고", "랩", "스탠드칼라", "퍼프소매", "슬릿넥", "크롭", "하이넥", "사루엘", "후드", "홀터넥", "세일러칼라", "벌룬", "원숄더", "나팔바지", "티어드", "세퍼레이트", "머메이드"], "opt": ["없음", "프린트", "데미지", "프릴", "라인", "넥타이", "리본", "스트라이프", "체크", "벨트", "체인", "보더", "퍼", "꽃·식물", "지퍼", "링거넥", "셔링", "기하학", "레이스업", "물방울", "레이스", "아가일", "오로라", "카모플라주", "폼폼", "자수", "레오파드", "보타이", "스터드", "고블랭", "게리코튼", "하네스", "자수 패치", "크로스", "나사와 볼트"]};
+const NOTE_CHIP_ORDER = {"pat": ["없음", "컷앤소", "팬츠", "스커트", "앞트임", "재킷", "원피스", "민소매", "카디건", "오버올", "베스트", "셋업", "코트", "판초", "기모노", "액세서리"], "mat": ["없음", "라운드넥", "스트레이트", "브이넥", "롤업", "A라인", "플레어", "스키니", "칼라", "플리츠", "와이드", "슬릿", "오프숄더", "센터프레스", "암커버", "타이트", "카고", "랩", "스탠드칼라", "퍼프소매", "슬릿넥", "크롭", "하이넥", "사루엘", "후드", "홀터넥", "세일러칼라", "벌룬", "원숄더", "나팔바지", "티어드", "세퍼레이트", "머메이드"], "opt": ["없음", "프린트", "데미지", "프릴", "라인", "넥타이", "리본", "스트라이프", "체크", "벨트", "체인", "보더", "퍼", "꽃·식물", "지퍼", "링거넥", "셔링", "기하학", "레이스업", "물방울", "레이스", "아가일", "오로라", "카모플라주", "폼폼", "자수", "레오파드", "보타이", "스터드", "고블랭", "게리코튼", "하네스", "자수 패치", "크로스", "나사와 볼트", "찐빵"]};
 const noteChipOrder = () => ({pat:alArr("recipe", NOTE_CHIP_ORDER.pat), mat:alArr("recipe", NOTE_CHIP_ORDER.mat), opt:alArr("recipe", NOTE_CHIP_ORDER.opt)});
 if (!S.chipOrder) S.chipOrder = noteChipOrder();
 /* 옷본·재료·옵션 칩 순서: ui/chiporder {pat:[],mat:[],opt:[]}. 목록에 없는 새 값은 기본 순서대로 뒤에 */
@@ -840,7 +857,17 @@ function fcFilterRow(){
     <span class="fh-act"><button class="chip sm" data-act="fcreset" ${sel.length||open?"":'disabled style="opacity:.5"'}>초기화</button><button class="chip sm ${multi?"":"on"}" data-act="fcsingle" aria-pressed="${!multi}">단일</button><button class="chip sm ${multi?"on":""}" data-act="fcmulti" aria-pressed="${multi}">다중</button></span></div>
   ${open ? `<div class="numpad">${nums.map(n => `<button class="${sel.includes(n)?"on":""}" data-fcn="${n}" aria-pressed="${sel.includes(n)}" title="${esc(checkName(n-1))}">${n}</button>`).join("")}</div>${(DATA.checksExtra||[]).length?`<div class="chips" style="margin-top:8px"><button class="chip sm ${S.fcExtra?"on":""}" data-act="fcextra" aria-pressed="${!!S.fcExtra}">모델 체크 ${(DATA.checksExtra||[]).length}</button></div>${S.fcExtra?fcExtraList():""}`:""}` : ""}`;
 }
-const fcTag = f => FC_OF[f.id] ? semTag("fc", `패션 체크 ${FC_OF[f.id].join("·")}`) + (S.facFcSel.length && S.facFcSel.every(n => (FC_ALT[f.id]||[]).includes(n)) ? `<span class="tag">대신 가능</span>` : "") : "";
+/* 패션 체크 완료(제제 2026-11-09): chkscore/k{oi}.doneRun = 그 회차 run 경로. 회차가 바뀌면 자연히 미완료로 */
+const fcDone = oi => S.chkscore[oi]?.doneRun === RUN;
+/* 시설에 걸린 패션 체크(대신 가능 포함)가 전부 완료면 목록 아래로. 하나라도 남으면 그대로 */
+const facFcAllDone = f => { const l = FC_OF[f.id]; return !!(l && l.length && l.every(n => fcDone(n-1))); };
+async function toggleFcDone(oi){
+  const on = !fcDone(oi), rec = {...(S.chkscore[oi]||{})};
+  if (on) rec.doneRun = RUN; else delete rec.doneRun;
+  S.chkscore = {...S.chkscore, [oi]:rec}; render(); toast(on ? `패션 체크 ${oi+1} 완료` : `패션 체크 ${oi+1} 완료 취소`);
+  if (db) try{ await writeSerial(`chkscore/k${oi}`, {...rec, t:Date.now(), by:"app"}); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
+}
+const fcTag = f => FC_OF[f.id] ? semTag(facFcAllDone(f) ? "done" : "fc", `패션 체크 ${FC_OF[f.id].join("·")}${facFcAllDone(f) ? " 완료" : ""}`) + (S.facFcSel.length && S.facFcSel.every(n => (FC_ALT[f.id]||[]).includes(n)) ? `<span class="tag">대신 가능</span>` : "") : "";
 const dotFac = f => facDone(f) ? `<span class="fdot on" aria-label="완료">${ICON.check}</span>` : facPartial(f) ? `<span class="fdot part" aria-label="일부완료">${putOf(f).filter(x => needOf(f).includes(x)).length}/${needOf(f).length}</span>` : `<span class="fdot" aria-label="미완료"></span>`;
 /* 패션 체크 수정 폼(기존 디자인 인라인용): 이름 / 통과 기록 / 코디 기록 */
 function fcEditForm(oi){
@@ -865,7 +892,7 @@ function fcInfoCard(oi){
   const noteOpen = !!S.fcNoteOpen, hasNote = !!(alt.length || c.note);
   return `<div class="fccard">
     <div class="fc-h"><span class="fcnum">${oi+1}</span><b class="fc-n">${esc(checkName(oi))}</b>
-      ${hybrid()?`<button class="iconbtn act" data-sheet="fc|${oi}" aria-label="이름·기록 수정">${ICON.pen}</button>`:""}${hasNote?`<button class="iconbtn act ${noteOpen?"on":""}" data-act="fcnote" aria-label="주석 보기" aria-expanded="${noteOpen}">${ICON.note}</button>`:""}
+      ${hybrid()?`<button class="iconbtn act" data-sheet="fc|${oi}" aria-label="이름·기록 수정">${ICON.pen}</button>`:""}<button class="iconbtn act ${fcDone(oi)?"on":""}" data-fcdone="${oi}" aria-label="패션 체크 ${oi+1} ${fcDone(oi)?"완료 취소":"완료"}" aria-pressed="${fcDone(oi)}">${ICON.ok}</button>${hasNote?`<button class="iconbtn act ${noteOpen?"on":""}" data-act="fcnote" aria-label="주석 보기" aria-expanded="${noteOpen}">${ICON.note}</button>`:""}
       <span class="fc-c">${main.length?`${n} / ${main.length}`:"대상 없음"}</span></div>
     <div class="check-overview">${factRows([["요구 조건",c.req],["보상",c.reward]])}</div>
     ${fcSiteLine(c.site)}
@@ -900,11 +927,12 @@ function viewFac(){
   const baseSort = (a,b) => TYPES.indexOf(a.type) - TYPES.indexOf(b.type) || needOf(a).length - needOf(b).length || a.id - b.id;
   const first = {
     "이름순": (a,b) => facName(a).localeCompare(facName(b), "ko"),
+    "장르순": (a,b) => TYPES.indexOf(a.type) - TYPES.indexOf(b.type) || a.id - b.id,
     "좋음 적은순": (a,b) => needOf(a).length - needOf(b).length,
     "패션 체크순": (a,b) => (FC_OF[b.id]?.length||0) - (FC_OF[a.id]?.length||0) || (FC_OF[a.id]?.[0]||99) - (FC_OF[b.id]?.[0]||99),
   }[S.facSort];
   const noStore = missingShopSet();
-  rows = [...rows].sort((a,b) => (noStore(a)?1:0) - (noStore(b)?1:0) || (first ? first(a,b) : 0) || baseSort(a,b));
+  rows = [...rows].sort((a,b) => (facFcAllDone(a)?1:0) - (facFcAllDone(b)?1:0) || (noStore(a)?1:0) - (noStore(b)?1:0) || (first ? first(a,b) : 0) || baseSort(a,b));
   const pc = rows.filter(facPartial).length;
   const fcOne = S.facFcSel.length===1 && S.facFcSel[0] <= FC_MAX ? S.facFcSel[0]-1 : null;
   const canPut = idx >= 0 && rel==="좋음";
@@ -915,7 +943,7 @@ function viewFac(){
     ${fcOne!=null ? fcInfoCard(fcOne) : ""}
     <div class="frowgap nol">${itemRow()}</div>
     <div class="tools toolsgap"><div class="seg">${["전체","미완료","일부완료","완료"].map(k => { const on = k==="전체" ? !facSts().length : facSts().includes(k); return `<button class="${on?"on":""}" data-fst="${k}" aria-pressed="${on}">${k}</button>`; }).join("")}</div></div>
-    <div class="tools" style="margin-top:8px">${seg(["기본순","좋음 적은순","패션 체크순","이름순"], ["이름순","좋음 적은순","패션 체크순"].includes(S.facSort)?S.facSort:"기본순", "fsort")}<input class="search" id="facQ" placeholder="시설이나 항목 검색" value="${esc(S.facQ)}" aria-label="시설 검색"></div>
+    <div class="tools" style="margin-top:8px">${seg(["기본순","좋음 적은순","패션 체크순","장르순","이름순"], ["이름순","장르순","좋음 적은순","패션 체크순"].includes(S.facSort)?S.facSort:"기본순", "fsort")}<input class="search" id="facQ" placeholder="시설이나 항목 검색" value="${esc(S.facQ)}" aria-label="시설 검색"></div>
     ${canPut && rows.length ? `<div class="bulkput"><span>보이는 ${rows.length}곳에 <b>${esc(it)}</b>을(를) 넣었다면</span><button class="btn sm" data-putall="${rows.map(f=>f.id).join(",")}|${esc(it)}">모두 넣었어요</button></div>` : ""}
     <div class="filterline"><span>${rows.filter(facDone).length} / ${rows.length} 완료${pc?` · 일부 ${pc}`:""}${it?` · ${esc(it)} 상성 ${rel}`:""}${fcOne!=null?` · 패션 체크 ${fcOne+1}`:S.facFcSel.length?` · 패션 체크 ${S.facFcSel.join("·")}`:""}</span></div>
     <div class="list">${rows.length ? rows.map(f => {
@@ -1123,22 +1151,40 @@ function cloNeedBlock(c){
   const sources = optSources(c.o);
   return `${uses ? infoSection("이 옷이 필요한 곳", uses) : ""}${sources.length ? infoSection(`${c.o} 얻는 곳`, textList(sources)) : ""}`;
 }
+/* 코디 추천 보기에서 이 옷이 쓰이는 곳 태그(제제 2026-11-09): 손님 요청·챌린지·마네킹·코디 세트(전투 추천은 원래 태그) */
+function cloUseTags(c){
+  const names = new Set([c.n, cloName(c)]), out = [];
+  if (DATA.coord.some(r => ["t","b","o","a"].some(k => String(cPart(r,k)||"").split("/").some(v => names.has(v.replace(/\s*외$/, "").trim()))))) out.push(semTag("guest", "손님 요청"));
+  if (DATA.battles.some(b => (b.site?.clothes || []).some(x => x.id === c.id))) out.push(semTag("battle", "챌린지"));
+  for (let i = 0; i < mqN(); i++) if (Object.values(mqOf(i).outfit || {}).includes(c.id)){ out.push(semTag("part", "마네킹")); break; }
+  if ((c.site?.sets || []).length) out.push(`<span class="tag plain">코디 세트</span>`);
+  return out.join("");
+}
 function viewClo(){
   const cats = ["전체", ...new Set(DATA.clo.map(c => c.c))];
   const kinds = S.cloKind || [];
   const base = c => kinds.length ? ((kinds.includes("추가옵션") && isOptKind(c)) || (kinds.includes("전투 추천") && isBtKind(c)) || (kinds.includes("코디 추천") && isCoKind(c))) : (S.cloSt==="전체" ? true : tracked(c));
-  const catChips = cats.map(k => { const g = DATA.clo.filter(c => (k==="전체"||c.c===k) && tracked(c) && (!S.cloSp || isSp(c))); return [k, k, g.length?`${g.filter(cloDone).length}/${g.length}`:""]; });
+  /* 칩 숫자 = 완성/전체(제제 2026-11-09). 옵션기준: 체크가 필요한 옷만. 전체기준: 모든 옷, 일반 옷은 만든 걸로 보되 필요한 옵션에 넣은 옷은 안 만든 걸로.
+     장르 → 옷본 → 재료 → 옵션 순서로 앞 줄 선택을 걸어서 셈(상태·보기 버튼과는 상관없이) */
+  const cntMode = S.cntMode === "all" ? "all" : "opt";
+  const cntDone = c => tracked(c) ? cloDone(c) : !(S.optPicks||[]).includes(c.id);
+  const frac = l => l.length ? `${l.filter(cntDone).length}/${l.length}` : 0;
+  const cnt0 = DATA.clo.filter(c => cntMode==="all" || tracked(c));
+  const cnt1 = cnt0.filter(c => !S.cloCat.length || S.cloCat.includes(c.c));
+  const cnt2 = cnt1.filter(c => !S.cloPat.length || S.cloPat.includes(c.p || "없음"));
+  const cnt3 = cnt2.filter(c => !S.cloMat.length || S.cloMat.includes(c.m || "없음"));
+  const catChips = cats.map(k => { const r = frac(cnt0.filter(c => k==="전체" || c.c===k)); return [k, k, r || ""]; });
   let rows = DATA.clo.filter(c => (!S.cloCat.length || S.cloCat.includes(c.c)) && base(c) && (!S.cloSp || isSp(c)));
   const patCount = {}; rows.forEach(c => { const k = c.p || "없음"; patCount[k] = (patCount[k]||0) + 1; });
   /* 옷본·재료·옵션 칩은 앞 조건과 상관없이 항상 전부 보여 줌(선택도 유지). 숫자는 지금 조건에서 남는 벌 수, 0이면 흐리게 */
   const gCount = f => { const m = {}; DATA.clo.forEach(c => { const k = f(c); if (k) m[k] = (m[k]||0) + 1; }); return m; };
   const patName = c => c.p || "없음", matName = c => c.m || "없음";
   const allPat = gCount(patName), allMat = gCount(matName), allOpt = gCount(c => c.o || "없음");
-  const pats = chipOrdered("pat", Object.keys(allPat).sort((a,b) => allPat[b]-allPat[a])).map(k => [k, patCount[k]||0]);
+  const pats = chipOrdered("pat", Object.keys(allPat).sort((a,b) => allPat[b]-allPat[a])).map(k => [k, frac(cnt1.filter(c => (c.p || "없음")===k))]);
   const patChips = [["전체","전체 옷본",rows.length], ...pats.map(([k,v]) => [k,k,v])];
   if (S.cloPat.length) rows = rows.filter(c => S.cloPat.includes(patName(c)));
   const matCount = {}; rows.forEach(c => { const k = matName(c); matCount[k] = (matCount[k]||0) + 1; });
-  const mats = chipOrdered("mat", Object.keys(allMat).sort((a,b) => allMat[b]-allMat[a])).map(k => [k, matCount[k]||0]);
+  const mats = chipOrdered("mat", Object.keys(allMat).sort((a,b) => allMat[b]-allMat[a])).map(k => [k, frac(cnt2.filter(c => (c.m || "없음")===k))]);
   const matChips = [["전체","전체 재료",rows.length], ...mats.map(([k,v]) => [k,k,v])];
   if (S.cloMat.length) rows = rows.filter(c => S.cloMat.includes(matName(c)));
   const optName = c => c.o || "없음";
@@ -1146,7 +1192,7 @@ function viewClo(){
   /* 순서: 개량 옵션 표 순서 → 표에 없는 일반 옵션(많은 순) → 없음 → ★ 특수 옵션(정해진 순서) */
   const UP_ORDER = Object.keys(DATA.up.rows);
   const optRank = k => SP_OPTS.includes(k) ? 3000 + SP_OPTS.indexOf(k) : k==="없음" ? 2000 : UP_ORDER.includes(k) ? UP_ORDER.indexOf(k) : 1000;
-  const opts = chipOrdered("opt", Object.keys(allOpt).sort((a,b) => optRank(a) - optRank(b) || allOpt[b]-allOpt[a])).map(k => [k, optCount[k]||0]);
+  const opts = chipOrdered("opt", Object.keys(allOpt).sort((a,b) => optRank(a) - optRank(b) || allOpt[b]-allOpt[a])).map(k => [k, frac(cnt3.filter(c => (c.o || "없음")===k))]);
   S.spAvail = opts.map(([k]) => k).filter(k => SP_OPTS.includes(k));
   S.rowAvail = {cat: cats.filter(k => k!=="전체"), pat: pats.map(([k]) => k), mat: mats.map(([k]) => k), opt: opts.map(([k]) => k)};
   const optChips = [["전체","전체 옵션",rows.length], ...opts.map(([k,v]) => [k, SP_OPTS.includes(k) ? "★ "+k : k, v])];
@@ -1187,8 +1233,10 @@ function viewClo(){
     /* 옷으로 고르기: 추가옵션·전투 추천·코디 추천이 아닌 일반 옷 중 장르·옷본·재료 조건과 누른 옵션에 맞는 옷 */
     const cand = pk ? DATA.clo.filter(c => !tracked(c) && (c.o || "없음") === pk && (!S.cloCat.length || S.cloCat.includes(c.c)) && (!S.cloPat.length || S.cloPat.includes(c.p || "없음")) && (!S.cloMat.length || S.cloMat.includes(c.m || "없음")) && !(S.optPicks||[]).includes(c.id)) : [];
     const modeSeg = `<div class="seg ocseg">${[["pick","옷으로 고르기"],["inc","+1"],["dec","−1"]].map(([v,l]) => `<button type="button" class="${mode===v?"on":""}" data-ocmode="${v}" aria-pressed="${mode===v}">${l}</button>`).join("")}</div>`;
-    const pickRow = c => `<button type="button" class="ocrow" data-ocadd="${c.id}"><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${esc([c.c, c.p, c.m].filter(Boolean).join(" · "))}</span><span class="ocplus" aria-hidden="true">＋</span></button>`;
-    const doneRow = c => `<button type="button" class="ocrow got" data-ocdone="${c.id}" title="누르면 만든 걸로 보고 목록에서 빼요"><span class="ock" aria-hidden="true"></span><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${esc([c.p, c.m].filter(Boolean).join(" · "))}</span><span class="tag">${SP_OPTS.includes(c.o)?"★ ":""}${esc(c.o||"없음")}</span></button>`;
+    /* 옷본·재료·옵션을 이름 옆에 한 줄로, 장르는 색 태그로(제제 2026-11-09) */
+    const ocSpec = c => esc([c.p, c.m, c.o ? (SP_OPTS.includes(c.o) ? "★ " : "") + c.o : ""].filter(Boolean).join(" · "));
+    const pickRow = c => `<button type="button" class="ocrow" data-ocadd="${c.id}"><span class="ocb"><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${ocSpec(c)}</span></span>${catTag(c.c)}<span class="ocplus" aria-hidden="true">＋</span></button>`;
+    const doneRow = c => `<button type="button" class="ocrow got" data-ocdone="${c.id}" title="누르면 만든 걸로 보고 목록에서 빼요"><span class="ock" aria-hidden="true"></span><span class="ocb"><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${ocSpec(c)}</span></span>${catTag(c.c)}</button>`;
     cntBox = `<div class="needopt optcnt"><div class="fhead" style="margin:0;flex-wrap:wrap;gap:6px"><span class="fh-l"><span class="sublbl" style="margin:0">필요한 옵션</span>${picks.length?`<span class="hint">고른 옷 ${picks.length}벌</span>`:""}</span><span class="fh-act" style="gap:6px;flex-wrap:wrap">${modeSeg}<button class="chip sm" data-act="ocsel" title="옵션 줄에서 고른 옵션만 0으로">선택 초기화</button><button class="chip sm" data-act="ocall">전체 초기화</button><button class="chip sm fold" data-act="optcnt" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span></div>
       ${o ? (keys.length ? `<div class="pills sm" style="margin-top:10px">${keys.map(k => `<button class="pill ${pk===k?"need":(cnt[k]||0)>0?"need":"must"} ${pk===k?"picking":""}" data-occ="${esc(k)}" aria-pressed="${pk===k}">${SP_OPTS.includes(k)?"★ ":""}${esc(k)}<b>${cnt[k]||0}</b></button>`).join("")}</div>` : `<div class="hint" style="margin-top:8px">옵션 줄에서 옵션을 고르면 여기에 나와요</div>`) : ""}
       ${o && mode==="pick" && !pk && keys.length ? `<div class="hint" style="margin-top:6px">옵션을 누르면 그 옵션이 붙은 일반 옷(추가옵션·전투 추천·코디 추천 제외)이 나와요. 장르·옷본·재료에서 고른 조건도 같이 걸려요.</div>` : ""}
@@ -1201,8 +1249,7 @@ function viewClo(){
   return `<section class="card wardrobe-card">
     <div class="catalog-head"><div><span class="catalog-kicker">WARDROBE INDEX</span><h2>의류 도감 <span>${rows.length}벌</span></h2></div><a href="#clothesList" class="catalog-jump">목록으로 ↓</a></div>
     <div class="tools ctools toolsgap"><div class="cloview"><div class="pillseg" role="group" aria-label="보기"><button type="button" class="${!kinds.length && S.cloSt==="전체"?"on":""}" data-cst="전체 옷">전체 옷</button>${["추가옵션","전투 추천","코디 추천"].map(k => `<button type="button" class="${kinds.includes(k)?"on":""}" data-ckind="${k}" aria-pressed="${kinds.includes(k)}">${k}</button>`).join("")}</div><div class="pillseg" role="group" aria-label="완료 상태">${["미완료","완료"].map(k => `<button type="button" class="${S.cloSt===k?"on":""}" data-cst="${k}" aria-pressed="${S.cloSt===k}">${k}</button>`).join("")}</div></div><input class="search" id="cloQ" placeholder="옷 이름, 옵션, 인물 검색" value="${esc(S.cloQ)}" aria-label="옷 검색"></div>
-    <div class="filter-toolbar fhead" style="gap:6px;margin-bottom:22px;flex-wrap:wrap"><span class="fh-l"><button class="chip sm" data-act="foldall">전체 접기</button><button class="chip sm" data-act="openall">전체 펼치기</button><button class="chip sm ${S.cloMulti?"on":""}" data-act="cmulti" aria-pressed="${S.cloMulti}">전체 다중선택</button></span><span class="fh-act" style="gap:6px">${slotBtns("all")}<button class="chip sm ${S.orderEdit?"on":""}" data-act="orderedit" aria-pressed="${!!S.orderEdit}">${S.orderEdit?"순서 수정 끝":"순서 수정"}</button></span></div>
-    ${S.orderEdit ? `<div class="orderbar"><span>옷본·재료·옵션 칩을 끌어서 순서를 바꿔요. 놓으면 바로 저장돼요.</span><button class="chip sm" data-act="orderreset">기본 순서로</button></div>` : ""}
+    <div class="filter-toolbar fhead" style="gap:6px;margin-bottom:22px;flex-wrap:wrap"><span class="fh-l">${(() => { const allExp = ["cat","pat","mat","opt"].every(k => S.cloExp[k]); return `<button class="chip sm" data-act="${allExp?"foldall":"openall"}" aria-expanded="${allExp}">${allExp?"전체 접기":"전체 펼치기"}</button>`; })()}<button class="chip sm ${S.cloMulti?"on":""}" data-act="cmulti" aria-pressed="${S.cloMulti}">전체 다중선택</button><span class="seg mini cntseg" role="group" aria-label="숫자 기준">${[["opt","옵션기준"],["all","전체기준"]].map(([v,l]) => `<button type="button" class="${cntMode===v?"on":""}" data-cntmode="${v}" aria-pressed="${cntMode===v}">${l}</button>`).join("")}</span></span></div>
     <div class="filter-grid">
     <div class="filter-row">${rowHead("장르","cat","ccat",S.cloCat)}${foldChips(catChips, S.cloCat, "ccat", "cat")}</div>
     <div class="filter-row">${rowHead("옷본","pat","cpat",S.cloPat,rows.length)}${foldChips(patChips, S.cloPat, "cpat", "pat")}</div>
@@ -1225,7 +1272,7 @@ function viewClo(){
         <div class="row ${d?"done":""} ${btOn && btHits(c)===btCs.length && btCs.length ? "btfull" : ""}">
           ${tr ? `<button data-tclo="${c.id}" aria-pressed="${!!d}" aria-label="${esc(cloName(c))} 완료 바꾸기">${ck(d)}</button>` : `<span style="width:26px;flex:none"></span>`}
           <button class="body" data-oclo="${c.id}" aria-expanded="${opened}" style="text-align:left">
-            <div class="t"><span class="item-number">#${String(c.id).padStart(3,"0")}</span><span class="n">${esc(cloName(c))}</span>${btOn ? btMatchTag(c) : ""}${catTag(c.c)}${optTags(c)}${Object.keys(S.clofix[c.id]||{}).length?semTag("fix","수정됨"):""}${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}${want?`<span class="tag blue">원함</span>`:shop?`<span class="tag amber">상점</span>`:""}</div>
+            <div class="t"><span class="item-number">#${String(c.id).padStart(3,"0")}</span><span class="n">${esc(cloName(c))}</span>${btOn ? btMatchTag(c) : ""}${kinds.includes("코디 추천") ? cloUseTags(c) : ""}${catTag(c.c)}${optTags(c)}${Object.keys(S.clofix[c.id]||{}).length?semTag("fix","수정됨"):""}${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}${want?`<span class="tag blue">원함</span>`:shop?`<span class="tag amber">상점</span>`:""}</div>
             <div class="s">${[c.p,c.m,c.o].filter(Boolean).map(esc).join(" · ")}${X?` — ${esc(X)}`:""}</div>
           </button>
 
@@ -1269,6 +1316,20 @@ function coordFixBox(n, list){
     ${pick && kind==="part" ? `<form class="inl" data-cfpform="${pick.id}"><select class="field kind" id="cfp-${pick.id}" aria-label="부위">${PARTS.map(([k,l]) => `<option value="${k}" ${k===pk?"selected":""}>${l}</option>`).join("")}</select><input class="field" id="cfv-${pick.id}" list="dl-clo" value="${esc(S.optDraft["cfv-"+pick.id] ?? cPart(pick,pk) ?? "")}" placeholder="옷 이름" aria-label="옷 이름"><datalist id="dl-clo">${cloNames.map(v => `<option value="${esc(v)}">`).join("")}</datalist><button class="btn" type="submit">저장</button></form><div class="hint">${fx[PK(pk)]?`원래 ${esc(pick[pk]||"-")} · 비우고 저장하면 원래대로`:"원래 값과 다르면 수정됨으로 표시돼요"}</div>` : ""}
   </div>`;
 }
+/* 손님 등장 순서(제제 2026-11-09): 정춘자(처음부터 있음) → 그 손님이 등장하는 옷(옷 "손님" 칸)이 옷 목록에서 앞선 순서 → 정보 없는 손님은 뒤 */
+function guestRank(){
+  const m = new Map([["정춘자", -1], [curPerson("정춘자"), -1]]);
+  DATA.clo.forEach((c, i) => { const g = String(optOf(c).guest || "").replace(/\s*\(.*\)\s*$/, "").trim(); if (!g) return;
+    [g, curPerson(g)].forEach(k => { if (!m.has(k)) m.set(k, i); }); });
+  return m;
+}
+/* 펼친 손님 칩을 다시 누르면 그 카드로 이동하고 테두리를 깜빡임 */
+function coordJump(n){
+  const el = [...document.querySelectorAll(".cocard")].find(x => x.dataset.coname === n); if (!el) return;
+  el.scrollIntoView({behavior:"smooth", block:"start"});
+  el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+  setTimeout(() => el.classList.remove("flash"), 1700);
+}
 function viewCoordReq(){
   const q = S.coordQ.trim();
   const cm = cloRenamed();
@@ -1276,7 +1337,9 @@ function viewCoordReq(){
   const groups = {};
   rows.forEach(c => { const n = curPerson(c.pb); (groups[n] = groups[n] || []).push(c); });
   const cdone = n => S.coordDone.includes(n);
-  const names = Object.keys(groups).sort((a,b) => (cdone(a) - cdone(b)) || a.localeCompare(b, "ko"));
+  const gr = guestRank(), rk = n => gr.get(n) ?? 9999;
+  const byAppear = (a,b) => rk(a) - rk(b) || a.localeCompare(b, "ko");
+  const names = Object.keys(groups).sort((a,b) => (cdone(a) - cdone(b)) || byAppear(a,b));
   const open = n => q ? true : S.coordOpen.includes(n);
   const allOpen = names.length && names.every(n => S.coordOpen.includes(n));
   const entry = c => `<article class="coord sub request-entry">
@@ -1285,9 +1348,9 @@ function viewCoordReq(){
     ${factRows(PARTS.map(([k,l]) => [l,withClo(cPart(c,k),cm)]))}
     ${S.cfix[c.id]?.title||hasPartFix(c)?'<p class="section-note">직접 수정한 요청</p>':""}${S.cfix[c.id]?.wrong?'<p class="err">잘못된 정보로 표시됨</p>':""}
   </article>`;
-  const all = Object.keys(groups).sort((a,b) => a.localeCompare(b, "ko"));
+  const all = Object.keys(groups).sort(byAppear);
   const shownCards = q ? names : names.filter(n => S.coordOpen.includes(n));
-  const card = n => { const dn = cdone(n), fo = !!S.coordFixOpen[n]; return `<div class="fccard cocard ${dn?"cdone":""}">
+  const card = n => { const dn = cdone(n), fo = !!S.coordFixOpen[n]; return `<div class="fccard cocard ${dn?"cdone":""}" data-coname="${esc(n)}">
     <div class="fc-h"><b class="fc-n">${esc(n)}</b>
       <button class="iconbtn act" data-cedit2="${esc(n)}" aria-label="${esc(n)} 이름 수정" aria-pressed="${fo}">${ICON.pen}</button>
       <button class="iconbtn act ${dn?"on":""}" data-cdone="${esc(n)}" aria-label="${esc(n)} ${dn?"완료 취소":"최종 완료"}" aria-pressed="${dn}">${ICON.ok}</button>
@@ -1300,7 +1363,7 @@ function viewCoordReq(){
     <div class="tools toolsgap"><input class="search" id="coordQ" placeholder="인물, 요청, 옷 이름 검색" value="${esc(q)}" aria-label="코디 검색"></div>
     <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">손님</span><span class="hint">${all.length}명 · 완료 ${all.filter(cdone).length}명</span></span>
       <span class="fh-act">${S.coordOpen.length?`<button class="chip sm" data-act="coord-close">선택 해제</button>`:""}<button class="chip sm ${S.coordHideDone?"on":""}" data-act="coord-hidedone" aria-pressed="${!!S.coordHideDone}">완료 숨기기</button></span></div>
-    <div class="chips cfoldchips cochips">${all.filter(n => !S.coordHideDone || !cdone(n) || S.coordOpen.includes(n)).map(n => `<button class="chip ${S.coordOpen.includes(n)?"on":""} ${cdone(n)?"done":""}" data-coordp="${esc(n)}" aria-pressed="${S.coordOpen.includes(n)}">${cdone(n)?ICON.ok:""}${esc(n)}</button>`).join("") || `<span class="hint">검색 결과가 없어요</span>`}</div>
+    <div class="chips cfoldchips cochips">${all.filter(n => !S.coordHideDone || !cdone(n) || S.coordOpen.includes(n)).map(n => `<button class="chip ${S.coordOpen.includes(n)?"on":""} ${cdone(n)?"done":""}" data-cochip="${esc(n)}" aria-pressed="${S.coordOpen.includes(n)}">${cdone(n)?ICON.ok:""}${esc(n)}</button>`).join("") || `<span class="hint">검색 결과가 없어요</span>`}</div>
 
   </section>
   ${shownCards.length ? `<div class="cogrid">${shownCards.map(card).join("")}</div>` : `<section class="card"><div class="empty">${q?"검색 결과가 없어요":"위에서 손님을 누르면 요청이 나와요"}</div></section>`}`;
@@ -1511,7 +1574,15 @@ function viewMannequin(){
 const NM_KEYS = [["pat","옷본","p"],["mat","재료","m"],["opt","옵션","o"]];
 const nmVals = k => { const f = NM_KEYS.find(x => x[0]===k)[2]; const cnt = {}; DATA.clo.forEach(c => { const v = c[f]; if (v && v!=="???") cnt[v] = (cnt[v]||0) + 1; }); return chipOrdered(k, Object.keys(cnt).sort((a,b) => cnt[b]-cnt[a])); };
 const nmNeed = c => NM_KEYS.map(([k,l,f]) => [k, l, c[f]]).filter(([,,v]) => v && v!=="???");
-const nmMissing = c => nmNeed(c).filter(([k,,v]) => !(S.own[k]||[]).includes(v));
+/* 가진 옷본·재료·옵션은 자동(제제 2026-11-09): 만든 옷(체크가 필요한 옷은 완료 체크, 일반 옷은 만든 걸로 보되 필요한 옵션에 넣은 옷은 제외)에 쓰인 값 */
+const cloMade = c => tracked(c) ? cloDone(c) : !(S.optPicks||[]).includes(c.id);
+function autoOwn(){
+  const own = {pat:new Set(), mat:new Set(), opt:new Set()};
+  DATA.clo.forEach(c => { if (!cloMade(c)) return; NM_KEYS.forEach(([k,,f]) => { const v = c[f]; if (v && v!=="???") own[k].add(v); }); });
+  return own;
+}
+let _own = null;
+const nmMissing = c => nmNeed(c).filter(([k,,v]) => !_own[k].has(v));
 function nmLastOfSet(){   /* 유효 세트에서 이 옷만 남은 경우 */
   const m = new Map();
   (DATA.sets||[]).filter(s => s.valid).forEach(s => { const left = (s.clothes||[]).filter(id => { const c = CLO_BY_ID.get(id); return !c || !cloDone(c); });
@@ -1519,8 +1590,9 @@ function nmLastOfSet(){   /* 유효 세트에서 이 옷만 남은 경우 */
   return m;
 }
 function nextMakeCard(){
-  const ownN = NM_KEYS.reduce((a,[k]) => a + (S.own[k]||[]).length, 0);
-  const todo = DATA.clo.filter(c => !cloDone(c) && c.done !== undefined);
+  _own = autoOwn();
+  const ownN = NM_KEYS.reduce((a,[k]) => a + _own[k].size, 0);
+  const todo = DATA.clo.filter(c => !cloMade(c) && c.done !== undefined);
   const last = nmLastOfSet();
   const tags = c => [last.has(c.id) && semTag("part", `세트 1벌 남음`), isOptKind(c) && c.done!==null && `<span class="tag">추가옵션</span>`, isBtKind(c) && `<span class="tag">전투 추천</span>`, isCoKind(c) && `<span class="tag">손님 요청</span>`].filter(Boolean);
   const can = todo.filter(c => nmNeed(c).length && !nmMissing(c).length).map(c => ({c, t:tags(c)})).sort((a,b) => b.t.length - a.t.length || cloName(a.c).localeCompare(cloName(b.c),"ko"));
@@ -1531,15 +1603,12 @@ function nextMakeCard(){
   const shown = S.nmAll ? can : can.slice(0, 8);
   const row = ({c, t}) => `<div class="nmrow"><button type="button" class="iconbtn act" data-nmdone="${c.id}" aria-label="${esc(cloName(c))} 완료">${ICON.ok}</button>
     <span class="nm-n">${esc(cloName(c))}<small class="desc">${esc([c.p, c.m, c.o].filter(Boolean).join(" · "))}</small></span><span class="nm-t">${t.join("")}</span></div>`;
-  const editor = NM_KEYS.map(([k,l]) => { const vals = nmVals(k), on = S.own[k]||[];
-    return `<div class="sublbl" style="margin:10px 0 6px">${l} <span class="hint">${on.filter(v => vals.includes(v)).length}/${vals.length}</span></div>
-      <div class="chips">${vals.map(v => `<button class="chip ${on.includes(v)?"on":""}" data-own="${k}|${esc(v)}" aria-pressed="${on.includes(v)}">${esc(v)}</button>`).join("")}</div>`; }).join("");
+  const ownLine = NM_KEYS.map(([k,l]) => `${l} ${_own[k].size}/${nmVals(k).length}`).join(" · ");
   const body = !S.nmOpen ? "" : `
-    <div class="tools toolsgap"><button class="chip sm ${S.nmEdit?"on":""}" data-nm="edit" aria-pressed="${S.nmEdit}">가진 옷본·재료·옵션 ${ownN?`(${ownN})`:"고르기"}</button></div>
-    ${S.nmEdit || !ownN ? `<div class="nmedit">${!ownN?`<div class="hint">게임에서 개방한 옷본·재료·옵션을 눌러 주세요. 회차마다 따로 저장돼요.</div>`:""}${editor}</div>` : ""}
+    <div class="hint" style="margin:2px 0 8px">가진 것은 만든 옷 기준으로 자동 계산해요(${ownLine}). 일반 옷은 만든 걸로 보고, 필요한 옵션에 넣은 옷은 빼요.</div>
     ${ownN ? (can.length ? `<div class="nmlist">${shown.map(row).join("")}</div>${can.length>8?`<button class="linkbtn" data-nm="all">${S.nmAll?"접기":`${can.length-8}벌 더 보기`}</button>`:""}` : `<div class="empty">지금 가진 것으로 만들 수 있는 미완료 옷이 없어요</div>`) : ""}
     ${ownN && unl.length ? `<div class="sublbl" style="margin:12px 0 6px">하나만 더 열면</div><div class="pills">${unl.map(([k,n]) => `<span class="pill">${esc(k)} <b>+${n}벌</b></span>`).join("")}</div>` : ""}`;
-  return `<section class="card nmcard"><div class="fhead rowhead"><button class="fh-l linkhead" data-nm="open" aria-expanded="${S.nmOpen}"><span class="sublbl" style="margin:0">다음에 만들 옷</span><span class="hint">${ownN ? `만들 수 있음 ${can.length}벌` : "가진 재료를 고르면 추천"}${last.size?` · 세트 1벌 남음 ${last.size}`:""}</span></button><span class="fh-act"><button class="chip sm" data-nm="open">${S.nmOpen?"접기":"열기"}</button></span></div>${body}</section>`;
+  return `<section class="card nmcard"><div class="fhead rowhead"><button class="fh-l linkhead" data-nm="open" aria-expanded="${S.nmOpen}"><span class="sublbl" style="margin:0">다음에 만들 옷</span><span class="hint">${`만들 수 있음 ${can.length}벌`}${last.size?` · 세트 1벌 남음 ${last.size}`:""}</span></button><span class="fh-act"><button class="chip sm" data-nm="open">${S.nmOpen?"접기":"열기"}</button></span></div>${body}</section>`;
 }
 
 /* 개량 옵션 찾기: 직원별 / 옵션별. +2 이상만 묶어서 보여주고 +1은 개수만 */
@@ -2313,8 +2382,8 @@ function homeToday(){
   const items = [];
   const last = nmLastOfSet();
   if (last.size) items.push(["set", "세트 1벌 남음", `${last.size}벌`, [...last.keys()].slice(0,3).map(id => cloName(CLO_BY_ID.get(id))).join(", ")]);
-  const ownN = NM_KEYS.reduce((a,[k]) => a + (S.own[k]||[]).length, 0);
-  if (ownN){ const can = DATA.clo.filter(c => !cloDone(c) && c.done !== undefined && nmNeed(c).length && !nmMissing(c).length); if (can.length) items.push(["make", "만들 수 있는 옷", `${can.length}벌`, can.slice(0,3).map(cloName).join(", ")]); }
+  _own = autoOwn(); const ownN = NM_KEYS.reduce((a,[k]) => a + _own[k].size, 0);
+  if (ownN){ const can = DATA.clo.filter(c => !cloMade(c) && c.done !== undefined && nmNeed(c).length && !nmMissing(c).length); if (can.length) items.push(["make", "만들 수 있는 옷", `${can.length}벌`, can.slice(0,3).map(cloName).join(", ")]); }
   const fcOk = CHECKS.filter(c => { const m = checkMain(c.oi); return c.oi < FC_MAX && m.length && m.every(facDone) && !S.chkscore[c.oi]; });
   if (fcOk.length) items.push(["fc|"+(fcOk[0].oi+1), "도전 가능한 패션 체크", `${fcOk.length}개`, fcOk.slice(0,3).map(c => `${c.oi+1}. ${checkName(c.oi)}`).join(", ")]);
   const yr = S.cyears.filter(x => cyRound(x) === cyThisRound() && x.picks && x.year != null).sort((a,b) => b.year - a.year)[0];
@@ -2386,7 +2455,7 @@ function viewSet(){
     ${row("기기", segB("device", [["auto","자동"],["phone","핸드폰"],["desk","PC·패드"]]))}
     ${row("테마", segB("mode", [["system","시스템"],["light","라이트"],["dark","다크"]]))}
     ${row("메인 색상", `<div class="pals">${[["rose","#955F64","빈티지 로즈"],["red","#994F53","뮤트 레드"],["taupe","#8E706E","로즈 토프"],["blue","#3182F6","기존 블루"]].map(([k,c,l]) => `<button type="button" class="pal" data-pal="${k}" style="--p:${c}"><i aria-hidden="true"></i>${l}</button>`).join("")}</div>`)}
-  </section>${clickLogCard()}${homeLegend()}`;
+  </section>${selSaveCard()}${clickLogCard()}${homeLegend()}`;
 }
 function viewMore(){
   const cur = MORE_SUBS.some(([k]) => k===S.moreSub) ? S.moreSub : "todo";
@@ -2496,6 +2565,7 @@ document.addEventListener("click", e => {
   if (d.setpill){ S.setOpen = S.setOpen===d.setpill ? null : d.setpill; render(); return; }
   if (d.setdone){ toggleClo(+d.setdone); return; }
   if (d.act==="fcextra"){ S.fcExtra = !S.fcExtra; render(); return; }
+  if (d.fcdone !== undefined){ toggleFcDone(+d.fcdone); return; }
   if (d.fcrec){ S.fcRecOpen = S.fcRecOpen===+d.fcrec ? null : +d.fcrec; render(); return; }
   if (d.act==="btextra"){ S.btExtra = !S.btExtra; render(); return; }
   if (d.btrec){ S.btRecOpen = {...(S.btRecOpen||{}), [d.btrec]: !S.btRecOpen?.[d.btrec]}; render(); return; }
@@ -2591,6 +2661,7 @@ document.addEventListener("click", e => {
     S.cloOpt = all ? S.cloOpt.filter(k => !sp.includes(k)) : [...S.cloOpt, ...sp.filter(k => !S.cloOpt.includes(k))];
     if (S.cloOpt.length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, opt:true}; remember(); render(); return; }
   if (d.act==="needopt"){ S.needOptOpen = !S.needOptOpen; render(); return; }
+  if (d.cntmode){ S.cntMode = d.cntmode; remember(); render(); return; }
   if (d.act==="foldall"){ S.cloExp = {}; remember(); render(); return; }
   if (d.act==="openall"){ S.cloExp = {cat:true, pat:true, mat:true, opt:true}; remember(); render(); return; }
   if (d.act==="fcreset"){ S.facFcSel = []; S.fcNoteOpen = false; remember(); render(); return; }
@@ -2677,6 +2748,9 @@ document.addEventListener("click", e => {
   if (d.act==="sync-ask"){ S.confirmSync=true; render(); return; }
   if (d.act==="sync-cancel"){ S.confirmSync=false; render(); return; }
   if (d.act==="sync-ok"){ markSynced(); return; }
+  if (d.cochip !== undefined){ const n = d.cochip;
+    if (S.coordOpen.includes(n)){ coordJump(n); return; }
+    S.coordOpen = [...S.coordOpen, n]; saveCoordOpen(); render(); requestAnimationFrame(() => coordJump(n)); return; }
   if (d.coordp !== undefined){ const n = d.coordp; S.coordOpen = S.coordOpen.includes(n) ? S.coordOpen.filter(x => x!==n) : [...S.coordOpen, n]; saveCoordOpen(); render(); return; }
   if (d.act==="coord-open"){ S.coordOpen = [...new Set(DATA.coord.map(c => curPerson(c.pb)))]; saveCoordOpen(); render(); return; }
   if (d.act==="coord-hidedone"){ S.coordHideDone = !S.coordHideDone; remember(); saveCoordOpen(); render(); return; }
@@ -2920,6 +2994,16 @@ fmtNumInputs();
 /* ---------- 클릭 기록(2026-11-09 제제 요청: 마지막 회차 동안 새 노트에서 수집) ----------
    누른 버튼의 data-* 값·글자·탭과 필터 상태(누르기 전후)·화면 폭·스크롤을 20초마다 모아 note/v2/uilog/{세션}-{순번}에 저장.
    입력칸은 글자 수만 남김. 진행 데이터 경로는 건드리지 않음. 기기별로 도구 > 화면에서 끄고 켬(localStorage fms-clicklog-off) */
+/* 의류 선택 수동 저장·불러오기: 평소엔 자동 저장(ui/slots slot.all), 기기 간 연동이 안 될 때 대비 */
+function selSaveCard(){
+  const a = S.cloSlot?.all, n = a && typeof a === "object" ? ["cat","pat","mat","opt"].reduce((t,k) => t + (a[k]||[]).length, 0) : 0;
+  const cur = curSel(), cn = Object.values(cur).reduce((t,l) => t + l.length, 0);
+  return `<section class="card prefs-card">
+    <div class="sec-h"><h2>의류 선택 저장</h2><span>지금 ${cn}개 선택 · 저장된 것 ${n}개</span></div>
+    <p class="hint" style="margin:0 0 10px">의류 탭의 장르·옷본·재료·옵션 선택은 누를 때마다 자동으로 저장돼요. 다른 기기와 맞지 않을 때만 아래 버튼을 써 주세요.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn ghost sm" data-slot="save|all">지금 선택 수동 저장</button><button type="button" class="btn ghost sm" data-slot="load|all" ${n?"":"disabled"}>저장된 선택 불러오기</button></div>
+  </section>`;
+}
 function clickLogCard(){
   const off = clkOff();
   return `<section class="card prefs-card">

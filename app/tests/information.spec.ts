@@ -44,7 +44,7 @@ for (const width of [320, 390, 768, 1440]) {
     await expect(page.getByRole("heading", { name: "아이템 상성", exact: true })).toBeVisible();
     await fits();
     await page.locator('[data-tab="coord"]').click();
-    await page.locator('[data-coordp]').first().click();
+    await page.locator('[data-cochip]').first().click();
     await expect(page.locator(".request-entry").first()).toContainText("상의");
     await fits();
     await page.locator('[data-tab="clo"]').click();

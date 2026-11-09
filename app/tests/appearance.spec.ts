@@ -59,7 +59,7 @@ for (const skin of ["atelier", "paper"]) {
       await page.locator('[data-ofac="1"]').first().click();
       await fits();
       await page.locator('[data-tab="coord"]').click();
-      await page.locator("[data-coordp]").first().click();
+      await page.locator("[data-cochip]").first().click();
       await fits();
       await page.locator('[data-tab="tool"]').click();
       for (const sub of ["contest", "calc", "ref", "set"]) {
