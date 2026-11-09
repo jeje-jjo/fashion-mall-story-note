@@ -406,3 +406,7 @@ nav.tabs { background: var(--card); }
 .list > div:has(> .rowpills) > .rowpills { gap: 6px; }
 .list > div:has(> .rowpills) > .rowpills .pill { min-height: 28px; padding: 3px 10px; font-size: 12.5px; }
 :root[data-design="hybrid"] .filter-grid { row-gap: 10px; }
+
+/* 패션 체크 번호: 완료한 번호는 옅게(누를 수는 있음) */
+.numpad button.fcdone, .chip.fcdone { opacity: .4; }
+.numpad button.fcdone.on, .chip.fcdone.on { opacity: .6; }
