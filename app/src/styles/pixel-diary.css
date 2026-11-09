@@ -510,13 +510,13 @@ nav.tabs { background: var(--card); }
 .brandbar .brandname { min-width: 0; }
 .brandbar .bn-top { display: flex; align-items: baseline; gap: 7px; white-space: nowrap; }
 .brandbar .crumb { color: var(--fg3); font-weight: 400; }
-:root:root .brandbar h1#ttl { margin: 0; font: 760 19px/1.25 var(--font); letter-spacing: -.03em; color: var(--fg); }
+:root:root .brandbar h1#ttl { margin: 0; font: 700 15px/1.6 var(--font); letter-spacing: -.03em; color: var(--fg); }
 .brandbar #sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0; font-family: var(--font); font-size: 11px; }
 .brandbar .hdr-r { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
 .brandbar .wiki-link { margin-left: 0; }
 @media (max-width: 739px) {
   .brandbar { gap: 8px; }
-  :root:root .brandbar h1#ttl { font-size: 16px; }
+  :root:root .brandbar h1#ttl { font-size: 13px; }
   .brandbar #sub { font-size: 10px; }
   .brandbar .hdr-r { gap: 6px; }
   .brandbar .sync span { display: none; }
@@ -534,3 +534,8 @@ nav.tabs { background: var(--card); }
   :root:root #view .t { font-size: 14px; }
   :root:root .sheet .sh-t h3 { font-size: 16px; }
 }
+
+/* 탭 제목 카드 머리 제거 후 남은 '목록으로' 링크만 작게(제제 2026-11-09) */
+:root:root .catalog-head.slim { display: flex; justify-content: flex-end; margin: 0 0 6px; padding: 0; border: 0; min-height: 0; }
+:root:root .catalog-head.slim .catalog-jump span { color: var(--fg3); font-size: .9em; margin-left: 4px; }
+:root:root .card > .toolsgap:first-child { margin-top: 0 !important; border-top: 0 !important; padding-top: 0 !important; }

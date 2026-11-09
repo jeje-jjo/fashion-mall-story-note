@@ -978,7 +978,6 @@ function viewFac(){
   const fcOne = S.facFcSel.length===1 && S.facFcSel[0] <= FC_MAX ? S.facFcSel[0]-1 : null;
   const canPut = idx >= 0 && rel==="좋음";
   return `<section class="card facility-catalog">
-    <div class="catalog-head"><div><p class="catalog-kicker">MY MALL</p><h2>시설 관리 <span>${rows.length}곳</span></h2></div><p class="catalog-description">아이템 상성을 보고, 넣은 항목을 바로 체크해요.</p></div>
     ${genreRow(typeChips)}
     <div class="frowgap nol">${fcFilterRow()}</div>
     ${fcOne!=null ? fcInfoCard(fcOne) : ""}
@@ -1340,7 +1339,7 @@ function viewClo(){
   }
   const spAll = SP.length, spDoneN = SP.filter(cloDone).length;
   return `<section class="card wardrobe-card">
-    <div class="catalog-head"><div><span class="catalog-kicker">WARDROBE INDEX</span><h2>의류 도감 <span>${rows.length}벌</span></h2></div><a href="#clothesList" class="catalog-jump">목록으로 ↓</a></div>
+    <div class="catalog-head slim"><a href="#clothesList" class="catalog-jump">목록으로 ↓ <span>${rows.length}벌</span></a></div>
     <div class="tools ctools toolsgap"><div class="cloview"><div class="pillseg" role="group" aria-label="보기"><button type="button" class="${!kinds.length && S.cloSt==="전체"?"on":""}" data-cst="전체 옷">전체 옷</button>${["추가옵션","전투 추천","코디 추천"].map(k => `<button type="button" class="${kinds.includes(k)?"on":""}" data-ckind="${k}" aria-pressed="${kinds.includes(k)}">${k}</button>`).join("")}</div><div class="pillseg" role="group" aria-label="완료 상태">${["미완료","완료"].map(k => `<button type="button" class="${S.cloSt===k?"on":""}" data-cst="${k}" aria-pressed="${S.cloSt===k}">${k}</button>`).join("")}</div></div><input class="search" id="cloQ" placeholder="옷 이름, 옵션, 인물 검색" value="${esc(S.cloQ)}" aria-label="옷 검색"></div>
     <div class="filter-toolbar fhead" style="gap:6px;margin-bottom:22px;flex-wrap:wrap"><span class="fh-l">${(() => { const allExp = ["cat","pat","mat","opt"].every(k => S.cloExp[k]); return `<button class="chip sm" data-act="${allExp?"foldall":"openall"}" aria-expanded="${allExp}">${allExp?"전체 접기":"전체 펼치기"}</button>`; })()}<button class="chip sm ${S.cloMulti?"on":""}" data-act="cmulti" aria-pressed="${S.cloMulti}">전체 다중선택</button><span class="seg mini cntseg" role="group" aria-label="숫자 기준">${[["opt","옵션기준"],["all","전체기준"]].map(([v,l]) => `<button type="button" class="${cntMode===v?"on":""}" data-cntmode="${v}" aria-pressed="${cntMode===v}">${l}</button>`).join("")}</span></span></div>
     <div class="filter-grid">
@@ -1452,7 +1451,6 @@ function viewCoordReq(){
     <div class="request-grid">${groups[n].map(entry).join("")}</div>${!hybrid() && fo ? coordFixBox(n, groups[n]) : ""}
   </div>`; };
   return `<section class="card customer-catalog">
-    <div class="catalog-head"><div><p class="catalog-kicker">STYLING NOTE</p><h2>손님 코디</h2></div><p class="catalog-description">요청한 옷을 비교하고 손님별로 완료를 기록해요.</p></div>
     <div class="tools toolsgap"><input class="search" id="coordQ" placeholder="인물, 요청, 옷 이름 검색" value="${esc(q)}" aria-label="코디 검색"></div>
     <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">손님</span><span class="hint">${all.length}명 · 완료 ${all.filter(cdone).length}명</span></span>
       <span class="fh-act">${S.coordOpen.length?`<button class="chip sm ${S.coordUnsel?"on":""}" data-act="coord-unsel" aria-pressed="${!!S.coordUnsel}" title="켜고 손님을 누르면 그 손님만 닫혀요">${S.coordUnsel?"선택 해제 끝":"선택 해제"}</button><button class="chip sm" data-act="coord-close">전체 해제</button>`:""}<button class="chip sm ${S.coordHideDone?"on":""}" data-act="coord-hidedone" aria-pressed="${!!S.coordHideDone}">완료 숨기기</button></span></div>
