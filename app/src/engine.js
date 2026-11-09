@@ -27,7 +27,7 @@ const alArr = (k, a) => Array.isArray(a) ? [...new Set(a.map(v => al(k, v)))] : 
 const alSlash = (k, v) => v ? String(v).split("/").map(x => { const t = x.trim(), m = t.match(/^(.*?)(\s*외)$/); return m ? al(k, m[1]) + m[2] : al(k, t); }).join("/") : v;
 /* 색 체계: 장르(옷 14·시설 7)는 연한 채움, 상태·추가옵션 태그는 테두리형 */
 const CAT_COLOR = {"캐주얼":"#0369A1","스트리트":"#1E3A8A","파스텔":"#F472B6","엘리건트":"#A21CAF","US레트로":"#F97316","록":"#B91C1C","코스프레":"#D946EF","포크로어":"#92400E","모드":"#4338CA","팝":"#CA8A04","고저스":"#BE185D","80년대레트로":"#65A30D","오리지널리티":"#15803D","사이버":"#14B8A6"};
-const SEM_COLOR = {guest:"#2563EB", shop:"#059669", item:"#D97706", battle:"#DC2626", sp:"#7C3AED", fc:"#EA580C", done:"#0D9488", part:"#4F46E5", fix:"#0891B2", wrong:"#E11D48"};
+const SEM_COLOR = {guest:"#2563EB", shop:"#059669", item:"#D97706", battle:"#DC2626", sp:"#7C3AED", fc:"#EA580C", done:"#0D9488", part:"#4F46E5", fix:"#0891B2", wrong:"#E11D48", req:"#DB2777", set:"#0F766E", mq:"#A16207"};
 const semTag = (k, label) => `<span class="tag sem" style="--c:${SEM_COLOR[k]}">${label}</span>`;
 const typeTag = t => `<span class="tag cat" style="--c:${TYPE_COLOR[t]||"#6B7280"}">${esc(t)}</span>`;
 const catTag = k => `<span class="tag cat" style="--c:${CAT_COLOR[k]||"#6B7280"}">${esc(k)}</span>`;
@@ -1180,9 +1180,9 @@ function cloNeedBlock(c){
 const isChal = c => isBtKind(c) || DATA.battles.some(b => (b.site?.clothes || []).some(x => x.id === c.id));
 function cloUseTags(c){
   const names = new Set([c.n, cloName(c)]), out = [];
-  if (DATA.coord.some(r => ["t","b","o","a"].some(k => String(cPart(r,k)||"").split("/").some(v => names.has(v.replace(/\s*외$/, "").trim()))))) out.push(`<span class="tag plain">손님 요청</span>`);
-  for (let i = 0; i < mqN(); i++) if (Object.values(mqOf(i).outfit || {}).includes(c.id)){ out.push(`<span class="tag plain">마네킹</span>`); break; }
-  if ((c.site?.sets || []).length) out.push(`<span class="tag plain">코디 세트</span>`);
+  if (DATA.coord.some(r => ["t","b","o","a"].some(k => String(cPart(r,k)||"").split("/").some(v => names.has(v.replace(/\s*외$/, "").trim()))))) out.push(semTag("req", "손님 요청"));
+  for (let i = 0; i < mqN(); i++) if (Object.values(mqOf(i).outfit || {}).includes(c.id)){ out.push(semTag("mq", "마네킹")); break; }
+  if ((c.site?.sets || []).length) out.push(semTag("set", "코디 세트"));
   return out.join("");
 }
 function viewClo(){
@@ -1259,9 +1259,9 @@ function viewClo(){
     const cand = pk ? DATA.clo.filter(c => !tracked(c) && (c.o || "없음") === pk && (!S.cloCat.length || S.cloCat.includes(c.c)) && (!S.cloPat.length || S.cloPat.includes(c.p || "없음")) && (!S.cloMat.length || S.cloMat.includes(c.m || "없음")) && !(S.optPicks||[]).includes(c.id)) : [];
     const modeSeg = `<div class="seg ocseg">${[["pick","옷으로 고르기"],["inc","+1"],["dec","−1"]].map(([v,l]) => `<button type="button" class="${mode===v?"on":""}" data-ocmode="${v}" aria-pressed="${mode===v}">${l}</button>`).join("")}</div>`;
     /* 옷본·재료·옵션을 이름 옆에 한 줄로, 장르는 색 태그로(제제 2026-11-09) */
-    const ocSpec = c => esc([c.p, c.m, c.o ? (SP_OPTS.includes(c.o) ? "★ " : "") + c.o : ""].filter(Boolean).join(" · "));
-    const pickRow = c => `<button type="button" class="ocrow" data-ocadd="${c.id}"><span class="ocb"><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${ocSpec(c)}</span></span>${catTag(c.c)}<span class="ocplus" aria-hidden="true">＋</span></button>`;
-    const doneRow = c => `<button type="button" class="ocrow got" data-ocdone="${c.id}" title="누르면 만든 걸로 보고 목록에서 빼요"><span class="ock" aria-hidden="true"></span><span class="ocb"><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${ocSpec(c)}</span></span>${catTag(c.c)}</button>`;
+    const ocSpec = c => esc([c.c, c.p, c.m, c.o ? (SP_OPTS.includes(c.o) ? "★ " : "") + c.o : ""].filter(Boolean).join(" · "));
+    const pickRow = c => `<button type="button" class="ocrow" data-ocadd="${c.id}"><span class="ocb"><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${ocSpec(c)}</span></span><span class="ocplus" aria-hidden="true">＋</span></button>`;
+    const doneRow = c => `<button type="button" class="ocrow got" data-ocdone="${c.id}" title="누르면 만든 걸로 보고 목록에서 빼요"><span class="ock" aria-hidden="true"></span><span class="ocb"><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${ocSpec(c)}</span></span></button>`;
     cntBox = `<div class="needopt optcnt"><div class="fhead" style="margin:0;flex-wrap:wrap;gap:6px"><span class="fh-l"><span class="sublbl" style="margin:0">필요한 옵션</span>${picks.length?`<span class="hint">고른 옷 ${picks.length}벌</span>`:""}</span><span class="fh-act" style="gap:6px;flex-wrap:wrap">${modeSeg}<button class="chip sm" data-act="ocsel" title="옵션 줄에서 고른 옵션만 0으로">선택 초기화</button><button class="chip sm" data-act="ocall">전체 초기화</button><button class="chip sm fold" data-act="optcnt" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span></div>
       ${o ? (keys.length ? `<div class="pills sm" style="margin-top:10px">${keys.map(k => `<button class="pill ${pk===k?"need":(cnt[k]||0)>0?"need":"must"} ${pk===k?"picking":""}" data-occ="${esc(k)}" aria-pressed="${pk===k}">${SP_OPTS.includes(k)?"★ ":""}${esc(k)}<b>${cnt[k]||0}</b></button>`).join("")}</div>` : `<div class="hint" style="margin-top:8px">옵션 줄에서 옵션을 고르면 여기에 나와요</div>`) : ""}
       ${o && mode==="pick" && !pk && keys.length ? `<div class="hint" style="margin-top:6px">옵션을 누르면 그 옵션이 붙은 일반 옷(추가옵션·전투 추천·코디 추천 제외)이 나와요. 장르·옷본·재료에서 고른 조건도 같이 걸려요.</div>` : ""}
