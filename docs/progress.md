@@ -1,45 +1,43 @@
 # 작업 진행 상황 (다음 세션 시작 메모)
 
-갱신: 2026-11-06 · 브랜치 `claude/nifty-ptolemy-dhkla6`(nice-pasteur 작업 이어받음) · **main에 합쳐 깃허브 페이지에 중간 배포함** (main에는 아직 안 합침 → 깃허브 페이지는 예전 뼈대)
+갱신: 2026-11-09 · **main = 깃허브 페이지에 배포 중** (작업 브랜치 `claude/intelligent-newton-3bbaqc`도 main과 같음)
 
-## 다음 작업: 화면 레이아웃·디자인 개편
-- 구조·메뉴 개편안 `docs/layout-plan.md`(4차 시안·클릭 기록 분석까지, 11절). 저장 구조는 바꾸지 않음(제제 2026-11-06). 시안 페이지 아티팩트 2zLB4pFgWqs6J9R9EfEMNN(db decide·decide2~5에 제제 선택)
-- **1단계 끝(2026-11-07, 브랜치 claude/intelligent-newton-3bbaqc, main 미병합)**
-  - 탭 의류 · 시설 · 코디 · 도구(제제 d4). 메인·기록 탭 → 도구 [콘테스트 · 계산기 · 자료 · 관리 · 화면 · 더 보기(할 일·검색 / 목표 / 배치 / 개량 옵션 표)]. 예전 `#home`→의류, `#rec`→도구. 앱을 열면 마지막에 본 탭
-  - 머리줄 한 줄(제목·진행·🕘 최근 변경·저장 상태·지금 저장). 리셋 주기·개량 옵션은 오른쪽 아래 떠 있는 버튼 → 팝업. 화면 설정은 도구 > 화면
-  - 아래 시트 대신 가운데 창(`isDesk = () => true`). 폭 740 이상(아이패드 세로)부터 왼쪽 레일 + 넓은 배치, 옷 목록에 품질·인기·가격 칸
-  - 의류 칩 줄 모두 다중 기본(localStorage `fms-v2-multi` 한 번만), 줄별 저장 메뉴(⋯) 없앰 → 전체 저장 하나(`ui/slots`의 `all`). 칩 줄 접기는 남김(제제 메모)
-  - 내려 볼 때 요약줄 `#sumBar`(의류 = 고른 칩, 시설 = 장르·패션 체크 ‹ ›·아이템), 패션 체크 이전·다음
-  - 옷 상세: 이 옷이 필요한 곳(세트 남은 수·배틀 일치·손님 요청·세운 마네킹), 옵션 얻는 곳(패션 체크·모델 체크·콘테스트·자격시험·스터디)
-- 2026-11-09 추가: 필요한 옵션 "옷으로 고르기"(옵션 누르면 일반 옷 목록 → 고르면 "만들 옷" 목록, 누르면 개수 −1·목록에서 빼기, 옷 완료 체크 안 함). 저장 `ui/optcnt`에 `picks[옷 번호]` 칸 추가(제제 승인, counts는 그대로). 배틀 추천 세트에 코디 세트 구성 옷·완료 표시, 누르면 코디 > 코디 세트의 그 세트로
-- 다음(2단계 후보): 시설 아이템 줄 붙이기, 목록 행 높이·누르는 범위, 개량 옵션 팝업 마지막 선택 기억, 패션 체크 필요 시설 완료 표시 다듬기, 디자인 다듬기
+## 지금 상태
+- 새 노트를 실제로 씀. 기존 노트(아티팩트 X6H5NaXw1k8pZD98Raioum)는 참고용으로 남겨 두고 더 이상 기록을 옮기지 않음(제제 2026-11-09: 새로 진행하므로 기존 기록 이전 불필요)
+- 새 노트 지금 회차 진행은 제제가 직접 초기화함(2026-11-09). 회차 무관 기록(1차 이전 1,424건: 이름 수정·배틀/콘테스트/패션 체크 점수·출현 년도·계산기·리셋 주기·배치·변경 기록)은 남아 있음
+- 클릭 기록: 기존 노트에 붙였던 기록 기능은 뺌(버전 170, 기록 붙이기 전 페이지와 같음). 모은 기록 `uilog` 499묶음은 기존 노트 db에 남겨 둠(제제). 분석은 `docs/layout-plan.md` 11절
 
-## 지금 앱 구조 (2026-11-06 결정)
-- **기존 노트 화면을 그대로 쓴다**(제제: 원래 디자인·레이아웃 유지, 꾸미기는 나중). React는 걷어냄.
-  - `app/index.html` = 앱 셸·로그인 화면·출처 표기. CSS는 `app/src/styles/`에서 관리
-  - `app/src/engine.js` = 기존 노트 화면 코드(legacy/app/post.html에서 옮김). **이제 이 파일이 원본**. 새 기능도 여기에 같은 방식(문자열 템플릿 + render + data-* 클릭)으로 넣는다.
-  - `app/src/main.ts` = 스타일·아이콘·실행 모드 진입점. `startup.ts`에서 로그인 → `ref/*` 표 받기 → `buildData.ts` → `engine-loader.ts`로 엔진 모듈 실행
-  - `app/src/fsdb.ts` 기존 저장소 API(doc/collection/onSnapshot/set/add)를 Firestore로 구현. 경로 앞에 `note/v2/`를 붙인다.
-  - `app/src/mockdb.ts` + `VITE_MOCK=1 npx vite` → 로그인 없이 `data/tables/*.json`과 메모리 저장소로 실행(테스트용)
-- 번호: 옷·시설 = 사이트 번호(`legacyId`에 기존 번호). 패션 체크·배틀은 엔진이 목록 순서로 저장하므로 순서 유지, 사이트 번호는 `site.id`(체크 = 순서+1, 챌린지 배틀 = 순서+12).
-- 사이트 값은 DATA 항목의 `site`에 붙어 있다: 옷(`q, pop, price, tier, sets, styles, good, bad, cust…`), 시설(`w,h,cost,effect…`), 체크(`critic, prize, option, appear`), 배틀(`request, clothCond, values[품질,매력,능력치], fee, clothes, sets`).
-  추가 목록: `DATA.facExtra`(마네킹 46~52 등 사이트에만 있는 시설), `checksExtra`(모델 체크 40~44), `battlesExtra`(다른 가게 직원 0~11), `sets`(코디 세트 207), `contests`(통과 점수·상금·보상), `recipes`, `ranks`, `trophies`, `missions`, `chars`, `guide`.
+## 화면 (2026-11-07 ~ 11-09)
+- 개편 계획·시안·클릭 기록 분석: `docs/layout-plan.md`(시안 페이지 아티팩트 2zLB4pFgWqs6J9R9EfEMNN, db decide·decide2~5에 제제 선택)
+- Claude 1단계(11-07): 탭 의류 · 시설 · 코디 · 도구(메인·기록 → 도구 [콘테스트·계산기·자료·관리·화면·더 보기]), 머리줄 한 줄·🕘 최근 변경, 리셋 주기·개량 옵션 떠 있는 버튼 → 팝업, 아래 시트 대신 가운데 창, 폭 740↑ 넓은 배치, 의류 칩 모두 다중 기본·전체 저장 하나, 내려 볼 때 고른 칩 요약줄, 패션 체크 ‹ ›, 옷·시설 상세 칸 나눔, 이 옷이 필요한 곳·옵션 얻는 곳, 코디 세트·마네킹·손님 요청·목표 카드 정리
+- Codex(11-09, PR #1~3, 제제가 main에 합침): 픽셀 다이어리 화면(`docs/pixel-diary.md`), 상세 정보 구조(`docs/readable-information.md`), 디자인 3종 현재·아틀리에·페이퍼(도구 → 화면 → 디자인, `docs/appearance-gallery.md`)
+- Claude(11-09, Codex 구조 위에 얹음): 필요한 옵션 "옷으로 고르기" — 옵션을 누르면 일반 옷(추가옵션·전투 추천·코디 추천 제외, 장르·옷본·재료 조건 적용) 목록 → 고르면 "만들 옷" 목록, 누르면 개수 −1·목록에서 빼기(옷 완료 체크 안 함). [옷으로 고르기 | +1 | −1]. 배틀 추천 세트에 같은 번호 코디 세트의 구성 옷·완료 표시, 누르면 코디 > 코디 세트의 그 세트로
 
-## 테스트 방법
-```
-cd app && npm ci && VITE_MOCK=1 npx vite --port 5199
-# 다른 창: playwright로 http://localhost:5199/fashion-mall-story-note/ 열고 S.tab='fac' 등 바꿔 render()
-```
-**데이터 준비(클라우드 세션 포함, 2026-11-06~)**: 비공개 저장소 `jeje-jjo/fashion-mall-story-data`에 Firestore `ref` 45표·사이트 정리 JSON·크롤러 캐시가 있다.
-```
-git clone https://github.com/jeje-jjo/fashion-mall-story-data ../fashion-mall-story-data
-tools/data_sync.sh          # → data/tables, data/pulled, data/site, tools/crawler/cache
-```
-- Firestore 표를 고치면 pull → `tools/data_sync.sh --push` → 데이터 저장소 커밋.
-- 맥이 아닌 곳에서 Firestore를 읽어야 하면: OAuth Playground(datastore 범위) 1시간 토큰을 환경의 network secret(`firestore.googleapis.com`)으로 넣고, `push_firestore.token`을 `'proxy-injected'`로 바꿔 실행한다.
-- `battle_clothes`·`battle_sets`·`facility_items`·`id_map`에는 번호 바꾸기 전 문서가 Firestore에 남아 있음(앱 영향 없음, 정리는 제제 확인 후).
+## 앱 구조
+- `app/index.html` 앱 셸·로그인·출처 / `app/src/engine.js` 화면 코드 원본(문자열 템플릿 + render + data-* 클릭, ES 모듈이라 `S`는 전역이 아님) / `app/src/ui/information.js` 상세 정보 공통 조각 / `app/src/styles/` legacy·pixel-diary·appearance CSS
+- `app/src/main.ts` → `startup.ts`(로그인 → `ref/*` 표 → `buildData.ts`) → `engine-loader.ts`(엔진 모듈 실행)
+- `app/src/fsdb.ts` 저장소 API를 Firestore로(경로 앞에 `note/v2/`). `mockdb.ts` + `VITE_MOCK=1` = 로그인 없이 `data/tables/*.json`과 메모리 저장소
+- 번호: 옷·시설 = 사이트 번호(`legacyId`에 기존 번호). 패션 체크·배틀은 목록 순서로 저장, 사이트 번호는 `site.id`
+- 사이트 값은 DATA 항목의 `site`: 옷(`q,pop,price,tier,sets,styles,good,bad,cust…`), 시설(`w,h,cost,upkeep,charm,pop,fame,effect…`), 체크(`critic,prize,option,appear`), 배틀(`request,clothCond,values,fee,clothes,sets`). 추가 목록 `facExtra`·`checksExtra`·`battlesExtra`·`sets`(207)·`contests`·`refTables`(사이트 표 16) 등
 
-## 끝난 것
+## 저장 경로 메모 (`note/v2/` 아래, 구조 바꿀 때는 제제에게 먼저 물음)
+- 회차별 `runs/rN/`: `fac/f{id}`(done, put, p40) · `clo/c{id}`(done, opt) · `misc/coord` · `ui/recipes|now|mqcfg|goals` · `mannequins/m1..5`
+- 회차 무관: `meta/round|verify` · `names/*` · `checks/k*` · `clofix|coordfix|cbattle|battles|contest|chkscore|cyear` · `calc/clear|carry` · `memo/reset` · `layslots/s*` · `ui/layout|slots|chiporder|coordopen` · `ui/optcnt`{counts{옵션:개수}, **picks[옷 번호]**(2026-11-09 추가, 제제 승인)} · `log/*`
+- 전체 정리 문서: 구글 드라이브 claude 폴더 "패션몰스토리 노트 Firestore 구조 (2026-11-06)"(doc id 1lbf2D8jTkVRYuesKdxMb7gS_xNPSD2egzm5qSI-xGvE) — optcnt.picks는 아직 반영 안 됨
+
+## 테스트·배포
+```
+git clone https://github.com/jeje-jjo/fashion-mall-story-data ../fashion-mall-story-data   # 비공개, 세션에 add_repo 필요
+tools/data_sync.sh                       # → data/tables, data/pulled, data/site, tools/crawler/cache
+cd app && npm ci
+VITE_MOCK=1 npx vite --port 5199         # 목업 화면
+npm run build:preview && PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium-1243/chrome-linux64/chrome npx playwright test --trace off   # Codex 테스트 21개
+```
+- main에 push하면 GitHub Actions(`pages.yml`)가 깃허브 페이지에 배포
+- Firestore를 Claude가 직접 읽고 쓰려면 OAuth Playground(datastore 범위) 1시간 토큰을 network secret(`firestore.googleapis.com`)으로 넣어야 함(앱 사용엔 불필요). 2026-11-09 기준 만료 상태
+- 데이터 저장소 백업: `legacy-backup/2026-11-06/`(1차 이전 전), `legacy-backup/2026-11-06-clicklog/`(클릭 기록 붙이기 전 페이지 원본 + db 2,538건)
+
+## 기준 데이터·기능 기록(2026-11-06까지)
 - [x] 기존 노트 화면·기능 전부 새 앱에서 실행(5탭 오류 없음)
 - [x] 시설 40P 태그 옆 작은 체크(회차별, `runs/rN/fac/f{id}.p40`), 우선개량 칩에 `40P n/33`
 - [x] 코디 탭 [손님 요청 | 코디 세트]: 유효 세트 156개, 기본 장르 칩(완성/전체), 전체·1벌 남음·미완성·완성, 검색, 옷 누르면 정보·완료 체크. 세트 상태는 옷 완료로 계산(따로 저장 안 함)
@@ -71,27 +69,14 @@ tools/data_sync.sh          # → data/tables, data/pulled, data/site, tools/cra
 - [x] 기록 탭 [자료]: 사이트 표 16개(자격시험·스터디·스킬·투자·출장 판매·유명인·유니폼·아이템·피버·옷 등급·식·클리어 포인트·이어받기·댓글 답하기·활동·상품) 검색해서 보기
 - [x] 데이터: 옷 계절 `봄&가을` → `봄·가을`(buildData에서), 계산용 색 표기 통일(검은→검정 등, 화면 표기는 그대로)
 
-## 남은 일 (제제 결정 반영, 순서는 Claude 재량)
-제제 원칙: **매력·품질·능력치·통과 점수 등 기준값은 사이트 값을 먼저 보여 주고, 제제가 넣은 기록은 "기록 보기"로 연다.** 기존 노트 데이터(플레이하며 넣은 값)는 모두 유지. 새로 넣으면 좋을 기능은 다 넣고, 빼는 건 제제가 한다.
-8. **사이트 도구 데이터(못 받음, 제제가 나중에 받거나 만들어 줌. 그때까지 지금 데이터만 씀)** — 클라우드·제제 회사 맥 모두 Cloudflare 403
-   1) 요청 매처 `/api/fashion-mall-story/ko/match`: 손님 요청·패션 체크·배틀 조건 + 옷 속성 → 손님 요청 사이트 문구·조건·추천 옷
-   2) 배치 `/ko/layout`: 시설 시너지·부지 크기 → 배치 판 추천
-   3) 판매 예측 `/ko/sales`: 손님별 좋아하는 장르·색 → 잘 팔릴 옷 순위, 마네킹 손님 색
-   4) 빌더 `/ko/builder`: 전체 상하 궁합(제제: 필요 없음)
-   받으면 `tools/crawler/cache/api/ko_{이름}.json`에 두고 데이터 저장소 `crawler-cache/api/`에 커밋
-9. 전투 이름 "성숙 챌린지 배틀"(예전 고저스 챌린지), "자신 있는 챌린지 배틀"(예전 특기 챌린지)은 **우선 사이트 이름 그대로 둠(제제 2026-11-06)**
-10. 데이터 이전 — **1차 끝(2026-11-06): 회차 무관 데이터만 옮김**(제제: 회차 초기화로 지워지는 것만 빼고 전부)
-   - 옮긴 것 1,424건 → Firestore `note/v2/`: meta(회차 7·확인 체크), names, checks(대상 시설만, 이름은 사이트 이름), coordfix 41, cbattle 41, battles 15, contest 17, chkscore 20, cyear 37, calc 2, memo, layslots 4, ui 5(선택 저장·칩 순서·열어 둔 손님·배치·옵션 개수), log 1,234(최신 1,000 + id 기준 500 합친 것)
-   - 안 옮긴 것: `runs/*`(회차별 체크·넣은 아이템·추가옵션 메모·코디 완료·가진 재료), clofix 7벌(모두 사이트 값과 같음)
-   - 백업: 데이터 저장소 `legacy-backup/2026-11-06/` + Firestore `backup/legacy-2026-11-06/cols/*`
-   - 스크립트 `tools/migrate/migrate.py DUMP_DIR [--write]`(옷·시설 번호 → 사이트 번호). 개수 대조 일치, 화면 엔진으로 읽기 확인
-   - **제제가 기존 노트를 계속 쓰므로 완성 때 최신 저장으로 다시 받아 한 번 더 돌린다(같은 경로 덮어씀). 그때 runs/r7(회차별)도 같이 옮김.** 그 전에 새 노트에서 고친 회차 무관 기록은 덮어써질 수 있음
-   - Firestore 쓰기는 OAuth Playground(datastore 범위) 1시간 토큰을 network secret으로 넣어서 함(Claude가 직접 읽기·쓰기할 때만 필요, 앱 사용엔 불필요)
-   - **주말 마지막 이전(아이패드, 토큰 없이)**: ① Claude가 ArtifactData로 기존 노트 최신 `meta/round`·`runs/{현재 회차}/{fac,clo,misc,ui}`·`calc/*`를 받음 → ② `python3 tools/migrate/migrate.py DUMP --only runs,calc,meta --import fms-import-날짜.json` → ③ 구글 드라이브 `claude` 폴더에 올림(커넥터) → ④ 제제가 아이패드 새 노트 기록 탭 [관리] "기존 노트에서 가져오기"에서 파일 앱 → 드라이브로 고르고 가져오기(로그인 계정으로 저장, 회차 정보는 마지막에 써서 새로 고침)
-11. 맥·아이폰·아이패드에서 로그인·동기화 확인(제제)
+## 남은 일
+1. **사이트 도구 데이터(못 받음, Cloudflare 403)** — 제제가 나중에 받거나 만들어 주면 넣음: 요청 매처 `/ko/match`, 배치 `/ko/layout`, 판매 예측 `/ko/sales`(빌더 `/ko/builder`는 필요 없음). 받으면 `tools/crawler/cache/api/ko_{이름}.json` → 데이터 저장소 `crawler-cache/api/`
+2. 전투 이름 "성숙 챌린지 배틀"·"자신 있는 챌린지 배틀"은 사이트 이름 그대로 둠(제제 2026-11-06)
+3. 맥·아이폰·아이패드 로그인·동기화 확인(제제)
+4. 정리 후보(제제 확인 후): Firestore `battle_clothes`·`battle_sets`·`facility_items`·`id_map`에 남은 번호 바꾸기 전 문서, 드라이브 Firestore 구조 문서에 optcnt.picks 추가
+- 하지 않기로 한 것: 기존 노트 회차 기록 이전(주말 아이패드 가져오기 포함). 가져오기 기능(도구 > 관리)은 코드에 남아 있음
 
 ## 데이터 메모
-- Firestore 구조 정리 문서(표·컬럼·설명, 진행 데이터 경로, 백업): 구글 드라이브 claude 폴더 "패션몰스토리 노트 Firestore 구조 (2026-11-06)" (doc id 1lbf2D8jTkVRYuesKdxMb7gS_xNPSD2egzm5qSI-xGvE)
-- 기존 노트 저장소: 아티팩트 X6H5NaXw1k8pZD98Raioum의 db, 지금 회차 경로 `runs/r7`(meta/round). 읽기 전용으로만 봄
-- 상하 궁합 목록은 사이트에 보이는 8개까지만 씀(제제 결정)
+- 상하 궁합은 사이트에 보이는 8개까지만 씀(제제 결정)
 - 게임 확인 대기: 옵션 33·42, 카이로군 #218·#459, 코디 79 코튼 팬츠(#136/#144)
+- 제제 원칙: 기준값(매력·품질·능력치·통과 점수)은 사이트 값을 먼저, 제제 기록은 "기록 보기"로. 새로 넣으면 좋을 기능은 넣고, 빼는 건 제제가 함
