@@ -217,7 +217,7 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   db.doc("ui/layout").onSnapshot(s => { S.layout = {rects: (s.exists && s.data().rects) || []}; render(); }, () => {});
   db.doc("ui/chiporder").onSnapshot(s => { const d = s.exists ? s.data() : null, n = noteChipOrder();
     S.chipOrder = d ? {pat:d.pat?.length ? alArr("recipe", d.pat) : n.pat, mat:d.mat?.length ? alArr("recipe", d.mat) : n.mat, opt:d.opt?.length ? alArr("recipe", d.opt) : n.opt} : n; render(); }, () => {});
-  db.doc("ui/optcnt").onSnapshot(s => { const c = (s.exists && s.data().counts) || {}; S.optCnt = Object.fromEntries(Object.entries(c).map(([k, v]) => [al("recipe", k), v])); render(); }, () => {});
+  db.doc("ui/optcnt").onSnapshot(s => { const dd = (s.exists && s.data()) || {}, c = dd.counts || {}; S.optCnt = Object.fromEntries(Object.entries(c).map(([k, v]) => [al("recipe", k), v])); S.optPicks = (dd.picks || []).filter(id => CLO_BY_ID.has(id)); render(); }, () => {});
   db.doc("meta/verify").onSnapshot(s => { S.verifyDone = (s.exists && s.data().done) || {}; render(); }, () => {});
   db.doc(`${RUN}/ui/recipes`).onSnapshot(s => { const d = (s.exists && s.data()) || {}; S.own = {pat:alArr("recipe", d.pat||[]), mat:alArr("recipe", d.mat||[]), opt:alArr("recipe", d.opt||[])}; render(); }, () => {});
   db.collection(`${RUN}/mannequins`).onSnapshot(s => { S.mq = Object.fromEntries(s.docs.map(d => [+d.id.slice(1), d.data()])); render(); }, () => {});
@@ -953,9 +953,10 @@ function verifyBox(){
       <div class="vbody"><div class="vt">${esc(v.t)}</div>${v.n?`<div class="hint">${esc(v.n)}</div>`:""}<div class="pills">${(v.ids||[]).map(id => nm(id, v.sh)).join("")}${(v.names||[]).map(x => `<span class="pill">${esc(x)}</span>`).join("")}</div></div></div>`; }).join("")}
   </div>`;
 }
-async function saveOptCnt(cnt){
-  S.optCnt = cnt; render();
-  if (db) try{ await writeSerial("ui/optcnt", {counts:cnt, t:Date.now()}); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
+/* 필요한 옵션: counts{옵션: 개수} + picks[옷 번호](2026-11-09 추가, 제제 승인). picks가 없는 예전 문서도 그대로 읽힘 */
+async function saveOptCnt(cnt, picks = S.optPicks || []){
+  S.optCnt = cnt; S.optPicks = picks; render();
+  if (db) try{ await writeSerial("ui/optcnt", {counts:cnt, picks, t:Date.now()}); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
 async function toggleVerify(k){
   S.verifyDone = {...(S.verifyDone||{}), [k]: !S.verifyDone?.[k]}; render();
@@ -989,7 +990,10 @@ function btSiteBlock(st, mine, noSrc){
   const clo = (st.clothes||[]).map(x => ({x, c: CLO_BY_ID.get(x.id)})).filter(y => y.c);
   const uniq = [...new Map(clo.map(y => [y.c.id, y])).values()].sort((a,b) => cloDone(b.c) - cloDone(a.c));
   const sets = (st.sets||[]).map(x => { const s = (DATA.sets||[]).find(z => z.id===x.setId); const inf = s && setInfo(s);
-    return `<span class="pill ${inf && !inf.left?"must":""}" title="${esc(x.unmet||"")}">세트 ${x.setId} · ${esc(x.result||"")}${inf?` <b>${inf.done}/${inf.total}</b>`:""}</span>`; }).join("");
+    if (!inf) return `<span class="pill" title="${esc(x.unmet||"")}">세트 ${x.setId} · ${esc(x.result||"")}</span>`;
+    /* 코디 세트(같은 번호)의 구성 옷과 완료 상태. 누르면 코디 > 코디 세트의 그 세트로 */
+    return `<div class="btset ${inf.left?"":"cdone"}"><button type="button" class="btset-h" data-gset="${x.setId}" title="${esc(x.unmet||"")}"><b>세트 ${x.setId}</b><span class="hint">${esc([s.genre, s.sub].filter(Boolean).join(" · "))}</span><span class="tag">${esc(x.result||"")}</span><span class="fc-c">${inf.left?`${inf.done}/${inf.total} 완료`:"완성"}</span><span class="chev" aria-hidden="true">›</span></button>
+      <div class="pills">${inf.items.map(it => it.c ? `<span class="pill ${cloDone(it.c)?"must":""}">${cloDone(it.c)?"✓ ":""}${esc(cloName(it.c))}</span>` : `<span class="pill off">${esc(it.name||"#"+it.id)}</span>`).join("")}</div></div>`; }).join("");
   return `<div class="csite btsite">
     ${st.request ? `<div class="cs-line" style="margin-top:0">${esc(st.request)}</div>` : ""}
     ${st.clothCond ? `<div class="cs-line"><small>의류 조건</small>${st.clothCond.split(";").map(t => `<span class="tag plain">${esc(t.trim())}</span>`).join("")}</div>` : ""}
@@ -997,7 +1001,7 @@ function btSiteBlock(st, mine, noSrc){
     <div class="cs-line"><small>${st.fee!=null?"참가비 · ":""}보상 · 등장</small>${st.fee!=null?`<span class="tag plain">${nf0(st.fee)}G</span>`:""}${st.win?`<span class="tag plain">${esc(st.win.replace(/\s*\/\s*/g," "))}</span>`:""}${st.appear?`<span class="tag plain">${esc(st.appear)}</span>`:""}</div>
     ${st.opponentOutfit ? `<div class="cs-line"><small>상대 코디</small>${esc(st.opponentOutfit.replace(/\s*#\d+/g,""))}</div>` : ""}
     ${uniq.length ? `<div class="cs-line"><small>일치 의류 ${uniq.filter(y => cloDone(y.c)).length}/${uniq.length} 완료</small>${uniq.map(({x,c}) => `<span class="pill ${cloDone(c)?"must":""}" title="${esc(x.source)}">${cloDone(c)?"✓ ":""}${esc(cloName(c))}</span>`).join("")}</div>` : ""}
-    ${sets ? `<div class="cs-line"><small>추천 세트(사이트, 세트 조건 결합은 미확정)</small>${sets}</div>` : ""}
+    ${sets ? `<div class="cs-line btsets"><small>추천 세트(사이트, 세트 조건 결합은 미확정) · 누르면 코디 세트로</small>${sets}</div>` : ""}
     ${noSrc ? "" : `<div class="hint">출처: KairoHistory 배틀·코디 세트</div>`}
   </div>`;
 }
@@ -1185,8 +1189,19 @@ function viewClo(){
     const cnt = S.optCnt || {}, sel = S.cloOpt || [];
     const keys = [...new Set([...sel, ...Object.keys(cnt).filter(k => cnt[k] > 0)])].filter(k => k!=="없음");
     const o = S.optCntOpen !== false, dec = !!S.optCntDec;
-    cntBox = `<div class="needopt optcnt"><div class="fhead" style="margin:0;flex-wrap:wrap;gap:6px"><span class="fh-l"><span class="sublbl" style="margin:0">필요한 옵션</span></span><span class="fh-act" style="gap:6px;flex-wrap:wrap"><button class="chip sm ${dec?"":"on"}" data-act="ocmode" title="누를 때마다 바뀌어요">${dec?"감소 −1":"증가 +1"}</button><button class="chip sm" data-act="ocsel" title="옵션 줄에서 고른 옵션만 0으로">선택 초기화</button><button class="chip sm" data-act="ocall">전체 초기화</button><button class="chip sm fold" data-act="optcnt" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span></div>
-      ${o ? (keys.length ? `<div class="pills sm" style="margin-top:10px">${keys.map(k => `<button class="pill ${(cnt[k]||0)>0?"need":"must"}" data-occ="${esc(k)}">${SP_OPTS.includes(k)?"★ ":""}${esc(k)}<b>${cnt[k]||0}</b></button>`).join("")}</div>` : `<div class="hint" style="margin-top:8px">옵션 줄에서 옵션을 고르면 여기에 나와요</div>`) : ""}
+    const mode = S.ocMode || "pick", picks = (S.optPicks || []).map(id => CLO_BY_ID.get(id)).filter(Boolean);
+    const pk = S.ocPick && keys.includes(S.ocPick) ? S.ocPick : null;
+    /* 옷으로 고르기: 추가옵션·전투 추천·코디 추천이 아닌 일반 옷 중 장르·옷본·재료 조건과 누른 옵션에 맞는 옷 */
+    const cand = pk ? DATA.clo.filter(c => !tracked(c) && (c.o || "없음") === pk && (!S.cloCat.length || S.cloCat.includes(c.c)) && (!S.cloPat.length || S.cloPat.includes(c.p || "없음")) && (!S.cloMat.length || S.cloMat.includes(c.m || "없음")) && !(S.optPicks||[]).includes(c.id)) : [];
+    const modeSeg = `<div class="seg ocseg">${[["pick","옷으로 고르기"],["inc","+1"],["dec","−1"]].map(([v,l]) => `<button type="button" class="${mode===v?"on":""}" data-ocmode="${v}" aria-pressed="${mode===v}">${l}</button>`).join("")}</div>`;
+    const pickRow = c => `<button type="button" class="ocrow" data-ocadd="${c.id}"><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${esc([c.c, c.p, c.m].filter(Boolean).join(" · "))}</span><span class="ocplus" aria-hidden="true">＋</span></button>`;
+    const doneRow = c => `<button type="button" class="ocrow got" data-ocdone="${c.id}" title="누르면 만든 걸로 보고 목록에서 빼요"><span class="ock" aria-hidden="true"></span><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${esc([c.p, c.m].filter(Boolean).join(" · "))}</span><span class="tag">${SP_OPTS.includes(c.o)?"★ ":""}${esc(c.o||"없음")}</span></button>`;
+    cntBox = `<div class="needopt optcnt"><div class="fhead" style="margin:0;flex-wrap:wrap;gap:6px"><span class="fh-l"><span class="sublbl" style="margin:0">필요한 옵션</span>${picks.length?`<span class="hint">고른 옷 ${picks.length}벌</span>`:""}</span><span class="fh-act" style="gap:6px;flex-wrap:wrap">${modeSeg}<button class="chip sm" data-act="ocsel" title="옵션 줄에서 고른 옵션만 0으로">선택 초기화</button><button class="chip sm" data-act="ocall">전체 초기화</button><button class="chip sm fold" data-act="optcnt" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span></div>
+      ${o ? (keys.length ? `<div class="pills sm" style="margin-top:10px">${keys.map(k => `<button class="pill ${pk===k?"need":(cnt[k]||0)>0?"need":"must"} ${pk===k?"picking":""}" data-occ="${esc(k)}" aria-pressed="${pk===k}">${SP_OPTS.includes(k)?"★ ":""}${esc(k)}<b>${cnt[k]||0}</b></button>`).join("")}</div>` : `<div class="hint" style="margin-top:8px">옵션 줄에서 옵션을 고르면 여기에 나와요</div>`) : ""}
+      ${o && mode==="pick" && !pk && keys.length ? `<div class="hint" style="margin-top:6px">옵션을 누르면 그 옵션이 붙은 일반 옷(추가옵션·전투 추천·코디 추천 제외)이 나와요. 장르·옷본·재료에서 고른 조건도 같이 걸려요.</div>` : ""}
+      ${o && pk ? `<div class="ocpick"><div class="ochead"><b>${SP_OPTS.includes(pk)?"★ ":""}${esc(pk)}</b><span class="hint">일반 옷 ${cand.length}벌${S.cloCat.length||S.cloPat.length||S.cloMat.length?" · 위 조건 적용":""} · 누르면 아래 목록에 들어가요</span><button type="button" class="chip sm fold" data-ocpick="">닫기</button></div>
+        <div class="oclist">${cand.length ? cand.slice(0, 60).map(pickRow).join("") : `<div class="hint" style="padding:8px 2px">맞는 일반 옷이 없어요</div>`}</div></div>` : ""}
+      ${o && picks.length ? `<div class="ocgot"><div class="ochead"><b>만들 옷</b><span class="hint">누르면 만든 걸로 보고 목록에서 빼요(옷 완료 체크는 안 해요)</span></div><div class="oclist">${picks.map(doneRow).join("")}</div></div>` : ""}
     </div>`;
   }
   const spAll = SP.length, spDoneN = SP.filter(cloDone).length;
@@ -1337,7 +1352,7 @@ function viewSets(){
       <button type="button" class="btn ${d?"ghost":""}" data-setdone="${c.id}">${d?"완료 취소":"완료 체크"}</button></div>
       <div class="pills">${facts.map(([k,v]) => `<span class="pill"><span style="color:var(--fg3);margin-right:6px">${k}</span>${esc(v)}</span>`).join("")}</div></div>`;
   };
-  const card = x => `<div class="fccard setcard ${x.left?"":"cdone"}">
+  const card = x => `<div class="fccard setcard ${x.left?"":"cdone"} ${S.setFocus===x.s.id?"focus":""}" id="set-${x.s.id}">
     <div class="fc-h"><b class="fc-n">세트 ${x.s.id}</b>${x.left===1?semTag("part","1벌 남음"):""}${x.left===0?semTag("done","완성"):""}<span class="fc-c">${x.done}/${x.total}</span></div>
     <div class="pills">${x.items.map(it => pill(x, it)).join("")}</div>${detail(x)}</div>`;
   const keys = Object.keys(groups);
@@ -2482,6 +2497,7 @@ document.addEventListener("click", e => {
   if (d.csub){ S.coordSub = d.csub; S.setOpen = null; remember(); render(); return; }
   if (d.setf){ S.setF = d.setf; remember(); render(); return; }
   if (d.setg){ S.setG = d.setg; remember(); render(); return; }
+  if (d.gset){ const id = +d.gset; S.tab="coord"; S.coordSub="set"; S.setF="전체"; S.setG="전체"; S.setQ=""; S.setFocus=id; remember(); render(); setTimeout(() => document.getElementById("set-"+id)?.scrollIntoView({block:"center", behavior:"smooth"}), 60); return; }
   if (d.setpill){ S.setOpen = S.setOpen===d.setpill ? null : d.setpill; render(); return; }
   if (d.setdone){ toggleClo(+d.setdone); return; }
   if (d.act==="fcextra"){ S.fcExtra = !S.fcExtra; render(); return; }
@@ -2517,10 +2533,18 @@ document.addEventListener("click", e => {
   if (d.hopen !== undefined){ S.homeOpen = S.homeOpen===d.hopen ? "" : d.hopen; render(); return; }
   if (d.hundo){ homeUndo(d.hundo); return; }
   if (d.cedit2 !== undefined){ S.sheet = {kind:"coord", id:d.cedit2}; render(); return; }
-  if (d.occ){ const k = d.occ, cnt = {...(S.optCnt||{})}; const v = Math.max(0, (cnt[k]||0) + (S.optCntDec ? -1 : 1)); if (v) cnt[k] = v; else delete cnt[k]; saveOptCnt(cnt); return; }
-  if (d.act==="ocmode"){ S.optCntDec = !S.optCntDec; render(); return; }
-  if (d.act==="ocsel"){ const cnt = {...(S.optCnt||{})}; (S.cloOpt||[]).forEach(k => delete cnt[k]); saveOptCnt(cnt); toast("고른 옵션의 개수를 0으로 했어요"); return; }
-  if (d.act==="ocall"){ saveOptCnt({}); toast("필요한 옵션 개수를 모두 지웠어요"); return; }
+  if (d.occ){ const k = d.occ, mode = S.ocMode || "pick";
+    if (mode==="pick"){ S.ocPick = S.ocPick===k ? null : k; render(); return; }
+    const cnt = {...(S.optCnt||{})}; const v = Math.max(0, (cnt[k]||0) + (mode==="dec" ? -1 : 1)); if (v) cnt[k] = v; else delete cnt[k]; saveOptCnt(cnt); return; }
+  if (d.ocmode){ S.ocMode = d.ocmode; if (d.ocmode!=="pick") S.ocPick = null; render(); return; }
+  if (d.ocpick !== undefined){ S.ocPick = d.ocpick || null; render(); return; }
+  if (d.ocadd){ const c = CLO_BY_ID.get(+d.ocadd); if (!c) return; const k = c.o || "없음", cnt = {...(S.optCnt||{})}; cnt[k] = (cnt[k]||0) + 1;
+    saveOptCnt(cnt, [...(S.optPicks||[]), c.id]); toast(`${cloName(c)} 넣었어요`); return; }
+  if (d.ocdone){ const c = CLO_BY_ID.get(+d.ocdone); if (!c) return; const k = c.o || "없음", prev = {cnt:{...(S.optCnt||{})}, picks:[...(S.optPicks||[])]};
+    const cnt = {...prev.cnt}; const v = Math.max(0, (cnt[k]||0) - 1); if (v) cnt[k] = v; else delete cnt[k];
+    saveOptCnt(cnt, prev.picks.filter(id => id !== c.id)); toast(`${cloName(c)} 뺐어요`, () => saveOptCnt(prev.cnt, prev.picks)); return; }
+  if (d.act==="ocsel"){ const cnt = {...(S.optCnt||{})}; (S.cloOpt||[]).forEach(k => delete cnt[k]); saveOptCnt(cnt, (S.optPicks||[]).filter(id => !(S.cloOpt||[]).includes(CLO_BY_ID.get(id)?.o || "없음"))); toast("고른 옵션의 개수를 0으로 했어요"); return; }
+  if (d.act==="ocall"){ saveOptCnt({}, []); S.ocPick = null; toast("필요한 옵션 개수와 고른 옷을 모두 지웠어요"); return; }
   if (d.act==="optcnt"){ S.optCntOpen = S.optCntOpen === false; render(); return; }
   if (d.act==="orderedit"){ S.orderEdit = !S.orderEdit; render(); return; }
   if (d.act==="orderreset"){ saveChipOrder({}); toast("옷본·재료·옵션을 기본 순서로 돌렸어요"); return; }

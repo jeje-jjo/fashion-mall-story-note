@@ -1524,6 +1524,32 @@ html.sheet-open .fab{display:none}
 :root[data-design="hybrid"] .cocard .coord.sub .pills{margin-top:6px}
 :root[data-design="hybrid"] .cocard.cdone{opacity:.7}
 @media (min-width:740px){:root[data-design="hybrid"] .cogrid{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}}
+
+/* 필요한 옵션 → 옷으로 고르기(2026-11-09) */
+:root[data-design="hybrid"] .ocseg button{height:28px;padding:0 11px;font-size:12.5px}
+:root[data-design="hybrid"] .optcnt .pill.picking{outline:2px solid var(--blue);outline-offset:2px}
+:root[data-design="hybrid"] .ocpick,:root[data-design="hybrid"] .ocgot{margin-top:12px;background:var(--card);border-radius:12px;box-shadow:inset 0 0 0 1px var(--line);padding:8px 10px}
+:root[data-design="hybrid"] .ochead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:2px 2px 6px}
+:root[data-design="hybrid"] .ochead .hint{flex:1;min-width:140px;font-size:12px}
+:root[data-design="hybrid"] .oclist{display:grid;grid-template-columns:minmax(0,1fr);max-height:320px;overflow:auto}
+:root[data-design="hybrid"] .ocgot .oclist{max-height:none}
+:root[data-design="hybrid"] .ocrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:9px 4px;border-top:1px solid var(--line);min-height:44px}
+:root[data-design="hybrid"] .oclist .ocrow:first-child{border-top:0}
+:root[data-design="hybrid"] .ocrow .ocn{font-size:14px;font-weight:600;flex:none;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:root[data-design="hybrid"] .ocrow .ocs{flex:1;min-width:0;font-size:12px;color:var(--fg3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:root[data-design="hybrid"] .ocrow .ocplus{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--blue-soft);color:var(--blue-ink);font-weight:700}
+:root[data-design="hybrid"] .ocrow .ock{flex:none;width:20px;height:20px;border-radius:50%;border:1.6px solid color-mix(in srgb,var(--blue) 45%,var(--line))}
+:root[data-design="hybrid"] .ocrow:active{background:var(--press)}
+@media (min-width:740px){:root[data-design="hybrid"] .oclist{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:18px}
+  :root[data-design="hybrid"] .oclist .ocrow:nth-child(2){border-top:0}}
+/* 배틀 추천 세트: 코디 세트 구성 옷까지 */
+:root[data-design="hybrid"] .btsets{flex-direction:column;align-items:stretch}
+:root[data-design="hybrid"] .btset{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border-radius:12px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line);width:100%}
+:root[data-design="hybrid"] .btset.cdone{opacity:.75}
+:root[data-design="hybrid"] .btset-h{display:flex;align-items:center;gap:8px;width:100%;text-align:left}
+:root[data-design="hybrid"] .btset-h .fc-c{margin-left:auto;font-size:12px;color:var(--fg3)}
+:root[data-design="hybrid"] .btset-h .chev{color:var(--fg3)}
+:root[data-design="hybrid"] .setcard.focus{box-shadow:inset 0 0 0 2px var(--blue)!important}
 </style>
 <script type="module" src="/src/main.ts"></script>
 </body>
