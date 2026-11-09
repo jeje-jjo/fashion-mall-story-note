@@ -403,7 +403,7 @@ async function saveChipOrder(order){
 }
 const foldChips = (list, cur, attr, key) => {
   if (S.orderEdit && ORDER_KEYS.includes(key)) return `<div class="chips cfoldchips dragwrap" data-dwrap="${key}">${list.filter(([k]) => k!=="전체").map(([k,label]) => `<span class="chip dragchip" data-dk="${key}" data-dv="${esc(k)}"><i aria-hidden="true">⋮⋮</i>${label}</span>`).join("")}</div>`;
-  return `<div class="chips cfoldchips ${S.cloExp[key]?"is-expanded":"is-strip"}" aria-label="${({cat:"장르",pat:"옷본",mat:"재료",opt:"옵션"})[key]} 선택">${list.filter(([k]) => k!=="전체").map(([k,label,meta]) => `<button class="chip ${isOn(k,cur)?"on":""} ${attr==="copt" && SP_OPTS.includes(k)?"spchip":""} ${meta===0?"zero":""}" data-${attr}="${esc(k)}" aria-pressed="${isOn(k,cur)}">${label}${meta!==""&&meta!=null?`<b>${meta}</b>`:""}</button>`).join("")}</div>`;
+  return `<div class="chips cfoldchips ${S.cloExp[key]?"is-expanded":"is-strip"}" aria-label="${({cat:"장르",pat:"옷본",mat:"재료",opt:"옵션"})[key]} 선택">${list.filter(([k]) => k!=="전체").map(([k,label,meta]) => `<button class="chip ${isOn(k,cur)?"on":""} ${attr==="copt" && SP_OPTS.includes(k)?"spchip":""} ${meta===0?"zero":""}" data-${attr}="${esc(k)}" aria-pressed="${isOn(k,cur)}" ${S.nextTgt?.[key]?.includes(k)&&!isOn(k,cur)?'data-next="1" title="다음 랭크에서 열려요"':""}>${label}${meta!==""&&meta!=null?`<b>${meta}</b>`:""}</button>`).join("")}</div>`;
 };
 
 const cloName = c => S.names.clo[c.id] || c.n;
@@ -1176,6 +1176,22 @@ function cloNeedBlock(c){
   const sources = optSources(c.o);
   return `${uses ? infoSection("이 옷이 필요한 곳", uses) : ""}${sources.length ? infoSection(`${c.o} 얻는 곳`, textList(sources)) : ""}`;
 }
+/* 랭크 진행 다음 대상(제제 2026-11-09): 장르 줄에서 고른(=연) 장르를 기준으로, 랭크 순서상 아직 안 연 첫 장르의 단계.
+   그 단계의 장르·새 옷 베이스(옷본)·새 스터디 재료/옵션을 칩에서 은은하게 표시. 패션 체크 보상은 완료하면 자동 선택이라 제외 */
+function nextRankStep(){
+  const plan = DATA.rankPlan || [], opened = S.cloCat || [];
+  if (!opened.length) return null;
+  return plan.find(p => p.rank != null && !opened.includes(p.genre)) || null;
+}
+function nextTargets(step, avail){
+  const out = {cat:[], pat:[], mat:[], opt:[]}; if (!step) return out;
+  const nk2 = x => String(x || "").replace(/\s/g, "");
+  const find = (key, v) => (avail[key] || []).find(k => nk2(k) === nk2(al("recipe", v)));
+  if ((avail.cat || []).includes(step.genre)) out.cat.push(step.genre);
+  const b = find("pat", step.base); if (b) out.pat.push(b);
+  (step.studyItems || []).forEach(v => { for (const key of ["mat","opt"]){ const k = find(key, v); if (k){ out[key].push(k); break; } } });
+  return out;
+}
 /* 목록 행 태그 순서(제제 2026-11-09): [장르] [추가옵션] [챌린지 = 전투 추천] [코디 추천: 손님 요청·마네킹·코디 세트] */
 const isChal = c => isBtKind(c) || DATA.battles.some(b => (b.site?.clothes || []).some(x => x.id === c.id));
 function cloUseTags(c){
@@ -1220,6 +1236,7 @@ function viewClo(){
   const opts = chipOrdered("opt", Object.keys(allOpt).sort((a,b) => optRank(a) - optRank(b) || allOpt[b]-allOpt[a])).map(k => [k, frac(cnt3.filter(c => (c.o || "없음")===k))]);
   S.spAvail = opts.map(([k]) => k).filter(k => SP_OPTS.includes(k));
   S.rowAvail = {cat: cats.filter(k => k!=="전체"), pat: pats.map(([k]) => k), mat: mats.map(([k]) => k), opt: opts.map(([k]) => k)};
+  const rankStep = nextRankStep(); S.nextTgt = nextTargets(rankStep, S.rowAvail);
   const optChips = [["전체","전체 옵션",rows.length], ...opts.map(([k,v]) => [k, SP_OPTS.includes(k) ? "★ "+k : k, v])];
   if (S.cloOpt.length) rows = rows.filter(c => S.cloOpt.includes(optName(c)));
   if (S.cloSt==="미완료") rows = rows.filter(c => !cloDone(c));
@@ -1298,6 +1315,7 @@ function viewClo(){
     <div class="filter-row">${rowHead("재료","mat","cmat",S.cloMat)}${foldChips(matChips, S.cloMat, "cmat", "mat")}</div>
     <div class="filter-row">${rowHead("옵션","opt","copt",S.cloOpt)}${foldChips(optChips, S.cloOpt, "copt", "opt")}</div>
     </div>
+    ${rankStep ? `<div class="ranknext"><span class="rn-k">다음 랭크 ${rankStep.rank}</span><span class="rn-v">배틀 ${esc(rankStep.battle)} → ${esc(rankStep.char)} → <b>${esc(rankStep.genre)}</b>${rankStep.base?` · 옷본 <b>${esc(rankStep.base)}</b>`:""}${rankStep.study?` · 스터디 ${esc(rankStep.study)}${rankStep.studyItems?.length?`(<b>${rankStep.studyItems.map(esc).join("·")}</b>)`:""}`:""}</span><span class="rn-h">점선 칩이 다음에 열리는 것</span></div>` : ""}
     ${cntBox}
     <div class="frowgap">${battleRow()}</div>
     ${S.verifyOpen ? verifyBox() : ""}

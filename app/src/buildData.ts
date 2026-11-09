@@ -134,6 +134,29 @@ export function buildData(t: Tables) {
   L.missions = t.site_missions;
   L.chars = t.characters;
   L.guide = t.guide;
+  // 랭크 진행(2026-11-09 제제): 랭크 → 배틀 상대 → 해금 캐릭터 → 그 캐릭터가 좋아하는 장르(괄호 안 세부 장르).
+  // 같은 랭크의 새 옷 베이스(옷본)·새 스터디(얻는 재료·옵션)를 묶는다. 출처: KairoHistory 진행·스킬·배틀·캐릭터 표.
+  {
+    const studyBy = new Map<string, string[]>(t.site_studies.map((r) => [String(r.c0 ?? "").trim(), String(r.c2 ?? "").split(",").map((x) => x.trim()).filter(Boolean)]));
+    const btBy = new Map<string, Row>(t.battles.map((b) => [String(b.name ?? "").trim(), b]));
+    const chBy = new Map<string, Row>(t.characters.map((c) => [String(c.name ?? "").trim(), c]));
+    const pick = (s: string, k: string) => (s.match(new RegExp(`${k}:\\s*([^/]+)`)) || [])[1]?.trim() || "";
+    const charOf = (b: Row | undefined) => (String(b?.win ?? "").match(/해금 캐릭터:\s*\/\s*([^/]+)/) || [])[1]?.trim() || "";
+    const genreOf = (c: string) => { const l = (chBy.get(c)?.likes || [])[0] || ""; return (String(l).match(/\(([^)]+)\)/) || [])[1]?.trim() || ""; };
+    const step = (rank: number | null, battle: string, extra: Record<string, unknown> = {}) => {
+      const b = btBy.get(battle), ch = charOf(b);
+      return { rank, battle, char: ch, genre: genreOf(ch), appear: b?.appear ?? "", ...extra };
+    };
+    const ranks = [...t.site_ranks].sort((a, b) => (+a.c0) - (+b.c0));
+    const plan: any[] = ranks.filter((r) => pick(String(r.c2 ?? ""), "배틀")).map((r) => {
+      const s = String(r.c2 ?? ""), study = pick(s, "새 스터디");
+      return step(+r.c0, pick(s, "배틀"), { base: pick(s, "새 옷 베이스"), study, studyItems: studyBy.get(study) || [] });
+    });
+    // 랭크 밖에서 열리는 장르(챌린지 배틀 조건 등)
+    const inPlan = new Set(plan.map((p) => p.battle));
+    t.battles.filter((b) => b.kind === "다른 가게 직원" && !inPlan.has(String(b.name).trim())).forEach((b) => plan.push(step(null, String(b.name).trim())));
+    L.rankPlan = plan.filter((p) => p.genre);
+  }
 
   // ================= 사이트 값으로 맞추기 (제제 결정 2026-11-06) =================
   // 기존 노트 기준값은 일본 위키 번역 스프레드시트에서 왔다. 공략 사이트(한국어판 게임 데이터) 값이 더 정확하므로

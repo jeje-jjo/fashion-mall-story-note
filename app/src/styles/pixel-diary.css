@@ -481,3 +481,10 @@ nav.tabs { background: var(--card); }
 /* 필요예정: 다음 장르에 필요한 옵션 */
 .optcnt .ocplan { margin-top: 10px; padding: 10px 12px; border: 1px dashed color-mix(in srgb, var(--blue) 35%, var(--line)); border-radius: 12px; background: var(--card); }
 .optcnt .ocplan .ochead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+
+/* 랭크 진행: 다음에 열리는 장르·옷본·재료·옵션 칩은 점선 테두리와 옅은 색으로 은은하게 */
+.cfoldchips .chip[data-next] { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--blue) 55%, transparent); outline: 1px dashed color-mix(in srgb, var(--blue) 45%, transparent); outline-offset: 2px; background: color-mix(in srgb, var(--blue) 7%, var(--card)); color: var(--blue-ink); }
+.ranknext { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 12px 0 0; padding: 9px 12px; border: 1px dashed color-mix(in srgb, var(--blue) 40%, var(--line)); border-radius: 12px; font-size: 12.5px; color: var(--fg2); background: color-mix(in srgb, var(--blue) 4%, var(--card)); }
+.ranknext .rn-k { font-weight: 700; color: var(--blue-ink); }
+.ranknext .rn-v b { color: var(--fg); font-weight: 650; }
+.ranknext .rn-h { margin-left: auto; font-size: 11px; color: var(--fg3); }
