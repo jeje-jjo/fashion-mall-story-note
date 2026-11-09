@@ -974,7 +974,9 @@ function viewFac(){
     "패션 체크순": (a,b) => (FC_OF[b.id]?.length||0) - (FC_OF[a.id]?.length||0) || (FC_OF[a.id]?.[0]||99) - (FC_OF[b.id]?.[0]||99),
   }[S.facSort];
   const noStore = missingShopSet();
-  rows = [...rows].sort((a,b) => (facFcAllDone(a)?1:0) - (facFcAllDone(b)?1:0) || (noStore(a)?1:0) - (noStore(b)?1:0) || (first ? first(a,b) : 0) || baseSort(a,b));
+  /* 아직 안 연 매장이 맨 아래. 패션 체크 완료 시설은 '패션 체크순'일 때만, 안 연 매장보다는 위로 내림(제제 2026-11-09) */
+  const fcSink = S.facSort==="패션 체크순" ? facFcAllDone : () => false;
+  rows = [...rows].sort((a,b) => (noStore(a)?1:0) - (noStore(b)?1:0) || (fcSink(a)?1:0) - (fcSink(b)?1:0) || (first ? first(a,b) : 0) || baseSort(a,b));
   const pc = rows.filter(facPartial).length;
   const fcOne = S.facFcSel.length===1 && S.facFcSel[0] <= FC_MAX ? S.facFcSel[0]-1 : null;
   const canPut = idx >= 0 && rel==="좋음";
