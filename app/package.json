@@ -6,12 +6,17 @@
     "dev": "vite",
     "dev:mock": "VITE_MOCK=1 vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:preview": "vite --mode preview",
+    "build:preview": "tsc -b && vite build --mode preview --outDir preview-dist",
+    "test": "npm run build:preview && playwright test"
   },
   "dependencies": {
-    "firebase": "^11.10.0"
+    "firebase": "^11.10.0",
+    "galmuri": "^2.40.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.0",
     "typescript": "^5.8.3",
     "vite": "^6.3.5"
   }

@@ -1,0 +1,308 @@
+/* 선택 가능한 시각 디자인. 데이터·순서·노출 조건은 그대로 둔다.
+   기본은 기존 디자인(classic). 신규 표면은 모든 팔레트·명암 모드와 조합된다. */
+.appearance-group { padding: 4px 0 24px; }
+.appearance-heading { margin-bottom: 16px; }
+.appearance-heading h3 { margin: 0 0 5px; font-size: 15px; font-weight: 650; color: var(--fg); }
+.appearance-heading p { margin: 0; color: var(--fg2); font-size: 13px; }
+.appearance-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
+.appearance-option { min-width: 0; display: flex; flex-direction: column; text-align: left; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); transition: border-color .18s, box-shadow .18s; }
+.appearance-option.on { border-color: var(--blue); box-shadow: 0 0 0 1px var(--blue); }
+.appearance-option:focus-visible { outline-offset: 4px; }
+.appearance-preview { position: relative; display: flex; width: 100%; height: 126px; overflow: hidden; border: 1px solid #e9e2de; border-radius: 6px; background: #f5f3ef; color: #905665; }
+.mini-rail { display: flex; flex-direction: column; flex: 0 0 20%; gap: 9px; padding: 23px 9px; border-right: 1px solid #e7dfdb; background: #fffefd; }
+.mini-rail i { height: 5px; display: block; border-radius: 3px; background: #d6c5c8; }
+.mini-rail i:first-child { background: #a86b7b; }
+.mini-main { display: flex; flex-direction: column; gap: 10px; padding: 17px 13px; width: 80%; }
+.mini-heading { width: 46%; height: 7px; background: #6d575d; border-radius: 2px; }
+.mini-panel { display: flex; align-items: center; justify-content: space-between; height: 30px; border: 1px solid #e7dfda; border-radius: 5px; background: #fffefd; padding: 8px; }
+.mini-panel i { display: block; width: 22%; height: 7px; background: #e7d8da; border-radius: 2px; }
+.mini-lines { display: flex; flex-direction: column; gap: 8px; }
+.mini-lines i { height: 2px; background: #e0d8d2; }
+.mini-lines i:last-child { width: 70%; }
+.preview-atelier { background: #f6f2ef; border-color: #e8ded8; }
+.preview-atelier .mini-rail { background: #3c3037; border: 0; }
+.preview-atelier .mini-rail i { background: #85707c; }
+.preview-atelier .mini-rail i:first-child { background: #e7c4cc; }
+.preview-atelier .mini-heading { background: #7c4e5d; }
+.preview-atelier .mini-panel { border-color: #efe7df; border-radius: 9px; box-shadow: 0 3px 8px #402b3310; }
+.preview-atelier .mini-panel i { background: #e8cbd2; }
+.preview-paper { background: #fafaf8; border-color: #deded8; }
+.preview-paper .mini-rail { background: #f0f0ed; border-color: #d7d9d4; }
+.preview-paper .mini-rail i { background: #b7bfbb; border-radius: 0; }
+.preview-paper .mini-rail i:first-child { background: #62786b; }
+.preview-paper .mini-heading { background: #3d4b44; border-radius: 0; }
+.preview-paper .mini-panel { border-radius: 0; background: #fff; border-color: #d9dfd9; border-top: 2px solid #62786b; }
+.preview-paper .mini-panel i { background: #d9e0da; border-radius: 0; }
+.preview-check { display: none; position: absolute; right: 8px; top: 8px; width: 20px; height: 20px; align-items: center; justify-content: center; border-radius: 50%; background: #905665; color: #fff; font-size: 12px; }
+.appearance-option.on .preview-check { display: flex; }
+.appearance-label { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; width: 100%; padding: 12px 2px 3px; }
+.appearance-label b { font-size: 14px; font-weight: 650; color: var(--fg); }
+.appearance-label > span { font: 10px/1.5 ui-monospace,monospace; color: var(--fg3); }
+.appearance-note { color: var(--fg2); padding: 0 2px 3px; font-size: 12px; line-height: 1.6; }
+
+/* 02 — Atelier: 따뜻한 종이, 깊은 메뉴, 섬세한 표면. */
+:root[data-skin="atelier"] {
+  --bg: #f6f3ef; --card: #fffefb; --soft: #f3eeea; --soft2: #eae0dc;
+  --fg: #372e31; --fg2: #685b5e; --fg3: #7c6e71; --line: #e9e1dc;
+  --skin-radius: 16px; --skin-small: 9px; --skin-inset: #f9f5f1;
+  --skin-shadow: 0 1px 2px #3c263008, 0 5px 20px #3c263004;
+  --skin-nav: #3a2f36; --skin-nav-ink: #f9edf0; --skin-nav-muted: #d0bac2;
+  --skin-nav-on: #f1dce3; --skin-nav-on-ink: #5d3545;
+  --skin-rule: #eaded9; --skin-glow: #aa6b7f13;
+}
+:root[data-skin="atelier"][data-theme="dark"] {
+  --bg: #1c191d; --card: #272228; --soft: #312a31; --soft2: #46343e;
+  --fg: #f2e8e9; --fg2: #d2bfc6; --fg3: #b6a0a9; --line: #43353e;
+  --skin-inset: #2b232a; --skin-shadow: 0 1px 3px #0002;
+  --skin-nav: #171419; --skin-nav-ink: #f9edf0; --skin-nav-muted: #c4aeb9;
+  --skin-nav-on: #4b3340; --skin-nav-on-ink: #f2cddd;
+  --skin-rule: #49353f; --skin-glow: #cb9baf0a;
+}
+/* 03 — Paper: 절제된 선과 중립적인 기록 표면. */
+:root[data-skin="paper"] {
+  --bg: #f4f5f1; --card: #fffffd; --soft: #f0f2ed; --soft2: #e3e7df;
+  --fg: #28302b; --fg2: #566158; --fg3: #6c776e; --line: #dce1d8;
+  --skin-radius: 6px; --skin-small: 5px; --skin-inset: #f8f9f5;
+  --skin-shadow: none; --skin-nav: #f0f2eb; --skin-nav-ink: #28352c;
+  --skin-nav-muted: #57665a; --skin-nav-on: #e1e8df; --skin-nav-on-ink: #314c3c;
+  --skin-rule: #dce1d8; --skin-glow: transparent;
+}
+:root[data-skin="paper"][data-theme="dark"] {
+  --bg: #181c19; --card: #222823; --soft: #2b332c; --soft2: #38473a;
+  --fg: #edf1e8; --fg2: #c4cebf; --fg3: #a7b5a3; --line: #3a473a;
+  --skin-inset: #252d25; --skin-shadow: none; --skin-nav: #1d241e;
+  --skin-nav-ink: #edf1e8; --skin-nav-muted: #c0cdb9;
+  --skin-nav-on: #364533; --skin-nav-on-ink: #dcebd2; --skin-rule: #3a473a;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-skin="atelier"]:not([data-theme="light"]) {
+    --bg: #1c191d; --card: #272228; --soft: #312a31; --soft2: #46343e;
+    --fg: #f2e8e9; --fg2: #d2bfc6; --fg3: #b6a0a9; --line: #43353e;
+    --skin-inset: #2b232a; --skin-shadow: 0 1px 3px #0002;
+    --skin-nav: #171419; --skin-nav-ink: #f9edf0; --skin-nav-muted: #c4aeb9;
+    --skin-nav-on: #4b3340; --skin-nav-on-ink: #f2cddd;
+    --skin-rule: #49353f; --skin-glow: #cb9baf0a;
+  }
+  :root[data-skin="paper"]:not([data-theme="light"]) {
+    --bg: #181c19; --card: #222823; --soft: #2b332c; --soft2: #38473a;
+    --fg: #edf1e8; --fg2: #c4cebf; --fg3: #a7b5a3; --line: #3a473a;
+    --skin-inset: #252d25; --skin-shadow: none; --skin-nav: #1d241e;
+    --skin-nav-ink: #edf1e8; --skin-nav-muted: #c0cdb9;
+    --skin-nav-on: #364533; --skin-nav-on-ink: #dcebd2; --skin-rule: #3a473a;
+  }
+}
+
+/* 공통 마감: 구조를 유지하며 선택·위계·수치의 표현을 통일한다. */
+:root:is([data-skin="atelier"],[data-skin="paper"]) body {
+  background-color: var(--bg); color: var(--fg); background-image: radial-gradient(ellipse at 80% 0,var(--skin-glow),transparent 45%);
+  background-attachment: fixed; -webkit-font-smoothing: antialiased;
+}
+:root:is([data-skin="atelier"],[data-skin="paper"]) :focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .app { gap: 24px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .brandbar { border-color: var(--skin-rule); padding-bottom: 22px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .brandmark { background: var(--card); border-color: var(--line); border-radius: var(--skin-small); box-shadow: 2px 2px 0 var(--soft2); color: var(--blue-ink); width: 42px; height: 42px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .brandname { font-size: 14px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .brandname small { color: var(--fg3); font-size: 9px; letter-spacing: .15em; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .wiki-link { font-size: 12px; text-decoration: none; border-bottom: 1px solid var(--line); padding-bottom: 2px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .wiki-link:hover { color: var(--blue-ink); border-color: var(--blue); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .hello { padding: 2px 0 4px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .hello h1 { font-size: 32px; font-weight: 760; line-height: 1.3; letter-spacing: -.05em; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .page-eyebrow { font-size: 10px; letter-spacing: .14em; margin-bottom: 8px !important; color: var(--blue-ink); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .hello #sub { color: var(--fg2); letter-spacing: -.01em; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .hprog { height: 3px; background: var(--soft2); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .hprog i { background: linear-gradient(90deg,var(--blue),color-mix(in srgb,var(--blue) 55%,var(--card))); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .hbtn { box-shadow: none; border: 1px solid var(--line); border-radius: var(--skin-small); background: var(--card); color: var(--fg2); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .sync { font-size: 12px; color: var(--fg2); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .sync.on i { background: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .card,
+:root:is([data-skin="atelier"],[data-skin="paper"]) .cogrid > .cocard {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--skin-radius); box-shadow: var(--skin-shadow);
+}
+:root:is([data-skin="atelier"],[data-skin="paper"]) .card.subnav { background: transparent; border: 0; box-shadow: none; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .stack { gap: 24px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .catalog-head { margin-bottom: 22px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .catalog-kicker { color: var(--blue-ink); font-size: 9px; letter-spacing: .16em; margin-bottom: 6px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .catalog-head h2 { font-size: 22px; line-height: 1.4; font-weight: 710; letter-spacing: -.04em; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .catalog-head h2 > span { margin-left: 8px; color: var(--fg3); font-size: 12px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .catalog-jump { text-decoration: none; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--fg2); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .filter-toolbar { border-color: var(--skin-rule); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .filter-row { border-color: var(--skin-rule); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .fhead.rowhead .sublbl { font-size: 13px; font-weight: 650; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .rdot { border-radius: 1px; width: 5px; height: 5px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .chip { border-radius: var(--skin-small); background: var(--soft); color: var(--fg2); border-color: transparent; transition: background-color .16s, border-color .16s, color .16s; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .chip.sm { border-radius: var(--skin-small); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .chip:hover { border-color: color-mix(in srgb,var(--blue) 30%,var(--line)); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .chip.on,
+:root:is([data-skin="atelier"],[data-skin="paper"]) .chip.sm.on { background: var(--blue); color: var(--on-accent); border-color: var(--blue); font-weight: 600; box-shadow: 0 1px 3px color-mix(in srgb,var(--blue) 15%,transparent); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .chip.fold,
+:root:is([data-skin="atelier"],[data-skin="paper"]) .ghostchip,
+:root:is([data-skin="atelier"],[data-skin="paper"]) .chip.mbtn { background: transparent; border-color: var(--line); color: var(--fg2); box-shadow: none; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .chip.zero:not(.on) { opacity: 1; color: var(--fg3); background: var(--skin-inset); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .seg,
+:root:is([data-skin="atelier"],[data-skin="paper"]) .pillseg { background: var(--soft); border-color: var(--line); box-shadow: inset 0 1px 2px #301e2403; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .seg button.on,
+:root:is([data-skin="atelier"],[data-skin="paper"]) .pillseg button.on { background: var(--card); color: var(--blue-ink); box-shadow: 0 1px 4px #30202a10; font-weight: 650; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .seg.wide { padding: 4px; border-radius: calc(var(--skin-small) + 3px); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .seg.wide button { border-radius: var(--skin-small); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .search { border-radius: var(--skin-small); border-color: var(--line); background-color: var(--skin-inset); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2385797e' stroke-width='1.3'%3E%3Ccircle cx='6.7' cy='6.7' r='4.5'/%3E%3Cpath d='m10.2 10.2 3.5 3.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 13px center; background-size: 16px; padding-left: 40px; box-shadow: inset 0 1px 2px #3c263004; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .search:focus { background-color: var(--card); border-color: var(--blue); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .needopt { background: var(--skin-inset); border: 1px solid var(--line); border-radius: var(--skin-small); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .legend { font-size: 12px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .row { border-color: var(--line); position: relative; transition: background-color .15s; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .row:hover { background: color-mix(in srgb,var(--blue) 3%,var(--card)); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .row .t { font-weight: 650; letter-spacing: -.025em; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .row .s { color: var(--fg2); line-height: 1.6; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .item-number { font-size: 10px; color: var(--fg3); padding-right: 3px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .open > .row .n { color: var(--blue-ink); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .row.done .n { color: var(--fg3); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .rowvals { color: var(--fg2); font-size: 12px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .ck { border-radius: 4px; border-color: color-mix(in srgb,var(--fg3) 70%,var(--line)); width: 20px; height: 20px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .ck.on { background: var(--green); border-color: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .tag { border-radius: 4px; padding: 2px 6px; font-size: 11px; font-weight: 500; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .tag.cat { background: color-mix(in srgb,var(--c) 8%,var(--card)); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .pill { border-radius: var(--skin-small); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .rowpills .pill { background: var(--skin-inset); border-color: var(--line); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .rowpills .pill.need { background: var(--green-soft); border-color: color-mix(in srgb,var(--green) 40%,var(--line)); color: var(--green); }
+
+/* 상세에도 목록과 같은 표면·문자·선택 규칙을 적용한다. */
+:root:is([data-skin="atelier"],[data-skin="paper"]) .detail,
+:root:is([data-skin="atelier"],[data-skin="paper"]) .detail.item-detail { border: 1px solid var(--line); border-radius: var(--skin-radius); box-shadow: var(--skin-shadow); background: var(--card); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .metric-strip { background: var(--skin-inset); border-radius: var(--skin-radius) var(--skin-radius) 0 0; border-color: var(--skin-rule); display: grid; grid-template-columns: repeat(auto-fit,minmax(76px,1fr)); column-gap: 20px; row-gap: 18px; padding: 22px 24px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .metric-strip > div { border-right: 1px solid var(--skin-rule); padding-right: 12px; min-width: 0; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .metric-strip > div:last-child { border-right: 0; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .metric-strip dt { font-size: 12px; color: var(--fg2); margin-bottom: 6px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .metric-strip dd { font-size: 24px; letter-spacing: -.045em; font-weight: 700; overflow-wrap: anywhere; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .info-section > h3 { display: flex; align-items: center; gap: 7px; font-size: 15px; margin-bottom: 14px; font-weight: 700; letter-spacing: -.02em; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .info-section > h3::before { content: ''; display: block; width: 4px; height: 4px; flex: none; border-radius: 1px; background: var(--blue); opacity: .7; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .fact-rows dt,
+:root:is([data-skin="atelier"],[data-skin="paper"]) .usage-row h4 { color: var(--fg2); font-size: 13px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .fact-rows dd { font-size: 14px; font-weight: 450; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .style-scores { gap: 10px 18px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .style-scores > div { font-size: 13px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .style-scores strong { font-size: 16px; color: var(--blue-ink); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .detail-layout > .detail-column + .detail-column { border-color: var(--line); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .detail-secondary { background: color-mix(in srgb,var(--skin-inset) 45%,var(--card)); border-color: var(--skin-rule); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .pair-group h4 { font-size: 12px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .pair-group li { font-size: 13px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .inline-state { opacity: .9; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .inline-progress { font-size: 12px; color: var(--fg3); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .detail-footer { border-color: var(--skin-rule); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .source-caption { font-size: 11px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .text-action { font-size: 12px; font-weight: 550; text-decoration-thickness: 1px; text-decoration-color: color-mix(in srgb,var(--blue) 35%,transparent); text-underline-offset: 4px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .text-action:hover { text-decoration-color: var(--blue); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .reference-block { border-color: var(--line); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .reference-block summary { font-size: 12px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .detail-actions { gap: 8px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .detail-actions .btn { font-size: 12px !important; height: 34px !important; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .fccard { border-radius: var(--skin-radius); border-color: var(--line); background: var(--card); box-shadow: var(--skin-shadow); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .fc-h { border-color: var(--skin-rule); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .fc-n { font-size: 16px; font-weight: 680; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .fc-c { font-size: 12px; color: var(--fg3); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .request-stage { color: var(--blue-ink); font-family: ui-monospace,monospace; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .request-heading h3 { font-size: 15px; font-weight: 650; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .request-entry { border-color: var(--skin-rule); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .comparison-label { color: var(--fg3); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .comparison-row { border-color: var(--line); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .comparison-row strong { color: var(--blue-ink); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .battle-notebook { background: var(--skin-inset); border: 1px solid var(--line); border-radius: var(--skin-small); padding: 18px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .battle-request { padding-left: 14px; border-left: 2px solid color-mix(in srgb,var(--blue) 45%,var(--line)); color: var(--fg2); font-size: 14px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .cform,
+:root:is([data-skin="atelier"],[data-skin="paper"]) .mq-saved { background: var(--skin-inset); border: 1px solid var(--line); border-radius: var(--skin-small); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .grade-dot { border-radius: var(--skin-small); font-size: 13px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .cscore { color: var(--blue-ink); font-weight: 650; font-variant-numeric: tabular-nums; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .refrow .rh { font-weight: 650; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .refrow { border-color: var(--skin-rule); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .note-bar { border-radius: var(--skin-small); border: 1px solid color-mix(in srgb,var(--amber-ink) 18%,var(--line)); font-size: 13px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .empty { color: var(--fg2); font-size: 13px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .btn { border-radius: var(--skin-small); background: var(--blue); color: var(--on-accent); box-shadow: none; transition: background-color .16s,border-color .16s; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .btn.ghost { color: var(--fg2); background: var(--card); border-color: var(--line); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .btn.ghost:hover { color: var(--blue-ink); background: var(--skin-inset); border-color: color-mix(in srgb,var(--blue) 30%,var(--line)); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) body .field { background: var(--card); border-color: var(--line); border-radius: var(--skin-small) !important; box-shadow: inset 0 1px 2px #34242b03; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .field:focus { border-color: var(--blue); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .sheet { border-radius: calc(var(--skin-radius) + 2px); background: var(--card); border: 1px solid var(--line); box-shadow: 0 20px 100px #20141d30; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .scrim { background: #20141d50; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .sh-t { border-color: var(--skin-rule); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .sh-t h3 { font-size: 20px; font-weight: 700; letter-spacing: -.03em; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .ed-h { border-color: var(--line); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .ed-h > span { color: var(--fg3); font-size: 11px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .setrow { border-color: var(--skin-rule); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .numpad { background: var(--skin-inset); border: 1px solid var(--line); border-radius: var(--skin-small); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .numpad button { border-radius: 5px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .fab button { background: var(--card); border-color: var(--line); border-radius: var(--skin-small); box-shadow: 0 4px 15px #2d1e2910; color: var(--blue-ink); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .fab button.on { background: var(--blue); color: var(--on-accent); border-color: var(--blue); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) #quick { border-radius: var(--skin-radius); border: 1px solid var(--line); box-shadow: 0 12px 45px #2d1e2920; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .toast { border-radius: var(--skin-small); background: var(--fg); color: var(--card); box-shadow: 0 6px 24px #23151f20; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .srcnote { font-size: 10px; color: var(--fg3); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .gate-in { padding: 32px; border: 1px solid var(--line); background: var(--card); border-radius: var(--skin-radius); box-shadow: var(--skin-shadow); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .preview-banner { border-radius: var(--skin-small); font-size: 11px; color: var(--blue-ink); }
+
+/* 페이퍼는 절제된 모서리와 구분선을 사용한다. 선택한 강조색은 유지한다. */
+:root[data-skin="paper"] .card { border-top: 2px solid var(--skin-nav-muted); }
+:root[data-skin="paper"] .card.subnav { border-top: 0; }
+:root[data-skin="paper"] .metric-strip { background: var(--card); border-bottom: 1px solid var(--skin-rule); }
+:root[data-skin="paper"] .metric-strip dd { font-family: ui-monospace,var(--font); font-size: 22px; letter-spacing: -.06em; }
+:root[data-skin="paper"] .detail-secondary { background: var(--card); }
+:root[data-skin="paper"] .info-section > h3::before { border-radius: 0; background: var(--skin-nav-muted); }
+:root[data-skin="paper"] .brandmark { border-radius: 2px; box-shadow: none; border-color: var(--skin-nav-muted); }
+:root[data-skin="paper"] .seg,
+:root[data-skin="paper"] .pillseg { border-radius: 7px; }
+:root[data-skin="paper"] .seg button,
+:root[data-skin="paper"] .pillseg button { border-radius: 4px; }
+:root[data-skin="paper"] .chip.on { box-shadow: none; }
+:root[data-skin="paper"] .brandname { font-family: var(--font); font-weight: 700; font-size: 15px; }
+:root[data-skin="paper"] .page-eyebrow { color: var(--fg2); }
+
+@media (min-width: 740px) {
+  :root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs { background: var(--skin-nav); border-right: 0; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs button { color: var(--skin-nav-muted); }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs button:hover { color: var(--skin-nav-ink); background: color-mix(in srgb,var(--skin-nav-muted) 9%,transparent); }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs button.on { color: var(--skin-nav-on-ink); background: var(--skin-nav-on); box-shadow: 0 2px 6px #1007100a; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs button.on .tic { background: transparent; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs button.on::after { display: none; }
+}
+@media (min-width: 1180px) {
+  :root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs { padding: 36px 16px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs::before { content: 'FASHION MALL\A STORY NOTE'; white-space: pre; color: var(--skin-nav-ink); font: 500 11px/1.8 ui-monospace,monospace; letter-spacing: .13em; padding: 0 12px 32px; opacity: .9; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs button { border-radius: var(--skin-small); min-height: 54px; font-size: 13px; font-weight: 500; }
+  :root[data-skin="paper"] nav.tabs { border-right: 1px solid var(--skin-rule); }
+  :root[data-skin="paper"] nav.tabs button.on { box-shadow: inset 2px 0 var(--skin-nav-on-ink); }
+}
+@media (max-width: 739px) {
+  .appearance-options { gap: 10px; }
+  .appearance-preview { height: 86px; }
+  .appearance-option { padding: 6px; border-radius: 9px; }
+  .appearance-label { padding-top: 10px; gap: 3px; }
+  .appearance-label b { font-size: 12px; }
+  .appearance-label > span { display: none; }
+  .appearance-note { font-size: 11px; }
+  .mini-rail { padding: 16px 4px; gap: 7px; }
+  .mini-main { padding: 13px 6px; gap: 8px; }
+  .mini-panel { height: 22px; padding: 5px; }
+  .mini-heading { width: 60%; height: 5px; }
+  .mini-lines { gap: 5px; }
+  .preview-check { width: 16px; height: 16px; right: 4px; top: 4px; font-size: 10px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .app { gap: 18px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .stack { gap: 18px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .brandmark { width: 34px; height: 34px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .brandname { font-size: 12px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .brandname small { font-size: 8px; letter-spacing: .08em; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .hello h1 { font-size: 28px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .card { border-radius: 12px; }
+  :root[data-skin="paper"] .card { border-radius: 5px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .catalog-head h2 { font-size: 20px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .metric-strip { padding: 18px 16px; grid-template-columns: repeat(auto-fit,minmax(66px,1fr)); gap: 18px 14px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .metric-strip dd { font-size: 21px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .metric-strip dt { font-size: 12px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .fact-rows dd { font-size: 13px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .detail .info-section > h3 { font-size: 14px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs { background: var(--card); border-top: 1px solid var(--line); box-shadow: 0 -3px 20px #21131c04; padding-top: 8px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs button { color: var(--fg2); }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs button.on { color: var(--blue-ink); }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs button.on .tic { background: var(--blue-soft); border-radius: 9px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .sheet { border-radius: 14px; padding: 20px; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) .battle-notebook { padding: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .appearance-option { transition: none; }
+  :root:is([data-skin="atelier"],[data-skin="paper"]) * { transition: none !important; }
+}

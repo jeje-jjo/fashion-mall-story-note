@@ -16,9 +16,9 @@
 
 ## 지금 앱 구조 (2026-11-06 결정)
 - **기존 노트 화면을 그대로 쓴다**(제제: 원래 디자인·레이아웃 유지, 꾸미기는 나중). React는 걷어냄.
-  - `app/index.html` = 기존 노트 CSS·마크업(legacy/app/pre.html에서 옮김) + 로그인 화면·출처 표기
-  - `app/public/engine.js` = 기존 노트 화면 코드(legacy/app/post.html에서 옮김). **이제 이 파일이 원본**. 새 기능도 여기에 같은 방식(문자열 템플릿 + render + data-* 클릭)으로 넣는다.
-  - `app/src/main.ts` 로그인 → `ref/*` 표 받기 → `buildData.ts`로 DATA 만들기 → engine.js 실행
+  - `app/index.html` = 앱 셸·로그인 화면·출처 표기. CSS는 `app/src/styles/`에서 관리
+  - `app/src/engine.js` = 기존 노트 화면 코드(legacy/app/post.html에서 옮김). **이제 이 파일이 원본**. 새 기능도 여기에 같은 방식(문자열 템플릿 + render + data-* 클릭)으로 넣는다.
+  - `app/src/main.ts` = 스타일·아이콘·실행 모드 진입점. `startup.ts`에서 로그인 → `ref/*` 표 받기 → `buildData.ts` → `engine-loader.ts`로 엔진 모듈 실행
   - `app/src/fsdb.ts` 기존 저장소 API(doc/collection/onSnapshot/set/add)를 Firestore로 구현. 경로 앞에 `note/v2/`를 붙인다.
   - `app/src/mockdb.ts` + `VITE_MOCK=1 npx vite` → 로그인 없이 `data/tables/*.json`과 메모리 저장소로 실행(테스트용)
 - 번호: 옷·시설 = 사이트 번호(`legacyId`에 기존 번호). 패션 체크·배틀은 엔진이 목록 순서로 저장하므로 순서 유지, 사이트 번호는 `site.id`(체크 = 순서+1, 챌린지 배틀 = 순서+12).
