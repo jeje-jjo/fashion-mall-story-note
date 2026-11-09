@@ -1703,7 +1703,8 @@ function nextMakeCard(){
 /* 개량 옵션 찾기: 직원별 / 옵션별. +2 이상만 묶어서 보여주고 +1은 개수만 */
 function upFinder(bare, staffOnly){
   const staff = DATA.up.staff.map(x => { const m = x.match(/^(.*) \((.*)\)$/); return {name:m?m[1]:x, g:m?m[2]:""}; });
-  const opts = Object.keys(DATA.up.rows);
+  /* 오른쪽 아래 빠른 보기(staffOnly)에서는 특수 옵션을 뺌(제제 2026-11-09) */
+  const opts = Object.keys(DATA.up.rows).filter(o => !staffOnly || !SP_OPTS.includes(o));
   const val = (o,i) => parseInt(DATA.up.rows[o][i]) || 0;
   const mode = staffOnly ? "직원별" : (S.upMode || "직원별");
   const groupLine = (items) => [4,3,2].map(n => { const xs = items.filter(x => x.v===n); return xs.length ? `<div class="upg"><span class="upv v${n}">+${n}</span><div class="pills">${xs.map(x => `<span class="pill ${n>=3?"must":""}">${esc(x.label)}</span>`).join("")}</div></div>` : ""; }).join("");
