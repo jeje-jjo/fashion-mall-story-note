@@ -1,0 +1,221 @@
+/* Pixel diary: 공통 UI만 도트로 표현한다. 개별 의류 이미지는 사용하지 않는다.
+   --blue 계열은 기존 엔진과의 호환 토큰이며 로즈 팔레트에서는 로즈 색이다. */
+@font-face {
+  font-family: "Galmuri Diary";
+  src: url("galmuri/dist/Galmuri11-Bold.woff2") format("woff2");
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --pixel-ink: #51413e;
+  --pixel-shadow: #ded2c5;
+  --grid-dot: #cdbfb044;
+  --rail-width: 96px;
+}
+:root[data-pal="rose"] {
+  --bg: #f6f2eb;
+  --card: #fffdf8;
+  --fg: #3f3432;
+  --fg2: #65534e;
+  --fg3: #806f66;
+  --line: #e1d6ca;
+  --soft: #efe8de;
+  --blue: #965565;
+  --blue-soft: #f2e2e4;
+  --blue-ink: #7f4454;
+  --green: #54734c;
+  --green-soft: #e7eddf;
+  --press: #96556508;
+  --r-lg: 8px;
+  --r-md: 6px;
+  --on-accent: #fffdf8;
+}
+:root[data-theme="dark"] {
+  --pixel-ink: #b9a59c;
+  --pixel-shadow: #151211;
+  --grid-dot: #a18c7820;
+}
+:root[data-pal="rose"][data-theme="dark"] {
+  --bg: #211c1b;
+  --card: #2b2523;
+  --fg: #f3e8dc;
+  --fg2: #d4bfb3;
+  --fg3: #b39e91;
+  --line: #51413b;
+  --soft: #372d29;
+  --blue: #d6a0ad;
+  --blue-soft: #493139;
+  --blue-ink: #edbac6;
+  --green: #b0c69a;
+  --green-soft: #303d29;
+  --on-accent: #291c20;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pixel-ink: #b9a59c; --pixel-shadow: #151211; --grid-dot: #a18c7820;
+  }
+  :root[data-pal="rose"]:not([data-theme="light"]) {
+    --bg: #211c1b; --card: #2b2523; --fg: #f3e8dc; --fg2: #d4bfb3;
+    --fg3: #b39e91; --line: #51413b; --soft: #372d29;
+    --blue: #d6a0ad; --blue-soft: #493139; --blue-ink: #edbac6;
+    --green: #b0c69a; --green-soft: #303d29; --on-accent: #291c20;
+  }
+}
+html { scroll-behavior: smooth; }
+body {
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+  background-size: 8px 8px;
+}
+.skip-link { position: fixed; top: -100px; left: 16px; z-index: 200; padding: 12px; background: var(--card); color: var(--fg); }
+.skip-link:focus { top: 12px; }
+.pixel-icon { flex: none; vertical-align: middle; }
+.brandbar { display: flex; align-items: center; gap: 12px; padding: 4px 0 20px; border-bottom: 2px solid var(--line); }
+.brandmark { width: 46px; height: 46px; display: grid; place-items: center; background: var(--blue-soft); color: var(--blue-ink); border: 2px solid var(--pixel-ink); box-shadow: 3px 3px 0 var(--pixel-shadow); }
+.brandmark .pixel-icon { width: 32px; height: 32px; }
+.brandname { font-weight: 800; font-size: 15px; letter-spacing: -.03em; }
+.brandname small { display: block; font: 9px/1.8 ui-monospace, monospace; letter-spacing: .14em; color: var(--fg3); }
+.wiki-link { margin-left: auto; color: var(--fg2); font-size: 12px; text-underline-offset: 4px; white-space: nowrap; }
+.page-eyebrow { font: 10px/1.5 ui-monospace, monospace; color: var(--blue-ink); letter-spacing: .12em; margin: 0 0 7px !important; }
+.preview-banner { padding: 8px 12px; color: var(--blue-ink); background: var(--blue-soft); border-left: 3px solid var(--blue); font-size: 12px; }
+.gate-mark { color: var(--blue); margin-bottom: 16px; }
+.gate-mark .pixel-icon { width: 64px; height: 64px; }
+.brandname, .catalog-head h2, #ttl, .gate h1 {
+  font-family: "Galmuri Diary", var(--font);
+  font-synthesis: none;
+}
+
+/* 렌더 엔진의 hybrid 선택자보다 높은 우선순위로 새 표현을 한 곳에서 관리한다. */
+:root[data-design="hybrid"] .app { gap: 20px; padding-top: 24px; }
+:root[data-design="hybrid"] .hello { padding: 3px 0 0; align-items: center; }
+:root[data-design="hybrid"] .hello h1 { font-size: 30px; letter-spacing: -.04em; line-height: 1.2; }
+:root[data-design="hybrid"] .hello #sub { margin-top: 7px; font-size: 12px; }
+:root[data-design="hybrid"] .hprog { height: 4px; border-radius: 0; max-width: 270px; background: var(--line); }
+.hprog i { border-radius: 0; background: repeating-linear-gradient(90deg, var(--blue) 0 6px, transparent 6px 8px); }
+:root[data-design="hybrid"] .stack { gap: 20px; }
+:root[data-design="hybrid"] .card,
+:root[data-design="hybrid"] .cogrid > .cocard {
+  border: 1px solid var(--line); border-top: 3px solid var(--pixel-ink);
+  border-radius: 4px; padding: 18px; box-shadow: 3px 3px 0 var(--pixel-shadow);
+}
+:root[data-design="hybrid"] .card.subnav { border: 0; padding: 0; box-shadow: none; }
+:root[data-design="hybrid"] .card.flush { padding: 8px 18px; }
+:root[data-design="hybrid"] .sec-h h2 { font-size: 17px; }
+:root[data-design="hybrid"] .fhead.rowhead .sublbl { font-size: 13px; color: var(--fg); }
+:root[data-design="hybrid"] .frowgap { margin-top: 14px; padding-top: 14px; border-color: var(--line); }
+:root[data-design="hybrid"] .chip {
+  background: var(--soft); border: 1px solid transparent; font-size: 12px;
+  height: 32px; border-radius: 5px; padding: 0 10px;
+}
+:root[data-design="hybrid"] .chip.sm { border-radius: 5px; height: 30px; font-size: 12px; padding: 0 9px; }
+:root[data-design="hybrid"] .chip.on,
+:root[data-design="hybrid"] .chip.sm.on {
+  color: var(--on-accent); background: var(--blue); border-color: var(--blue);
+  box-shadow: 0 2px 0 color-mix(in srgb, var(--blue) 65%, var(--pixel-ink));
+}
+:root[data-design="hybrid"] .chip.fold,
+:root[data-design="hybrid"] .ghostchip,
+:root[data-design="hybrid"] .chip.mbtn { background: transparent; border: 1px solid var(--line); color: var(--fg2); box-shadow: none; }
+:root[data-design="hybrid"] .chip.fold.on { background: var(--blue-soft); color: var(--blue-ink); }
+:root[data-design="hybrid"] .chips,
+:root[data-design="hybrid"] .cfoldchips { gap: 7px; }
+:root[data-design="hybrid"] .pillseg,
+:root[data-design="hybrid"] .seg { border: 1px solid var(--line); border-radius: 999px; background: var(--soft); padding: 3px; }
+:root[data-design="hybrid"] .seg button.on,
+:root[data-design="hybrid"] .pillseg button.on { box-shadow: none; }
+:root[data-design="hybrid"] .ctools { gap: 12px; }
+:root[data-design="hybrid"] .search { height: 42px; background: var(--bg); border-radius: 5px; border: 1px solid var(--line); }
+:root[data-design="hybrid"] .needopt { background: var(--soft); border: 1px dashed var(--line); border-radius: 4px; padding: 12px; }
+:root[data-design="hybrid"] .list { margin-top: 16px; }
+:root[data-design="hybrid"] .row { min-height: 72px; padding: 12px 0; gap: 10px; }
+:root[data-design="hybrid"] .row .t { font-size: 14px; gap: 5px; }
+:root[data-design="hybrid"] .row .s { margin-top: 5px; font-size: 12px; }
+.item-number { display: inline-block; font: 11px/1.3 ui-monospace, monospace; color: var(--fg3); margin-right: 2px; }
+.row > button[data-tclo], .row > button[data-tfac] { min-width: 44px; min-height: 44px; display: grid; place-items: center; }
+:root[data-design="hybrid"] .ck { border-radius: 2px; width: 22px; height: 22px; border: 2px solid var(--fg3); }
+:root[data-design="hybrid"] .ck.on { background: var(--green); border-color: var(--green); box-shadow: 2px 2px 0 var(--pixel-shadow); }
+:root[data-design="hybrid"] .ck.on svg { color: var(--card); }
+:root[data-design="hybrid"] .tag { border-radius: 3px; font-size: 10px; padding: 2px 5px; }
+:root[data-design="hybrid"] .detail,
+:root[data-design="hybrid"] .hrow .detail { border-radius: 3px; border-left: 3px solid var(--blue); margin-left: 54px; background: var(--soft); }
+:root[data-design="hybrid"] .detail .cs-f { border-radius: 3px; }
+:root[data-design="hybrid"] .pill { border-radius: 4px; }
+:root[data-design="hybrid"] .fccard { border-radius: 4px; }
+:root[data-design="hybrid"] .numpad { border-radius: 4px; }
+:root[data-design="hybrid"] .numpad button { border-radius: 2px; }
+:root[data-design="hybrid"] .btn { border-radius: 4px; box-shadow: 0 2px 0 var(--pixel-shadow); }
+:root[data-design="hybrid"] .btn.sm { border-radius: 4px; }
+.fab button { border-radius: 4px; border: 1px solid var(--pixel-ink); box-shadow: 2px 2px 0 var(--pixel-shadow); }
+.sync i { border-radius: 0; width: 6px; height: 6px; }
+.hbtn { border-radius: 4px; }
+nav.tabs { background: var(--card); }
+:root[data-design="hybrid"] nav.tabs button { color: var(--fg2); }
+:root[data-design="hybrid"] nav.tabs button.on { color: var(--blue-ink); }
+:root[data-design="hybrid"] nav.tabs button.on::after { width: 6px; height: 4px; border-radius: 0; background: var(--blue); }
+.srcnote { line-height: 1.7; }
+.catalog-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.catalog-kicker { color: var(--blue-ink); font: 10px/1.5 ui-monospace, monospace; letter-spacing: .12em; }
+.catalog-head h2 { margin: 5px 0 0; font-size: 19px; letter-spacing: -.03em; }
+.catalog-head h2 span { margin-left: 7px; font-size: 12px; color: var(--fg3); font-weight: 500; }
+.catalog-jump { font-size: 12px; color: var(--fg2); text-underline-offset: 4px; white-space: nowrap; }
+:root[data-design="hybrid"] .wardrobe-card .ctools { border: 0; padding-top: 0; margin-top: 16px !important; flex-direction: column-reverse; align-items: stretch !important; }
+.wardrobe-card .ctools .search { flex: none; width: 100%; }
+.filter-toolbar { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); margin-bottom: 14px !important; }
+.filter-grid { display: grid; gap: 14px; min-width: 0; }
+.filter-row { min-width: 0; padding: 0 0 12px; border-bottom: 1px solid var(--line); }
+:root[data-design="hybrid"] .filter-row .fhead.rowhead { margin-bottom: 8px; }
+:root[data-design="hybrid"] .cfoldchips.is-strip { flex-wrap: nowrap; overflow-x: auto; padding: 0 0 5px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+.cfoldchips.is-strip > .chip { flex-shrink: 0; }
+#clothesList { scroll-margin-top: 70px; }
+@media (min-width: 1100px) {
+  .filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 28px; }
+}
+
+@media (min-width: 740px) {
+  :root[data-design="hybrid"] .app { max-width: 1180px; padding-top: 30px; }
+  :root[data-design="hybrid"] .card { padding: 20px 24px; }
+  :root[data-design="hybrid"] nav.tabs { padding: 34px 12px; border-right: 2px solid var(--line); }
+  :root[data-design="hybrid"] nav.tabs button { border-radius: 4px; min-height: 72px; }
+  :root[data-design="hybrid"] nav.tabs button.on { box-shadow: inset 3px 0 var(--blue); background: var(--blue-soft); }
+  .rowvals { color: var(--fg2); }
+}
+@media (min-width: 1180px) {
+  body { padding-left: 208px; padding-right: 40px; }
+  :root[data-design="hybrid"] nav.tabs { width: 184px; padding: 40px 16px; }
+  nav.tabs::before { content: "FMS / NOTE"; display: block; font: bold 12px/1.5 ui-monospace, monospace; letter-spacing: .1em; padding: 0 12px 28px; color: var(--blue-ink); }
+  :root[data-design="hybrid"] nav.tabs button { flex-direction: row; gap: 14px; min-height: 56px; padding: 12px 16px; font-size: 14px; }
+  .sumbar { left: 184px; }
+  .toast { left: calc(50% + 92px); }
+  .brandbar { padding-bottom: 24px; }
+  .brandname { font-size: 17px; }
+}
+@media (max-width: 739px) {
+  :root[data-design="hybrid"] .app { gap: 16px; padding-top: 18px; }
+  .brandbar { gap: 9px; padding-bottom: 16px; }
+  .brandmark { width: 38px; height: 38px; }
+  .brandmark .pixel-icon { width: 24px; height: 24px; }
+  .brandname { font-size: 13px; }
+  .brandname small { font-size: 8px; letter-spacing: .08em; }
+  .wiki-link { font-size: 11px; }
+  :root[data-design="hybrid"] .hello { flex-wrap: wrap; row-gap: 12px; }
+  :root[data-design="hybrid"] .hello .hl { flex: 1 1 180px; }
+  :root[data-design="hybrid"] .hello h1 { font-size: 26px; }
+  .hdr-r { flex-wrap: wrap; gap: 7px; }
+  .hdr-r .sync { font-size: 11px; }
+  :root[data-design="hybrid"] .card { padding: 16px 12px; }
+  :root[data-design="hybrid"] .detail,
+  :root[data-design="hybrid"] .hrow .detail { margin-left: 0; }
+  :root[data-design="hybrid"] .cloview { gap: 8px; }
+  :root[data-design="hybrid"] .pillseg button { font-size: 12px; padding: 0 9px; }
+  :root[data-design="hybrid"] .cloview .pillseg { max-width: 100%; flex-wrap: wrap; border-radius: 18px; }
+  :root[data-design="hybrid"] .row > .body { min-width: 0; }
+  :root[data-design="hybrid"] .row .t { font-size: 14px; }
+  .row .body .s { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .item-number { font-size: 10px; }
+  .fab { right: 10px; }
+  .fab button { width: 36px; height: 36px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

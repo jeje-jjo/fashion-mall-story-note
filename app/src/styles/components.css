@@ -1,0 +1,121 @@
+
+/* ---------- 2026-11-07 디자인 다듬기: 시안 방향(둥근 상자로 묶기 · 고른 칩은 로즈로 채우기 · 동그란 체크 · 알약 세그먼트) ---------- */
+:root[data-design="hybrid"]{ --r-lg:18px; --on-accent:var(--card) }
+:root[data-design="hybrid"] body{letter-spacing:-.01em}
+:root[data-design="hybrid"] .app{gap:12px;padding-left:0;padding-right:0}
+:root[data-design="hybrid"] .stack{gap:14px}
+/* 상자 */
+:root[data-design="hybrid"] .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px;margin:0;box-shadow:0 1px 2px rgba(60,30,40,.03)}
+:root[data-design="hybrid"] .card.subnav{background:transparent;border:0;box-shadow:none;padding:0}
+:root[data-design="hybrid"] .card.flush{padding:6px 18px}
+:root[data-design="hybrid"] .fold-card{padding:4px 18px}
+:root[data-design="hybrid"] .hsearch-card{padding:12px}
+/* 머리줄 */
+:root[data-design="hybrid"] .hello{padding:6px 2px 4px}
+:root[data-design="hybrid"] .hello h1{font-size:25px;font-weight:800;letter-spacing:-.035em}
+:root[data-design="hybrid"] .hello #sub{color:var(--fg3)}
+:root[data-design="hybrid"] .hprog{height:3px;margin:7px 0 0;max-width:220px}
+/* 제목 줄 */
+:root[data-design="hybrid"] .sec-h h2{font-size:16.5px;font-weight:700;letter-spacing:-.02em}
+:root[data-design="hybrid"] .fhead.rowhead .sublbl{font-size:15px;font-weight:700;letter-spacing:-.02em}
+:root[data-design="hybrid"] .frowgap{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+:root[data-design="hybrid"] .ctools{margin-top:16px!important;padding-top:14px;border-top:1px solid var(--line)}
+/* 칩: 기본은 옅은 바탕, 고르면 로즈로 채움 */
+:root[data-design="hybrid"] .chip{height:32px;padding:0 12px;border-radius:999px;border:1px solid transparent;background:var(--soft);color:var(--fg2);font-size:13px;font-weight:500;gap:5px}
+:root[data-design="hybrid"] .chip.sm{height:30px;padding:0 11px;font-size:12.5px}
+:root[data-design="hybrid"] .chip b{font-size:11px;font-weight:600;color:inherit;opacity:.55}
+:root[data-design="hybrid"] .chip.on,:root[data-design="hybrid"] .chip.sm.on{background:var(--blue);color:var(--on-accent);border-color:var(--blue);font-weight:600;box-shadow:0 1px 3px color-mix(in srgb,var(--blue) 30%,transparent)}
+:root[data-design="hybrid"] .chip.on b{opacity:.75}
+:root[data-design="hybrid"] .chip.fold,:root[data-design="hybrid"] .ghostchip,:root[data-design="hybrid"] .chip.mbtn{background:transparent;border:1px solid var(--line);color:var(--fg3);box-shadow:none}
+:root[data-design="hybrid"] .chip.fold.on{background:var(--soft);color:var(--fg2)}
+:root[data-design="hybrid"] .chips,:root[data-design="hybrid"] .cfoldchips{gap:6px}
+/* 세그먼트: 알약 모양 */
+:root[data-design="hybrid"] .seg{background:var(--soft);padding:3px;gap:2px;border-radius:999px;flex-wrap:nowrap;border:0}
+:root[data-design="hybrid"] .seg button{height:32px;padding:0 13px;border-radius:999px;border:0;margin:0;color:var(--fg3);font-size:13px;font-weight:500}
+:root[data-design="hybrid"] .seg button.on{background:var(--card);color:var(--fg);font-weight:700;box-shadow:0 1px 3px rgba(60,30,40,.10)}
+:root[data-design="hybrid"] .seg.wide{display:flex;width:100%;border:0;gap:2px;overflow-x:auto;scrollbar-width:none}
+:root[data-design="hybrid"] .seg.wide::-webkit-scrollbar{display:none}
+:root[data-design="hybrid"] .seg.wide button{flex:1 0 auto;height:36px}
+:root[data-design="hybrid"] .pillseg{border-radius:999px}
+:root[data-design="hybrid"] .pillseg button{border-radius:999px}
+:root[data-design="hybrid"] .cloview .pillseg button.on{background:var(--blue);color:var(--on-accent);box-shadow:none}
+/* 입력 */
+:root[data-design="hybrid"] .search,:root[data-design="hybrid"] .field{border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+:root[data-design="hybrid"] .hsearch{border-radius:14px;background:var(--bg)}
+/* 목록 */
+:root[data-design="hybrid"] .list{margin-top:12px;border-top:1px solid var(--line)}
+:root[data-design="hybrid"] .row{padding:12px 0;min-height:58px;gap:12px}
+:root[data-design="hybrid"] .row .t{font-size:15px;font-weight:650}
+:root[data-design="hybrid"] .ck{width:24px;height:24px;border-radius:50%;border:1.6px solid color-mix(in srgb,var(--blue) 45%,var(--line));background:transparent}
+:root[data-design="hybrid"] .ck.on{background:var(--blue);border-color:var(--blue)}
+:root[data-design="hybrid"] .ck.on svg{color:var(--on-accent)}
+/* 펼친 상세: 옅은 상자 */
+:root[data-design="hybrid"] .detail,:root[data-design="hybrid"] .hrow .detail{background:color-mix(in srgb,var(--soft) 55%,var(--card));border:0;border-radius:14px;margin:0 0 12px 36px;padding:14px 16px;gap:12px}
+@media (max-width:420px){:root[data-design="hybrid"] .detail,:root[data-design="hybrid"] .hrow .detail{margin-left:0;padding:12px 14px}}
+:root[data-design="hybrid"] .open > .row{border-bottom-color:transparent}
+:root[data-design="hybrid"] .cneed{display:flex;flex-direction:column;gap:8px;padding:10px 12px;margin:8px 0 4px;border-radius:12px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line)}
+:root[data-design="hybrid"] .cneed .cs-line{margin:0}
+:root[data-design="hybrid"] .pill{border-radius:999px;padding:4px 10px}
+:root[data-design="hybrid"] .tag{border-radius:999px;padding:2px 8px}
+/* 묶음 상자들 */
+:root[data-design="hybrid"] .needopt{background:var(--soft);box-shadow:none;border-radius:14px;padding:12px 14px}
+:root[data-design="hybrid"] .fccard{margin:12px 0 4px;border:0;border-radius:14px;padding:14px 16px}
+:root[data-design="hybrid"] .numpad{border-radius:14px;padding:10px;gap:6px}
+:root[data-design="hybrid"] .numpad button{border-radius:10px;height:34px}
+:root[data-design="hybrid"] .btn{border-radius:12px}
+:root[data-design="hybrid"] .btn.sm{border-radius:10px}
+:root[data-design="hybrid"] .btn.ghost{background:var(--card)}
+/* 탭 */
+:root[data-design="hybrid"] nav.tabs button.on::after{width:20px;height:3px;border-radius:2px}
+@media (min-width:740px){
+  :root[data-design="hybrid"] nav.tabs{background:var(--card);border-right:1px solid var(--line)}
+  :root[data-design="hybrid"] nav.tabs button{border-radius:16px;padding:10px 0 8px}
+  :root[data-design="hybrid"] nav.tabs button.on{background:var(--blue-soft)}
+  :root[data-design="hybrid"] nav.tabs button.on::after{display:none}
+  :root[data-design="hybrid"] .card{padding:18px 22px}
+}
+
+/* 옷 상세(2026-11-07): 상자 하나, 칸 나눠 나란히(휴대폰 1칸 · 중간 2칸 · 아이패드 세로 이상 3칸) */
+:root[data-design="hybrid"] .detail{display:grid;grid-template-columns:minmax(0,1fr);gap:14px 22px;align-items:start}
+:root[data-design="hybrid"] .detail > .csite,:root[data-design="hybrid"] .detail .cneed{display:contents}
+:root[data-design="hybrid"] .detail .cs-facts{grid-column:1/-1;order:0;display:flex;flex-wrap:wrap;gap:8px}
+:root[data-design="hybrid"] .detail .cs-f{display:inline-flex;align-items:baseline;gap:5px;padding:6px 12px;border-radius:12px;background:var(--card)}
+:root[data-design="hybrid"] .detail .cs-f small{margin:0;font-size:11.5px}
+:root[data-design="hybrid"] .detail .cs-f b{font-size:15px;font-weight:700}
+:root[data-design="hybrid"] .detail .cs-line{order:1;margin:0;display:flex;flex-wrap:wrap;align-items:center;gap:5px;font-size:13.5px;min-width:0}
+:root[data-design="hybrid"] .detail .cs-line > small{flex-basis:100%;margin:0 0 2px;font-size:11.5px;font-weight:600;color:var(--fg3);letter-spacing:.01em}
+:root[data-design="hybrid"] .detail .cneed .cs-line:first-child > small,:root[data-design="hybrid"] .detail .cneed .cs-line > small{color:var(--blue-ink)}
+:root[data-design="hybrid"] .detail .pill{background:var(--card);color:var(--fg2);box-shadow:inset 0 0 0 1px var(--line)}
+:root[data-design="hybrid"] .detail .pill.must{background:var(--blue-soft);color:var(--blue-ink);box-shadow:none}
+:root[data-design="hybrid"] .detail .pill.need{background:var(--blue);color:var(--on-accent);box-shadow:none}
+:root[data-design="hybrid"] .detail .kv{order:2;margin:0;font-size:13px;gap:5px 12px;align-content:start}
+:root[data-design="hybrid"] .detail .csite > .linkbtn{order:3;grid-column:1/-1;justify-self:start;margin:0}
+:root[data-design="hybrid"] .detail .csite > .linkbtn + .cs-line{order:3;grid-column:1/-1}
+:root[data-design="hybrid"] .detail .csite > .hint{order:4;grid-column:1/-1;margin:0;font-size:11.5px}
+:root[data-design="hybrid"] .detail > :not(.csite):not(.kv){order:5;grid-column:1/-1}
+@media (min-width:560px){:root[data-design="hybrid"] .detail{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (min-width:740px){:root[data-design="hybrid"] .detail{grid-template-columns:repeat(3,minmax(0,1fr));padding:16px 18px}}
+
+/* 묶음 카드(코디 세트·마네킹)와 배틀 정보: 안쪽 상자는 옅게, 넓은 화면은 칸 나눔(2026-11-07) */
+:root[data-design="hybrid"] .cardgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:4px}
+:root[data-design="hybrid"] .cardgrid > .fccard{margin:0;background:var(--bg);box-shadow:inset 0 0 0 1px var(--line)}
+:root[data-design="hybrid"] .cardgrid > .fccard.cdone{opacity:.7}
+:root[data-design="hybrid"] .fccard .csite{background:transparent;padding:0;margin:8px 0 0}
+@media (min-width:740px){
+  :root[data-design="hybrid"] .cardgrid{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+  :root[data-design="hybrid"] .cardgrid > .fccard:has(.setdet),:root[data-design="hybrid"] .cardgrid > .fccard:has(.mq-list){grid-column:1/-1}
+  :root[data-design="hybrid"] .csite.btsite{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px;align-items:start}
+  :root[data-design="hybrid"] .csite.btsite > .cs-line{margin:0}
+  :root[data-design="hybrid"] .csite.btsite > .cs-line:first-child,:root[data-design="hybrid"] .csite.btsite > .cs-facts,:root[data-design="hybrid"] .csite.btsite > .cs-line:has(+ .cs-facts),:root[data-design="hybrid"] .csite.btsite > .hint{grid-column:1/-1}
+}
+
+/* 코디 손님 요청(2026-11-07): 연 손님마다 흰 상자, 넓은 화면은 2열. 요청은 줄로 나눔 */
+:root[data-design="hybrid"] .cogrid{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+:root[data-design="hybrid"] .cogrid > .cocard{margin:0;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px 16px 6px;box-shadow:0 1px 2px rgba(60,30,40,.03)}
+:root[data-design="hybrid"] .cocard .fc-h{padding-bottom:8px;border-bottom:1px solid var(--line)}
+:root[data-design="hybrid"] .cocard .fc-n{font-size:16px}
+:root[data-design="hybrid"] .cocard .coord.sub{padding:10px 0;border-top:1px solid var(--line)}
+:root[data-design="hybrid"] .cocard .fc-h + .coord.sub{border-top:0}
+:root[data-design="hybrid"] .cocard .coord.sub .pills{margin-top:6px}
+:root[data-design="hybrid"] .cocard.cdone{opacity:.7}
+@media (min-width:740px){:root[data-design="hybrid"] .cogrid{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}}
