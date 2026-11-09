@@ -387,3 +387,22 @@ nav.tabs { background: var(--card); }
 
 /* 손님 코디: 검색창과 손님 줄(선택 해제·완료 숨기기) 사이 간격 */
 .customer-catalog .tools + .fhead.rowhead { margin-top: 18px; }
+
+/* 손님 코디: 손님 줄 버튼(선택 해제·완료 숨기기)은 테두리 버튼으로, 손님 칩과 간격 */
+.customer-catalog .fhead.rowhead { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px dashed var(--line); }
+.customer-catalog .fhead.rowhead .fh-act .chip { background: transparent; border: 1px solid var(--line); color: var(--fg2); }
+.customer-catalog .fhead.rowhead .fh-act .chip.on { background: var(--blue-soft); border-color: color-mix(in srgb, var(--blue) 40%, var(--line)); color: var(--blue-ink); }
+
+/* 의류 필터: 줄마다 칸으로 나누고, 옆으로 넘치는 칩은 오른쪽 끝을 흐리게(잘린 느낌 대신 더 있다는 표시) */
+:root[data-design="hybrid"] .filter-row { padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: color-mix(in srgb, var(--fg) 2%, var(--card)); }
+:root[data-design="hybrid"] .filter-row .fhead.rowhead { margin-bottom: 10px; }
+:root[data-design="hybrid"] .filter-row .cfoldchips.is-strip { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); padding-right: 24px; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .filter-row { border-color: var(--line); }
+
+/* 시설 목록: 항목 칩이 있는 행은 위아래 여백을 줄여 얇게 */
+:root[data-design="hybrid"] .list > div:has(> .rowpills) > .row { min-height: 0; padding: 10px 0 6px; }
+.list > div:has(> .rowpills) > .rowpills { padding-bottom: 10px; }
+.list > div:has(> .rowpills) > .row > button[data-tfac] { min-height: 36px; }
+.list > div:has(> .rowpills) > .rowpills { gap: 6px; }
+.list > div:has(> .rowpills) > .rowpills .pill { min-height: 28px; padding: 3px 10px; font-size: 12.5px; }
+:root[data-design="hybrid"] .filter-grid { row-gap: 10px; }
