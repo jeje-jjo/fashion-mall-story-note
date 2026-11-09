@@ -867,10 +867,29 @@ function fcFilterRow(){
 const fcDone = oi => S.chkscore[oi]?.doneRun === RUN;
 /* 시설에 걸린 패션 체크(대신 가능 포함)가 전부 완료면 목록 아래로. 하나라도 남으면 그대로 */
 const facFcAllDone = f => { const l = FC_OF[f.id]; return !!(l && l.length && l.every(n => fcDone(n-1))); };
+/* 패션 체크 보상(옷본·재료·옵션)을 의류 필터 칩으로: 완료하면 그 칩을 선택, 취소하면 선택에서 뺌(제제 2026-11-09) */
+function fcRewardChip(oi){
+  const c = DATA.checks[oi]; if (!c) return null;
+  const raw = c.site?.option && c.site.option !== "—" ? c.site.option : String(c.reward || "").split("&")[0];
+  const nk2 = x => String(x || "").replace(/\s/g, "");
+  const v = nk2(al("recipe", String(raw).trim())); if (!v) return null;
+  for (const [key, f] of [["pat","p"],["mat","m"],["opt","o"]]){
+    const hit = DATA.clo.find(x => nk2(x[f]) === v); if (hit) return [key, hit[f]];
+  }
+  return null;
+}
+function applyFcReward(oi, on){
+  const r = fcRewardChip(oi); if (!r) return "";
+  const [key, val] = r, f = ROWF[key], cur = S[f] || [];
+  if (on){ if (cur.includes(val)) return val; S[f] = isMulti(key) ? [...cur, val] : [val]; }
+  else { if (!cur.includes(val)) return ""; S[f] = cur.filter(x => x !== val); }
+  remember(); return val;
+}
 async function toggleFcDone(oi){
   const on = !fcDone(oi), rec = {...(S.chkscore[oi]||{})};
   if (on) rec.doneRun = RUN; else delete rec.doneRun;
-  S.chkscore = {...S.chkscore, [oi]:rec}; render(); toast(on ? `패션 체크 ${oi+1} 완료` : `패션 체크 ${oi+1} 완료 취소`);
+  const rw = applyFcReward(oi, on);
+  S.chkscore = {...S.chkscore, [oi]:rec}; render(); toast(on ? `패션 체크 ${oi+1} 완료${rw ? ` · 의류 필터에 ${rw} 선택` : ""}` : `패션 체크 ${oi+1} 완료 취소${rw ? ` · ${rw} 선택 해제` : ""}`);
   if (db) try{ await writeSerial(`chkscore/k${oi}`, {...rec, t:Date.now(), by:"app"}); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
 const fcTag = f => FC_OF[f.id] ? semTag(facFcAllDone(f) ? "done" : "fc", `패션 체크 ${FC_OF[f.id].join("·")}${facFcAllDone(f) ? " 완료" : ""}`) + (S.facFcSel.length && S.facFcSel.every(n => (FC_ALT[f.id]||[]).includes(n)) ? `<span class="tag">대신 가능</span>` : "") : "";
