@@ -43,15 +43,15 @@ test("네 탭·시설 체크·빠른 보기·테마가 유지된다", async ({ p
   page.on("pageerror", error => errors.push(error.message));
   await page.goto("./");
   await page.locator('[data-tab="fac"]').click();
-  await expect(page.locator("#ttl")).toHaveText("나의 패션몰");
+  await expect(page.locator("#ttl")).toHaveText("시설");
   const facility = page.locator("[data-tfac]").first();
   const id = await facility.getAttribute("data-tfac");
   await facility.click();
   await expect(page.locator(`[data-tfac="${id}"] .ck`)).toHaveClass(/on/);
   await page.locator('[data-tab="coord"]').click();
-  await expect(page.locator("#ttl")).toHaveText("코디 노트");
+  await expect(page.locator("#ttl")).toHaveText("코디");
   await page.locator('[data-tab="tool"]').click();
-  await expect(page.locator("#ttl")).toHaveText("플레이 도구");
+  await expect(page.locator("#ttl")).toHaveText("도구");
   await page.locator('[data-rsub="set"]').click();
   await page.getByRole("button", { name: "다크", exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");

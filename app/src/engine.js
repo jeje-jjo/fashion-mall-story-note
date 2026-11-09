@@ -611,11 +611,8 @@ function counts(){
   const tracked = DATA.clo.filter(c => c.done !== null);
   const cd = tracked.filter(cloDone).length, ct = tracked.length;
   $("#sub").textContent = `${roundLabel()} · 시설 ${Math.round(fd/ft*100)}% · 신규 손님 옷 ${Math.round(cd/ct*100)}%`;
-  $("#ttl").textContent = ({clo:"나의 옷장",fac:"나의 패션몰",coord:"코디 노트",tool:"플레이 도구"})[S.tab] || "패션몰스토리 노트";
-  const eyebrow = $("#pageEyebrow");
-  if (eyebrow) eyebrow.textContent = ({clo:"COLLECTION / 01",coord:"STYLING / 02",fac:"MY MALL / 03",tool:"PLAY JOURNAL / 04"})[S.tab] || "MY LITTLE MALL";
+  $("#ttl").textContent = ({clo:"의류",fac:"시설",coord:"코디",tool:"도구"})[S.tab] || "";
   $("#saveAll").hidden = !db;
-  const hp = $("#hprogI"); if (hp) hp.style.width = `${Math.round(fd/ft*100)}%`;
 }
 const pendingList = () => {
   const net = new Map();
@@ -2745,7 +2742,7 @@ document.addEventListener("click", e => {
   if (d.cedit3 !== undefined){ S.sheet = {kind:"coordreq", id:d.cedit3}; render(); return; }
   if (d.battle){ const id = +d.battle; const c = DATA.clo.find(x => x.id===id); S.sheet = null; saveBattleValue(id, battleOf(c) >= 0 ? "" : battleFor(c)); return; }
   if (d.cclear){ S[ROWF[d.cclear]] = []; remember(); render(); return; }
-  if (d.cbt !== undefined){ const i = +d.cbt; S.cloBt = S.cloBt===i ? null : i; if (S.cloBt==null) S.cloBtView = false; S.btNote = false; remember(); render(); return; }
+  if (d.cbt !== undefined){ const i = +d.cbt; S.cloBt = S.cloBt===i ? null : i; if (S.cloBt==null){ S.cloBtView = false; S.btOpen = false; } S.btNote = false; remember(); render(); return; }
   if (d.act==="btopen"){ S.btOpen = S.btOpen === false; remember(); render(); return; }
   if (d.act==="btview"){ if (S.cloBt==null) return; S.cloBtView = !S.cloBtView; remember(); render(); return; }
   if (d.fctemp !== undefined){ saveFcTemp(+d.fctemp); return; }
@@ -2862,7 +2859,7 @@ document.addEventListener("click", e => {
   if (d.act==="coord-close"){ S.coordUnsel = false; S.coordOpen = []; saveCoordOpen(); render(); return; }
   if (d.act==="fcprev" || d.act==="fcnext"){ const cur = S.facFcSel[0] || 0, n = Math.min(FC_MAX, Math.max(1, cur + (d.act==="fcnext" ? 1 : -1))); S.facType="전체"; S.itemPick=""; S.facFcSel = [n]; S.fcNoteOpen = false; remember(); render(); return; }
   if (d.act==="sumtop"){ const el = document.querySelector("#view .card"); scrollTo({top:0, behavior:"smooth"}); return; }
-  if (d.fcn !== undefined){ const n = +d.fcn; S.facType="전체"; S.itemPick=""; if (S.fcMode==="multi") S.facFcSel = S.facFcSel.includes(n) ? S.facFcSel.filter(x => x!==n) : [...S.facFcSel, n].sort((a,b)=>a-b); else { S.facFcSel = S.facFcSel.includes(n) && S.facFcSel.length===1 ? [] : [n]; } S.fcNoteOpen = false; remember(); render(); return; }
+  if (d.fcn !== undefined){ const n = +d.fcn; S.facType="전체"; S.itemPick=""; if (S.fcMode==="multi") S.facFcSel = S.facFcSel.includes(n) ? S.facFcSel.filter(x => x!==n) : [...S.facFcSel, n].sort((a,b)=>a-b); else { S.facFcSel = S.facFcSel.includes(n) && S.facFcSel.length===1 ? [] : [n]; } if (!S.facFcSel.length) S.facFcOpen = false; S.fcNoteOpen = false; remember(); render(); return; }
   if (d.act==="fcopen"){ S.facFcOpen = !S.facFcOpen; remember(); render(); return; }
   if (d.cdone !== undefined){ const n = d.cdone; S.coordDone = S.coordDone.includes(n) ? S.coordDone.filter(x => x!==n) : [...S.coordDone, n]; S.coordOpen = S.coordOpen.filter(x => x!==n); saveCoordOpen(); render(); toast(S.coordDone.includes(n) ? `${n} 코디 완료` : `${n} 완료 취소`); if (db) writeSerial(`${RUN}/misc/coord`, {list:S.coordDone}).catch(()=>{}); return; }
   if (d.cled){ const [id,k] = d.cled.split("|"); S.cloEdit[+id] = S.cloEdit[+id]===k ? "" : k; render(); return; }
