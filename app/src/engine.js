@@ -60,6 +60,8 @@ const ICON = {
   ok:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
 };
 
+Object.assign(ICON, window.__FMS_ICONS__ || {});
+
 /* ---------- state ---------- */
 const S = {
   tab:"clo", recSub:"contest", homeQ:"", homeOpen:"", homeCt:false, facType:"전체", facSt:"전체", facSort:"기본순", facQ:"", facOpen:null,
@@ -298,7 +300,7 @@ async function saveAll(){
   btn.disabled = false; btn.textContent = "지금 저장";
   if (bad) showNotice(`${bad}건을 저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.`); else toast(`${w.length}건 모두 저장했어요`);
 }
-function setSync(on, txt){ const el=$("#sync"); el.classList.toggle("on", on); el.querySelector("span").textContent=txt; }
+function setSync(on, txt){ if (window.__FMS_PREVIEW__) txt = "미리보기"; const el=$("#sync"); el.classList.toggle("on", on); el.querySelector("span").textContent=txt; }
 
 /* ---------- actions ---------- */
 let undoFn = null, toastT = null;
@@ -377,8 +379,7 @@ async function saveChipOrder(order){
 }
 const foldChips = (list, cur, attr, key) => {
   if (S.orderEdit && ORDER_KEYS.includes(key)) return `<div class="chips cfoldchips dragwrap" data-dwrap="${key}">${list.filter(([k]) => k!=="전체").map(([k,label]) => `<span class="chip dragchip" data-dk="${key}" data-dv="${esc(k)}"><i aria-hidden="true">⋮⋮</i>${label}</span>`).join("")}</div>`;
-  if (!S.cloExp[key]) return cur.length ? `<div class="hint selsum">${cur.map(esc).join(" · ")}</div>` : "";
-  return `<div class="chips cfoldchips">${list.filter(([k]) => k!=="전체").map(([k,label,meta]) => `<button class="chip ${isOn(k,cur)?"on":""} ${attr==="copt" && SP_OPTS.includes(k)?"spchip":""} ${meta===0?"zero":""}" data-${attr}="${esc(k)}" aria-pressed="${isOn(k,cur)}">${label}${meta!==""&&meta!=null?`<b>${meta}</b>`:""}</button>`).join("")}</div>`;
+  return `<div class="chips cfoldchips ${S.cloExp[key]?"is-expanded":"is-strip"}" aria-label="${({cat:"장르",pat:"옷본",mat:"재료",opt:"옵션"})[key]} 선택">${list.filter(([k]) => k!=="전체").map(([k,label,meta]) => `<button class="chip ${isOn(k,cur)?"on":""} ${attr==="copt" && SP_OPTS.includes(k)?"spchip":""} ${meta===0?"zero":""}" data-${attr}="${esc(k)}" aria-pressed="${isOn(k,cur)}">${label}${meta!==""&&meta!=null?`<b>${meta}</b>`:""}</button>`).join("")}</div>`;
 };
 
 const cloName = c => S.names.clo[c.id] || c.n;
@@ -565,7 +566,9 @@ function counts(){
   const tracked = DATA.clo.filter(c => c.done !== null);
   const cd = tracked.filter(cloDone).length, ct = tracked.length;
   $("#sub").textContent = `${roundLabel()} · 시설 ${Math.round(fd/ft*100)}% · 신규 손님 옷 ${Math.round(cd/ct*100)}%`;
-  $("#ttl").textContent = (TABS.find(t => t[0]===S.tab)||TABS[0])[1];
+  $("#ttl").textContent = ({clo:"나의 옷장",fac:"나의 패션몰",coord:"코디 노트",tool:"플레이 도구"})[S.tab] || "패션몰스토리 노트";
+  const eyebrow = $("#pageEyebrow");
+  if (eyebrow) eyebrow.textContent = ({clo:"COLLECTION / 01",coord:"STYLING / 02",fac:"MY MALL / 03",tool:"PLAY JOURNAL / 04"})[S.tab] || "MY LITTLE MALL";
   $("#saveAll").hidden = !db;
   const hp = $("#hprogI"); if (hp) hp.style.width = `${Math.round(fd/ft*100)}%`;
 }
@@ -1190,34 +1193,34 @@ function viewClo(){
     </div>`;
   }
   const spAll = SP.length, spDoneN = SP.filter(cloDone).length;
-  return `${nextMakeCard()}<section class="card">
-    <div class="fhead" style="gap:6px;margin-bottom:22px;flex-wrap:wrap"><span class="fh-l"><button class="chip sm" data-act="foldall">전체 접기</button><button class="chip sm" data-act="openall">전체 펼치기</button><button class="chip sm ${S.cloMulti?"on":""}" data-act="cmulti" aria-pressed="${S.cloMulti}">전체 다중선택</button></span><span class="fh-act" style="gap:6px">${slotBtns("all")}<button class="chip sm ${S.orderEdit?"on":""}" data-act="orderedit" aria-pressed="${!!S.orderEdit}">${S.orderEdit?"순서 수정 끝":"순서 수정"}</button></span></div>
+  return `<section class="card wardrobe-card">
+    <div class="catalog-head"><div><span class="catalog-kicker">WARDROBE INDEX</span><h2>의류 도감 <span>${rows.length}벌</span></h2></div><a href="#clothesList" class="catalog-jump">목록으로 ↓</a></div>
+    <div class="tools ctools toolsgap"><div class="cloview"><div class="pillseg" role="group" aria-label="보기"><button type="button" class="${!kinds.length && S.cloSt==="전체"?"on":""}" data-cst="전체 옷">전체 옷</button>${["추가옵션","전투 추천","코디 추천"].map(k => `<button type="button" class="${kinds.includes(k)?"on":""}" data-ckind="${k}" aria-pressed="${kinds.includes(k)}">${k}</button>`).join("")}</div><div class="pillseg" role="group" aria-label="완료 상태">${["미완료","완료"].map(k => `<button type="button" class="${S.cloSt===k?"on":""}" data-cst="${k}" aria-pressed="${S.cloSt===k}">${k}</button>`).join("")}</div></div><input class="search" id="cloQ" placeholder="옷 이름, 옵션, 인물 검색" value="${esc(S.cloQ)}" aria-label="옷 검색"></div>
+    <div class="filter-toolbar fhead" style="gap:6px;margin-bottom:22px;flex-wrap:wrap"><span class="fh-l"><button class="chip sm" data-act="foldall">전체 접기</button><button class="chip sm" data-act="openall">전체 펼치기</button><button class="chip sm ${S.cloMulti?"on":""}" data-act="cmulti" aria-pressed="${S.cloMulti}">전체 다중선택</button></span><span class="fh-act" style="gap:6px">${slotBtns("all")}<button class="chip sm ${S.orderEdit?"on":""}" data-act="orderedit" aria-pressed="${!!S.orderEdit}">${S.orderEdit?"순서 수정 끝":"순서 수정"}</button></span></div>
     ${S.orderEdit ? `<div class="orderbar"><span>옷본·재료·옵션 칩을 끌어서 순서를 바꿔요. 놓으면 바로 저장돼요.</span><button class="chip sm" data-act="orderreset">기본 순서로</button></div>` : ""}
-    ${rowHead("장르","cat","ccat",S.cloCat)}
-    ${foldChips(catChips, S.cloCat, "ccat", "cat")}
-    <div class="frowgap">${rowHead("옷본","pat","cpat",S.cloPat,rows.length)}</div>
-    ${foldChips(patChips, S.cloPat, "cpat", "pat")}
-    <div class="frowgap">${rowHead("재료","mat","cmat",S.cloMat)}</div>
-    ${foldChips(matChips, S.cloMat, "cmat", "mat")}
-    <div class="frowgap">${rowHead("옵션","opt","copt",S.cloOpt)}</div>
-    ${foldChips(optChips, S.cloOpt, "copt", "opt")}
+    <div class="filter-grid">
+    <div class="filter-row">${rowHead("장르","cat","ccat",S.cloCat)}${foldChips(catChips, S.cloCat, "ccat", "cat")}</div>
+    <div class="filter-row">${rowHead("옷본","pat","cpat",S.cloPat,rows.length)}${foldChips(patChips, S.cloPat, "cpat", "pat")}</div>
+    <div class="filter-row">${rowHead("재료","mat","cmat",S.cloMat)}${foldChips(matChips, S.cloMat, "cmat", "mat")}</div>
+    <div class="filter-row">${rowHead("옵션","opt","copt",S.cloOpt)}${foldChips(optChips, S.cloOpt, "copt", "opt")}</div>
+    </div>
     ${cntBox}
     <div class="frowgap">${battleRow()}</div>
     ${S.verifyOpen ? verifyBox() : ""}
     ${S.cloBt != null && DATA.battles[S.cloBt] ? battleCard(S.cloBt) : ""}
-    <div class="tools ctools toolsgap"><div class="cloview"><div class="pillseg" role="group" aria-label="보기"><button type="button" class="${!kinds.length && S.cloSt==="전체"?"on":""}" data-cst="전체 옷">전체 옷</button>${["추가옵션","전투 추천","코디 추천"].map(k => `<button type="button" class="${kinds.includes(k)?"on":""}" data-ckind="${k}" aria-pressed="${kinds.includes(k)}">${k}</button>`).join("")}</div><div class="pillseg" role="group" aria-label="완료 상태">${["미완료","완료"].map(k => `<button type="button" class="${S.cloSt===k?"on":""}" data-cst="${k}" aria-pressed="${S.cloSt===k}">${k}</button>`).join("")}</div></div><input class="search" id="cloQ" placeholder="옷 이름, 옵션, 인물 검색" value="${esc(S.cloQ)}" aria-label="옷 검색"></div>
+
     ${needOpt}
     ${LEGEND}
-    <div class="list">${shown.length ? shown.map(c => {
+    <div class="list" id="clothesList" tabindex="-1">${shown.length ? shown.map(c => {
       const tr = tracked(c), d = tr && cloDone(c), opened = S.cloOpen===c.id;
       const X = withNames(c.x);
       const want = X.match(/\[원함\]([^→\s]+(?: [^→\s\[]+)?)/);
       const shop = X.match(/^([^\[]+)\[([^\]]+)\]/);
       return `<div class="${opened?"open":""}">
         <div class="row ${d?"done":""} ${btOn && btHits(c)===btCs.length && btCs.length ? "btfull" : ""}">
-          ${tr ? `<button data-tclo="${c.id}" aria-label="${esc(cloName(c))} 완료 바꾸기">${ck(d)}</button>` : `<span style="width:26px;flex:none"></span>`}
-          <button class="body" data-oclo="${c.id}" style="text-align:left">
-            <div class="t"><span class="n">${esc(cloName(c))}</span>${btOn ? btMatchTag(c) : ""}${catTag(c.c)}${optTags(c)}${Object.keys(S.clofix[c.id]||{}).length?semTag("fix","수정됨"):""}${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}${want?`<span class="tag blue">원함</span>`:shop?`<span class="tag amber">상점</span>`:""}</div>
+          ${tr ? `<button data-tclo="${c.id}" aria-pressed="${!!d}" aria-label="${esc(cloName(c))} 완료 바꾸기">${ck(d)}</button>` : `<span style="width:26px;flex:none"></span>`}
+          <button class="body" data-oclo="${c.id}" aria-expanded="${opened}" style="text-align:left">
+            <div class="t"><span class="item-number">#${String(c.id).padStart(3,"0")}</span><span class="n">${esc(cloName(c))}</span>${btOn ? btMatchTag(c) : ""}${catTag(c.c)}${optTags(c)}${Object.keys(S.clofix[c.id]||{}).length?semTag("fix","수정됨"):""}${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}${want?`<span class="tag blue">원함</span>`:shop?`<span class="tag amber">상점</span>`:""}</div>
             <div class="s">${[c.p,c.m,c.o].filter(Boolean).map(esc).join(" · ")}${X?` — ${esc(X)}`:""}</div>
           </button>
           ${opened && hybrid() ? `<button class="iconbtn act" data-sheet="clo|${c.id}" aria-label="${esc(cloName(c))} 수정">${ICON.pen}</button><button class="iconbtn act ${battleOf(c)>=0?"on":""}" data-sheet="battle|${c.id}" aria-label="전투 추천 ${battleOf(c)>=0?"해제":"켜기"}" aria-pressed="${battleOf(c)>=0}">${ICON.sword}</button>` : ""}
@@ -1230,7 +1233,7 @@ function viewClo(){
           ${hybrid() ? "" : cloEditor(c)}</div>` : ""}
       </div>`; }).join("") : `<div class="empty">조건에 맞는 옷이 없어요</div>`}</div>
     ${rows.length>200?`<div class="empty" style="padding:12px">200벌까지 보여요. 검색으로 좁혀 주세요.</div>`:""}
-  </section>`;
+  </section>${nextMakeCard()}`;
 }
 
 /* 코디 요청 수정: 제목이 바뀐 경우(새 제목 저장) / 잘못된 정보(표시만, 노트 전용). coordfix/k{id} */
@@ -1932,9 +1935,9 @@ function homeResults(q){
     const inCoord = DATA.coord.filter(x => coordPieces(x).some(p => p[1]===cloName(c) || p[1]===c.n));
     return `<div class="hrow ${o?"open":""}">
       <div class="row ${d?"done":""}">
-        ${tr ? `<button data-tclo="${c.id}" aria-label="${esc(cloName(c))} 완료 바꾸기">${ck(d)}</button>` : `<span class="ck ghost" aria-hidden="true"></span>`}
+        ${tr ? `<button data-tclo="${c.id}" aria-pressed="${!!d}" aria-label="${esc(cloName(c))} 완료 바꾸기">${ck(d)}</button>` : `<span class="ck ghost" aria-hidden="true"></span>`}
         <button class="body" data-hopen="c${c.id}" style="text-align:left">
-          <div class="t"><span class="n">${esc(cloName(c))}</span><span class="tag">${esc(c.c)}</span>${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}</div>
+          <div class="t"><span class="item-number">#${String(c.id).padStart(3,"0")}</span><span class="n">${esc(cloName(c))}</span><span class="tag">${esc(c.c)}</span>${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}</div>
           <div class="s">${[c.p,c.m,c.o].filter(Boolean).map(esc).join(" · ")}</div>${optLine(c)}
         </button>${ICON.chev}
       </div>
@@ -2891,3 +2894,6 @@ fmtNumInputs();
   document.addEventListener("pointerup", end);
   document.addEventListener("pointercancel", () => { st = null; render(); });
 })();
+
+// Vite가 이 파일을 모듈로 묶어 엔진도 버전별 해시 자산으로 배포한다.
+export {};

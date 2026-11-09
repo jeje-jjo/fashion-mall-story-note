@@ -1,5 +1,5 @@
 /* 기존 노트(claude.ai 아티팩트 저장소)와 같은 모양의 저장소 API를 Firestore로 구현한다.
-   화면 엔진(public/engine.js)은 window.claude.use("db")로 이 객체를 받아 그대로 쓴다.
+   화면 엔진(src/engine.js)은 window.claude.use("db")로 이 객체를 받아 그대로 쓴다.
    모든 경로 앞에 ROOT를 붙여 기준 데이터(ref/*)·백업(backup/*)과 섞이지 않게 한다. */
 import {
   addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, limit, query, setDoc, updateDoc,

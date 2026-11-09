@@ -25,3 +25,8 @@ data/site/
 data/tables/
 data/pulled/
 tools/migrate/out/
+
+# 로컬 UI 검증용 정적 미리보기
+app/preview-dist/
+app/test-results/
+app/playwright-report/
