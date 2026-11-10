@@ -392,7 +392,7 @@ if (S.cloSlot) S.cloSlot = slotAlias(S.cloSlot);
 const slotBtns = key => { const has = S.cloSlot[key] != null;
   return `<button class="chip sm ghostchip" data-slot="save|${key}">${key==="all"?"전체 저장":"저장"}</button><button class="chip sm ghostchip" data-slot="load|${key}" ${has?"":'aria-disabled="true"'} style="${has?"":"opacity:.45"}">불러오기</button>${has?`<button class="chip sm ghostchip" data-slot="del|${key}" aria-label="저장 삭제">×</button>`:""}`; };
 const rowHead = (label, key, attr, cur, total) => { label = `<i class="rdot r-${key}" aria-hidden="true"></i>${label}`; const open = S.slotOpen===key, has = S.cloSlot[key] != null, exp = !!S.cloExp[key];
-  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${label}</span><button class="chip sm ${allSel(cur, key)?"on":""}" data-${attr}="전체" aria-pressed="${allSel(cur, key)}" title="${allSel(cur, key)?"전체 해제":"이 줄 전체 선택"}">전체${total!=null?`<b>${total}</b>`:""}</button>${key==="opt" && S.spAvail?.length ? (() => { const all = S.spAvail.every(k => cur.includes(k)); return `<button class="chip sm spchip ${all?"on":""}" data-act="spall" aria-pressed="${all}" title="${all?"특수 옵션만 해제":"특수 옵션만 전체 선택"}">★ 특수${all?" 해제":" 전체"}</button>`; })() : ""}<button class="chip sm fold" data-cfold="${key}" aria-expanded="${exp}">${exp?"접기 ▴":`펼치기 ▾${cur.length?` <b>${cur.length}</b>`:""}`}</button></span><span class="fh-act">${cur.length?`<button class="chip sm" data-cclear="${key}">전체해제</button>`:""}<button class="chip sm ${isMulti(key)?"on":""}" data-rmulti="${key}" aria-pressed="${isMulti(key)}">${isMulti(key)?"다중":"단일"}</button></span></div>
+  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${label}</span><button class="chip sm ${allSel(cur, key)?"on":""}" data-${attr}="전체" aria-pressed="${allSel(cur, key)}" title="${allSel(cur, key)?"전체 해제":"이 줄 전체 선택"}">전체${total!=null?`<b>${total}</b>`:""}</button>${key==="opt" && S.spAvail?.length ? (() => { const all = S.spAvail.every(k => cur.includes(k)); return `<button class="chip sm spchip ${all?"on":""}" data-act="spall" aria-pressed="${all}" title="${all?"특수 옵션만 해제":"특수 옵션만 전체 선택"}">★ 특수<span class="ph-x">${all?" 해제":" 전체"}</span></button>`; })() : ""}<button class="chip sm fold" data-cfold="${key}" aria-expanded="${exp}">${exp?`<span class="ph-x">접기 </span>▴`:`<span class="ph-x">펼치기 </span>▾${cur.length?` <b>${cur.length}</b>`:""}`}</button></span><span class="fh-act">${cur.length?`<button class="chip sm" data-cclear="${key}"><span class="ph-x">전체</span>해제</button>`:""}<button class="chip sm ${isMulti(key)?"on":""}" data-rmulti="${key}" aria-pressed="${isMulti(key)}">${isMulti(key)?"다중":"단일"}</button></span></div>
   `; };
 /* 접힘: 칩을 모두 숨김(선택은 유지, 머리에 선택 개수 표시). 펼침: 전체 칩 */
 const ORDER_KEYS = ["pat","mat","opt"];
@@ -1052,7 +1052,11 @@ async function toggleVerify(k){
 }
 /* 다른 가게 직원 배틀(사이트에만 있음, 노트 기록 없음): 참가비·등장 조건·보상만 */
 function btExtraList(){
-  return `<div class="btextra">${(DATA.battlesExtra||[]).map(b => `<div class="fccard ${btDone(btKeyX(b))?"btdone":""}"><div class="fc-h"><b class="fc-n">${esc(b.name)}</b>${btDoneBtn(btKeyX(b), b.name)}${b.site?.fee!=null?`<span class="fc-c">${nf0(b.site.fee)}G</span>`:""}</div>${btSiteBlock({...b.site, fee:null}, {noSrc:true})}</div>`).join("")}<div class="hint">다른 가게 직원 배틀은 사이트에만 있어 기록 칸은 없고, ✓로 승리만 체크해요 · 출처: KairoHistory 배틀</div></div>`;
+  /* 작은 카드로: 이름 · 참가비 · ✓, 아래에 보상·등장(·의류 조건) 두 줄(제제 2026-11-10: 제목이 크고 오른쪽이 비어 정렬이 이상함) */
+  const btxCard = b => { const st = b.site || {}, cond = (st.clothCond || "").split(";").map(x => x.trim().replace(/^[^:]+:\s*/, "")).filter(Boolean).join(" · ");
+    const rows = [["보상", fmtWin(st.win)], ["등장", btAppear(st.appear)], ...(cond ? [["의류 조건", cond]] : [])].filter(([, v]) => v);
+    return `<div class="btx ${btDone(btKeyX(b))?"btdone":""}"><div class="btx-h"><b class="btx-n">${esc(b.name)}</b>${st.fee!=null?`<span class="btx-fee">${nf0(st.fee)}G</span>`:""}${btDoneBtn(btKeyX(b), b.name)}</div><dl class="btx-dl">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>`; };
+  return `<div class="btextra"><div class="btx-list">${(DATA.battlesExtra||[]).map(btxCard).join("")}</div><div class="hint">다른 가게 직원 배틀은 사이트에만 있어 기록 칸은 없고, ✓로 승리만 체크해요 · 출처: KairoHistory 배틀</div></div>`;
 }
 function battleRow(){
   const sel = S.cloBt, o = S.btOpen !== false, on = !!S.cloBtView;
@@ -1332,7 +1336,7 @@ function viewClo(){
   {
     const cnt = S.optCnt || {}, sel = S.cloOpt || [];
     const keys = [...new Set([...sel, ...Object.keys(cnt).filter(k => cnt[k] > 0)])].filter(k => k!=="없음");
-    const o = S.optCntOpen !== false, dec = !!S.optCntDec;
+    const o = S.optCntOpen === true, dec = !!S.optCntDec;
     const mode = S.ocMode || "pick", picks = (S.optPicks || []).map(id => CLO_BY_ID.get(id)).filter(Boolean);
     const pk = S.ocPick && keys.includes(S.ocPick) ? S.ocPick : null;
     /* 옷으로 고르기: 추가옵션·전투 추천·코디 추천이 아닌 일반 옷 중 장르·옷본·재료 조건과 누른 옵션에 맞는 옷 */
@@ -1359,7 +1363,7 @@ function viewClo(){
     const ocSpec = c => esc([c.c, c.p, c.m, c.o ? (SP_OPTS.includes(c.o) ? "★ " : "") + c.o : ""].filter(Boolean).join(" · "));
     const pickRow = c => `<button type="button" class="ocrow" data-ocadd="${c.id}"><span class="ocb"><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${ocSpec(c)}</span></span><span class="ocplus" aria-hidden="true">＋</span></button>`;
     const doneRow = c => `<button type="button" class="ocrow got" data-ocdone="${c.id}" title="누르면 만든 걸로 보고 목록에서 빼요"><span class="ock" aria-hidden="true"></span><span class="ocb"><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${ocSpec(c)}</span></span></button>`;
-    cntBox = `<div class="needopt optcnt"><div class="fhead" style="margin:0;flex-wrap:wrap;gap:6px"><span class="fh-l"><span class="sublbl" style="margin:0">필요한 옵션</span>${picks.length?`<span class="hint">고른 옷 ${picks.length}벌</span>`:""}</span><span class="fh-act" style="gap:6px;flex-wrap:wrap">${modeSeg}<button class="chip sm" data-act="ocsel" title="옵션 줄에서 고른 옵션만 0으로">선택 초기화</button><button class="chip sm" data-act="ocall">전체 초기화</button><button class="chip sm fold" data-act="optcnt" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span></div>
+    cntBox = `<div class="needopt optcnt"><div class="fhead" style="margin:0;flex-wrap:wrap;gap:6px"><span class="fh-l"><span class="sublbl" style="margin:0">필요한 옵션</span>${picks.length?`<span class="hint">고른 옷 ${picks.length}벌</span>`:""}</span><span class="fh-act" style="gap:6px;flex-wrap:wrap">${o ? `${modeSeg}<button class="chip sm" data-act="ocsel" title="옵션 줄에서 고른 옵션만 0으로">선택 초기화</button><button class="chip sm" data-act="ocall">전체 초기화</button>` : ""}<button class="chip sm fold" data-act="optcnt" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span></div>
       ${o ? (keys.length ? `<div class="pills sm" style="margin-top:10px">${keys.map(k => `<button class="pill ${pk===k?"need":(cnt[k]||0)>0?"need":"must"} ${pk===k?"picking":""}" data-occ="${esc(k)}" aria-pressed="${pk===k}">${SP_OPTS.includes(k)?"★ ":""}${esc(k)}<b>${cnt[k]||0}</b></button>`).join("")}</div>` : `<div class="hint" style="margin-top:8px">옵션 줄에서 옵션을 고르면 여기에 나와요</div>`) : ""}
       ${o && mode==="pick" && !pk && keys.length ? `<div class="hint" style="margin-top:6px">옵션을 누르면 그 옵션이 붙은 일반 옷(추가옵션·전투 추천·코디 추천 제외)이 나와요. 장르·옷본·재료에서 고른 조건도 같이 걸려요.</div>` : ""}
       ${o && pk ? `<div class="ocpick"><div class="ochead"><b>${SP_OPTS.includes(pk)?"★ ":""}${esc(pk)}</b><span class="hint">일반 옷 ${cand.length}벌${S.cloCat.length||S.cloPat.length||S.cloMat.length?" · 위 조건 적용":""} · 누르면 아래 목록에 들어가요</span><button type="button" class="chip sm fold" data-ocpick="">닫기</button></div>
@@ -2925,7 +2929,7 @@ document.addEventListener("click", e => {
     saveOptCnt(cnt, prev.picks.filter(id => id !== c.id)); toast(`${cloName(c)} 뺐어요`, () => saveOptCnt(prev.cnt, prev.picks)); return; }
   if (d.act==="ocsel"){ const cnt = {...(S.optCnt||{})}; (S.cloOpt||[]).forEach(k => delete cnt[k]); saveOptCnt(cnt, (S.optPicks||[]).filter(id => !(S.cloOpt||[]).includes(CLO_BY_ID.get(id)?.o || "없음"))); toast("고른 옵션의 개수를 0으로 했어요"); return; }
   if (d.act==="ocall"){ saveOptCnt({}, []); S.ocPick = null; toast("필요한 옵션 개수와 고른 옷을 모두 지웠어요"); return; }
-  if (d.act==="optcnt"){ S.optCntOpen = S.optCntOpen === false; render(); return; }
+  if (d.act==="optcnt"){ S.optCntOpen = !S.optCntOpen; render(); return; }
   if (d.act==="orderedit"){ S.orderEdit = !S.orderEdit; render(); return; }
   if (d.act==="orderreset"){ saveChipOrder({}); toast("옷본·재료·옵션을 기본 순서로 돌렸어요"); return; }
   if (d.lrec != null){ const i = +d.lrec; S.layRec = S.layRec===i ? null : i; S.layAsk2 = false; S.laySel = null; render(); return; }

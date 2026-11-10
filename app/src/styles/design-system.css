@@ -17,9 +17,11 @@
   --sp-row: 10px;          /* 구역 제목과 내용 사이 */
 }
 @media (max-width: 739px) {
+  /* 휴대폰은 머리줄이 한 줄에 들어가는 게 우선(제제 2026-11-10: 작아도 되니 꼬이지 않게).
+     버튼을 줄인 만큼 목록 글씨도 같이 줄여 태그·칩보다 목록 글씨만 커 보이지 않게 한다. */
   :root:root[data-design="hybrid"] {
-    --t-sec: 13.5px; --t-item: 13.5px; --t-meta: 11px;
-    --h-ctl: 30px; --sp-sec: 14px; --sp-row: 8px;
+    --t-sec: 12.5px; --t-item: 12.5px; --t-body: 11.5px; --t-ctl: 11px; --t-meta: 10.5px;
+    --h-ctl: 26px; --r-ctl: 7px; --sp-sec: 14px; --sp-row: 8px;
   }
 }
 
@@ -55,8 +57,9 @@
 :root:root[data-design="hybrid"] .pillseg { padding: 2px; gap: 2px; }
 :root:root[data-design="hybrid"] .pillseg button { height: calc(var(--h-ctl) - 4px); min-height: 0; border-radius: 999px; padding: 0 12px; }
 /* 목록 위 상태·정렬 세그먼트(시설 등)도 같은 높이 */
-:root:root[data-design="hybrid"] .tools .seg:not(.wide) button { height: calc(var(--h-ctl) - 2px); font-size: var(--t-ctl); padding: 0 11px; }
-:root:root[data-design="hybrid"] .tools .seg:not(.wide) { padding: 3px; }
+/* 검색칸 옆에 붙으면 칸 높이만큼 늘어나므로 버튼도 같이 늘이고, 모서리는 검색칸과 같은 각진 모양으로 */
+:root:root[data-design="hybrid"] .tools .seg:not(.wide) { padding: 3px; align-items: stretch; border-radius: calc(var(--r-ctl) + 2px); }
+:root:root[data-design="hybrid"] .tools .seg:not(.wide) button { height: auto; min-height: calc(var(--h-ctl) - 2px); font-size: var(--t-ctl); padding: 0 11px; border-radius: var(--r-ctl); }
 
 /* 칩: 이름과 숫자 사이 간격, 숫자는 한 단계 작게 */
 :root:root[data-design="hybrid"] .chip:not(.sm) { font-size: var(--t-body); }
@@ -112,4 +115,39 @@
   :root:root[data-design="hybrid"] .filter-toolbar .chip.sm,
   :root:root[data-design="hybrid"] .filter-toolbar .seg button { padding: 0 7px; font-size: 11.5px; white-space: nowrap; }
   :root:root[data-design="hybrid"] .filter-toolbar .catalog-jump .cj-w { display: none; }
+}
+
+@media (max-width: 739px) {
+  /* 휴대폰에서 버튼 글자 줄이기: "펼치기 ▾" → "▾", "전체해제" → "해제" */
+  .ph-x { display: none; }
+  :root:root[data-design="hybrid"] .chip.sm,
+  :root:root[data-design="hybrid"] .fhead .seg button,
+  :root:root[data-design="hybrid"] .seg.mini button { padding: 0 7px; }
+  :root:root[data-design="hybrid"] .fhead .fh-l,
+  :root:root[data-design="hybrid"] .fhead .fh-act { gap: 4px; }
+  :root:root[data-design="hybrid"] .filter-row .fhead.rowhead { flex-wrap: nowrap; }
+  :root:root[data-design="hybrid"] .filter-row .fhead .fh-l { flex-wrap: nowrap; }
+  :root:root[data-design="hybrid"] .fhead .sublbl { gap: 5px; margin-right: 2px; }
+  :root:root[data-design="hybrid"] .chip:not(.sm) { height: 28px; min-height: 28px; padding: 0 8px; }
+  :root:root[data-design="hybrid"] .chip.sm b { margin-left: 3px; }
+  :root:root[data-design="hybrid"] .tools .seg:not(.wide) button { padding: 0 9px; }
+  :root:root[data-design="hybrid"] .search { height: 36px; }
+}
+
+/* ---------- 다른 가게 직원 배틀: 작은 카드 격자 ---------- */
+:root:root[data-design="hybrid"] .btx-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin-top: 12px; }
+:root:root[data-design="hybrid"] .btx { border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 12px 14px; min-width: 0; }
+:root:root[data-design="hybrid"] .btx.btdone { background: var(--soft); }
+:root:root[data-design="hybrid"] .btx.btdone .btx-n { color: var(--fg2); }
+:root:root[data-design="hybrid"] .btx-h { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+:root:root[data-design="hybrid"] .btx-n { flex: 1; min-width: 0; font-size: var(--t-item); font-weight: 650; line-height: 1.45; letter-spacing: -.01em; }
+:root:root[data-design="hybrid"] .btx-fee { font-size: var(--t-meta); color: var(--fg2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+:root:root[data-design="hybrid"] .btx-h .iconbtn { width: 28px; height: 28px; flex: none; }
+:root:root[data-design="hybrid"] .btx-dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 0; font-size: var(--t-body); line-height: 1.55; }
+:root:root[data-design="hybrid"] .btx-dl dt { color: var(--fg3); font-size: var(--t-meta); line-height: 1.7; }
+:root:root[data-design="hybrid"] .btx-dl dd { margin: 0; color: var(--fg); overflow-wrap: anywhere; }
+:root:root[data-design="hybrid"] .btextra > .hint { margin-top: 10px; font-size: var(--t-meta); }
+@media (max-width: 739px) {
+  :root:root[data-design="hybrid"] .btx-list { grid-template-columns: 1fr; gap: 8px; }
+  :root:root[data-design="hybrid"] .btx { padding: 10px 12px; }
 }
