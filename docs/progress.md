@@ -92,3 +92,11 @@ npm run build:preview && PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/ch
 - 제제 원칙: 기준값(매력·품질·능력치·통과 점수)은 사이트 값을 먼저, 제제 기록은 "기록 보기"로. 새로 넣으면 좋을 기능은 넣고, 빼는 건 제제가 함
 
 - 2026-11-10 전투 승리 체크: `battles/b{번호}.doneRun = RUN`(챌린지), 다른 가게 직원은 `battles/bx{사이트 id}`. 회차가 바뀌면 자동 미완료(제제 승인). 지금 진행: 챌린지 캐주얼·스트리트, 다른 가게 직원은 사이버틱 전까지 승리(앱에서 제제가 직접 체크).
+
+- 2026-11-10 Firestore 반영
+  - ref/coord_requests 79 매옥준③ 코튼 팬츠 bottomIds = [144] (buildData COORD_ID_FIX와 같은 값, 이제 ref에도 반영됨).
+  - 「요청·옷·판매·코디 전체 정보.xlsx」(KairoHistory, 제제 드라이브 claude 폴더) 14시트 → ref/full_* 14표. 행 수 검증 완료(옷 448, 코디 세트 207, 손님 요청 112, 패션 체크 44, 배틀 27, 조건별 추천 옷 6130, 판매 손님 72, 판매 점수 3계절·유행색 각 448, 분류 사전 155, 안내 17, FAQ 11).
+    변환: python3 tools/sheets/import_full_xlsx.py reference/full_info.xlsx → push_firestore.py full_...
+  - 클라우드 세션 주의: 환경의 네트워크 비밀(Firestore OAuth 토큰)이 firestore.googleapis.com 요청의 Authorization을 덮어써서 401이 남.
+    FIRESTORE_API=https://firestore.mtls.googleapis.com/v1/ 를 주고 push/pull 스크립트를 실행하면 firebase 로그인 토큰으로 됨.
+  - 전투 승리 체크는 제제가 앱에서 직접 넣음(b0·b1, bx0~bx11 = runs/r8).

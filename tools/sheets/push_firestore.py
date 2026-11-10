@@ -24,7 +24,8 @@ PROJECT = "fashion-mall-story"
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 TABLES = ROOT / "data" / "tables"
 DOCS = f"projects/{PROJECT}/databases/(default)/documents"
-API = "https://firestore.googleapis.com/v1/"
+# 클라우드 세션 프록시가 firestore.googleapis.com 요청에 저장된 토큰을 덮어써서, 같은 API의 mtls 주소를 쓸 수 있게 함
+API = os.environ.get("FIRESTORE_API", "https://firestore.googleapis.com/v1/")
 
 
 def token() -> str:
