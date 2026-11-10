@@ -235,7 +235,7 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
     if (selSig === null) selSig = JSON.stringify(curSel());
     slotFirst = false;
   }, fail);
-  db.collection("battles").onSnapshot(s => { S.battleRec = Object.fromEntries(s.docs.map(d => { const v = {...d.data()}; const i = +d.id.slice(1);
+  db.collection("battles").onSnapshot(s => { S.battleRec = Object.fromEntries(s.docs.map(d => { const v = {...d.data()}; const k = d.id.slice(1), i = /^\d+$/.test(k) ? +k : k;
     /* 예전 조건(스프레드시트 표기)을 그대로 저장한 것은 버리고 사이트 조건을 씀 */
     if (v.cond && DATA.battles[i] && v.cond === DATA.battles[i].legacyCond) delete v.cond;
     if (v.slots) v.slots = Object.fromEntries(Object.entries(v.slots).map(([k, x]) => [k, x && x.n ? {...x, n: al("clo", x.n)} : x]));
@@ -509,6 +509,18 @@ const COND_ALIAS = {"바지":["팬츠"]};
 const BT_SLOTS = [["t","상의"],["b","하의"],["o","아우터"],["a","액세서리"]];
 const bShort = i => DATA.battles[i].name.replace(/\s*챌린지.*$/,"");
 const bRec = i => S.battleRec[i] || {};
+/* 전투 완료(제제 2026-11-10): battles/b{번호}.doneRun = 그 회차 run. 다른 가게 직원은 사이트 번호로 battles/bx{id}. 회차가 바뀌면 저절로 미완료 */
+const btKeyX = b => `x${b.site?.id}`;
+const btDone = k => bRec(k).doneRun === RUN;
+async function toggleBtDone(k){
+  const on = !btDone(k), rec = {...bRec(k)};
+  if (on) rec.doneRun = RUN; else delete rec.doneRun;
+  S.battleRec = {...S.battleRec, [k]:rec}; render();
+  const nm = typeof k === "number" ? DATA.battles[k]?.name : (DATA.battlesExtra||[]).find(b => btKeyX(b)===k)?.name;
+  toast(on ? `${nm || "전투"} 승리로 체크` : `${nm || "전투"} 체크 취소`);
+  if (db) try{ await writeSerial(`battles/b${k}`, {...rec, t:Date.now(), by:"app"}); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
+}
+const btDoneBtn = (k, label) => `<button class="iconbtn act ${btDone(k)?"on":""}" data-btdone="${k}" aria-label="${esc(label)} ${btDone(k)?"승리 체크 취소":"승리 체크"}" aria-pressed="${btDone(k)}">${ICON.ok}</button>`;
 const bCond = i => String(bRec(i).cond ?? DATA.battles[i].cond).split("/").map(x => x.trim()).filter(x => x && x!=="-");
 /* 조건 단어(사이트 의류 조건): 세부 장르·옷본(베이스)·재료·옵션·색·계절·태그, "셋업"은 옷 종류 */
 const termHit = (c, t) => (COND_ALIAS[t] || [t]).some(a => ["c","p","m","o","col","s"].some(f => c[f]===a) || (c.tgs || String(c.tg||"").split(/\s+/)).includes(a) || (a==="셋업" && c.site?.kind==="셋업"));
@@ -1035,13 +1047,13 @@ async function toggleVerify(k){
 }
 /* 다른 가게 직원 배틀(사이트에만 있음, 노트 기록 없음): 참가비·등장 조건·보상만 */
 function btExtraList(){
-  return `<div class="btextra">${(DATA.battlesExtra||[]).map(b => `<div class="fccard"><div class="fc-h"><b class="fc-n">${esc(b.name)}</b>${b.site?.fee!=null?`<span class="fc-c">${nf0(b.site.fee)}G</span>`:""}</div>${btSiteBlock({...b.site, fee:null}, null, true)}</div>`).join("")}<div class="hint">다른 가게 직원 배틀은 사이트에만 있어 기록 칸이 없어요 · 출처: KairoHistory 배틀</div></div>`;
+  return `<div class="btextra">${(DATA.battlesExtra||[]).map(b => `<div class="fccard ${btDone(btKeyX(b))?"btdone":""}"><div class="fc-h"><b class="fc-n">${esc(b.name)}</b>${btDoneBtn(btKeyX(b), b.name)}${b.site?.fee!=null?`<span class="fc-c">${nf0(b.site.fee)}G</span>`:""}</div>${btSiteBlock({...b.site, fee:null}, null, true)}</div>`).join("")}<div class="hint">다른 가게 직원 배틀은 사이트에만 있어 기록 칸은 없고, ✓로 승리만 체크해요 · 출처: KairoHistory 배틀</div></div>`;
 }
 function battleRow(){
   const sel = S.cloBt, o = S.btOpen !== false, on = !!S.cloBtView;
-  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0"><i class="rdot r-bt" aria-hidden="true"></i>전투</span>${sel!=null&&DATA.battles[sel]?`<button class="chip sm on" data-cbt="${sel}">${esc(bShort(sel))} ×</button>`:""}<button class="chip sm fold" data-act="btopen" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span>
+  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0"><i class="rdot r-bt" aria-hidden="true"></i>전투</span><span class="hint">승리 ${DATA.battles.filter((b,i) => btDone(i)).length}/${DATA.battles.length}</span>${sel!=null&&DATA.battles[sel]?`<button class="chip sm on" data-cbt="${sel}">${esc(bShort(sel))} ×</button>`:""}<button class="chip sm fold" data-act="btopen" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span>
     <span class="fh-act">${verifyBtn()}<button class="switch ${on?"on":""}" data-act="btview" role="switch" aria-checked="${on}" ${sel==null?'disabled':''}><i aria-hidden="true"></i>전투 리스트</button></span></div>
-  ${o ? `<div class="chips cfoldchips">${DATA.battles.map((b,i) => `<button class="chip ${sel===i?"on":""}" data-cbt="${i}" aria-pressed="${sel===i}">${esc(bShort(i))}</button>`).join("")}${(DATA.battlesExtra||[]).length?`<button class="chip ${S.btExtra?"on":""}" data-act="btextra" aria-pressed="${!!S.btExtra}">다른 가게 직원 ${(DATA.battlesExtra||[]).length}</button>`:""}</div>` : ""}
+  ${o ? `<div class="chips cfoldchips">${DATA.battles.map((b,i) => `<button class="chip ${sel===i?"on":""} ${btDone(i)?"fcdone":""}" data-cbt="${i}" aria-pressed="${sel===i}" title="${btDone(i)?"승리":""}">${btDone(i)?ICON.ok:""}${esc(bShort(i))}</button>`).join("")}${(DATA.battlesExtra||[]).length?`<button class="chip ${S.btExtra?"on":""}" data-act="btextra" aria-pressed="${!!S.btExtra}">다른 가게 직원 ${(DATA.battlesExtra||[]).filter(b => btDone(btKeyX(b))).length}/${(DATA.battlesExtra||[]).length}</button>`:""}</div>` : ""}
   ${o && S.btExtra ? btExtraList() : ""}`;
 }
 const gsOf = name => { const c = DATA.clo.find(x => cloName(x)===name || x.n===name); const g = c && GS_BY[c.id]; return g ? {q:g[1], charm:g[2]} : null; };
@@ -1075,7 +1087,7 @@ function battleCard(i){
   const tries = r.tries || [], prev = r.prev || [];
   return `<div class="fccard btcard">
     <div class="fc-h"><b class="fc-n">${esc(b.name)}</b>
-      <button class="iconbtn act" data-sheet="bt|${i}" aria-label="전투 기록 수정">${ICON.pen}</button>${b.note?`<button class="iconbtn act ${noteOpen?"on":""}" data-act="btnote" aria-label="코멘트 보기" aria-expanded="${noteOpen}">${ICON.note}</button>`:""}
+      <button class="iconbtn act" data-sheet="bt|${i}" aria-label="전투 기록 수정">${ICON.pen}</button>${btDoneBtn(i, b.name)}${b.note?`<button class="iconbtn act ${noteOpen?"on":""}" data-act="btnote" aria-label="코멘트 보기" aria-expanded="${noteOpen}">${ICON.note}</button>`:""}
       ${ov?`<span class="tag ${ov.cls}">${ov.t}</span>`:""}<span class="fc-c">추천 ${rec}벌</span></div>
     ${btSiteBlock(b.site, [qsum||null, sum||null, r.stat ?? null])}
     <div class="battle-notebook">${infoSection("내 전투 준비",factRows([["노트 조건",cs.length?cs.join(" · "):"조건 없음"],["보상 옵션",b.reward],["점원 능력",b.stat]]))}</div>
@@ -2664,6 +2676,7 @@ document.addEventListener("click", e => {
   if (d.setdone){ toggleClo(+d.setdone); return; }
   if (d.act==="fcextra"){ S.fcExtra = !S.fcExtra; render(); return; }
   if (d.fcdone !== undefined){ toggleFcDone(+d.fcdone); return; }
+  if (d.btdone !== undefined){ toggleBtDone(/^\d+$/.test(d.btdone) ? +d.btdone : d.btdone); return; }
   if (d.fcrec){ S.fcRecOpen = S.fcRecOpen===+d.fcrec ? null : +d.fcrec; render(); return; }
   if (d.act==="btextra"){ S.btExtra = !S.btExtra; render(); return; }
   if (d.btrec){ S.btRecOpen = {...(S.btRecOpen||{}), [d.btrec]: !S.btRecOpen?.[d.btrec]}; render(); return; }

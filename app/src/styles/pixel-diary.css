@@ -539,3 +539,8 @@ nav.tabs { background: var(--card); }
 :root:root .catalog-head.slim { display: flex; justify-content: flex-end; margin: 0 0 6px; padding: 0; border: 0; min-height: 0; }
 :root:root .catalog-head.slim .catalog-jump span { color: var(--fg3); font-size: .9em; margin-left: 4px; }
 :root:root .card > .toolsgap:first-child { margin-top: 0 !important; border-top: 0 !important; padding-top: 0 !important; }
+
+/* 전투 승리 체크(제제 2026-11-10): 칩은 패션 체크 완료처럼 흐리게 + ✓, 다른 가게 직원 카드는 흐리게 */
+.chip.fcdone svg { width: 12px; height: 12px; margin-right: 3px; vertical-align: -1px; }
+.btextra .fccard.btdone > :not(.fc-h) { opacity: .45; }
+.btextra .fccard.btdone .fc-n { color: var(--fg3); }
