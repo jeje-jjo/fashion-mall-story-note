@@ -39,6 +39,26 @@ def main():
     for n in notes:
         g = n["guest"]; c = next((x for x in g if x in CIRC), "①")
         key[(g.replace(c, ""), c)] = n["id"]
+    # 패션 체크: xlsx 항목 ID는 사이트 번호와 순서가 달라서 이름으로 맞춘다. 모델 체크는 보상 액세서리로
+    fcs = load("fashion_checks")
+    by_name = {f["siteName"].strip("'"): f["id"] for f in fcs if f["siteName"] != "모델 체크"}
+    clo_name = {r["c0"]: r["c1"] for r in load("full_clothes")}
+    by_acc = {}
+    for f in fcs:
+        m = re.search(r"액세서리:\s*(\d+)", f.get("success") or "")
+        if f["siteName"] == "모델 체크" and m:
+            by_acc[clo_name.get(int(m.group(1)))] = f["id"]
+
+    def fc_id(r):
+        if r["c1"] == "모델 체크":
+            m = re.search(r"액세서리:\s*(.+)$", r.get("c13") or "")
+            sid = by_acc.get(m.group(1).strip()) if m else None
+        else:
+            sid = by_name.get(r["c1"].strip("'"))
+        if sid is None:
+            raise SystemExit(f"패션 체크 번호 없음: {r['c0']} {r['c1']} {r.get('c13')}")
+        return sid
+
     out = []
     for kind, tbl in (("손님 요청", "full_coord_requests"), ("패션 체크", "full_fashion_checks"), ("배틀", "full_battles")):
         for r in load(tbl):
@@ -54,7 +74,8 @@ def main():
                     raise SystemExit(f"노트 코디 번호 없음: {r['c2']} {r['c1']}")
                 row.update(key=f"c{nid}", noteId=nid)
             elif kind == "패션 체크":
-                row.update(key=f"f{r['c0'] + 1}", siteId=r["c0"] + 1)
+                sid = fc_id(r)
+                row.update(key=f"f{sid}", siteId=sid)
             else:
                 row.update(key=f"b{r['c0']}", siteId=r["c0"])
             out.append(row)
