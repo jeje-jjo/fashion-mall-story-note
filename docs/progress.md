@@ -107,3 +107,7 @@ npm run build:preview && PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/ch
 - 2026-11-10 req_site(요청별 조건·맞는 옷)·sales_avg(계절별 판매 점수 평균) 표: tools/sheets/build_req_site.py. 코디 손님 요청·패션 체크에 '추천 옷' 펼치기.
 
 - 2026-11-10 제제 확인: 씨앗 계승은 **누적 획득량 기준**(보유량 아님) → 씨앗은 아끼지 말고 바로 써도 됨. 가이드(ref/guide g39·g45)도 이 값으로 고쳐 Firestore에 반영함.
+
+- 2026-11-10 옷 재료(recipes) 확인: 사이트 페이지(11-10 다시 받음, 11-06과 같음)의 옷 베이스 14·형태 옵션 32·장식 옵션 35(희귀 12 포함) 행은 ref/recipes에 전부 있음.
+  희귀 옵션 '얻는 곳' 표(48행: 배틀·패션 체크·콘테스트·자격시험 번호)는 옵션마다 마지막 줄만 rareStats에 남아 있어서, 전체를 rareSources(이름으로 풀어 씀)로 추가함.
+  사용하는 옷 목록은 사이트에서도 24벌까지만 보여 잘려 있음(전체는 clothes 표의 옷본·재료·옵션으로 알 수 있음).
