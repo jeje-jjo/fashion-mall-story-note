@@ -575,3 +575,14 @@ nav.tabs { background: var(--card); }
 .mqset .mqset-s { font-size: 12px; font-weight: 650; color: var(--fg2); padding-top: 3px; }
 .mqset.built { border-color: color-mix(in srgb, var(--green, #16a34a) 45%, var(--line)); background: color-mix(in srgb, var(--green, #16a34a) 5%, var(--card)); }
 .chip .cnt { font-size: .85em; color: var(--fg3); margin-left: 3px; }
+
+/* 패드·폰 코디 요청 한 줄 접기(2026-11-10) */
+.request-entry.compact { padding-top: 6px; padding-bottom: 6px; }
+.request-entry.compact .request-heading { align-items: flex-start; gap: 6px; margin: 0; }
+.request-entry.compact.open .request-heading { margin-bottom: 8px; }
+.reqrow { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 6px 0; background: none; border: 0; text-align: left; color: inherit; font: inherit; cursor: pointer; }
+.reqrow-t { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-weight: 650; font-size: 14px; }
+.reqrow-s { font-size: 12.5px; color: var(--fg2); line-height: 1.45; }
+.reqrow-c { color: var(--fg3); font-size: 12px; padding-top: 9px; }
+:root:root .request-grid .request-entry.compact { padding: 2px 0; }
+:root:root .request-entry.compact .reqrow { padding: 4px 0; }

@@ -100,7 +100,7 @@ function autoSaveSel(){
   selTimer = setTimeout(() => { const all = curSel(); S.cloSlot = {...S.cloSlot, all, ...all};
     writeSerial("ui/slots", {slot:S.cloSlot}).catch(() => showNotice("선택을 저장하지 못했어요. 도구 > 화면에서 수동 저장해 주세요.")).finally(() => { selPending = false; }); }, 400);
 }
-const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
+const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
 if (S.facType!=="전체" && S.facType!=="우선개량" && !(S.facType in TYPE_COLOR)) S.facType = "전체";
 if (!Array.isArray(S.cloCat)) S.cloCat = S.cloCat && S.cloCat!=="전체" ? [S.cloCat] : [];
 if (!Array.isArray(S.cloPat)) S.cloPat = S.cloPat && S.cloPat!=="전체" ? [S.cloPat] : [];
@@ -1492,14 +1492,23 @@ function viewCoordReq(){
   const names = Object.keys(groups).sort((a,b) => (cdone(a) - cdone(b)) || byAppear(a,b));
   const open = n => q ? true : S.coordOpen.includes(n);
   const allOpen = names.length && names.every(n => S.coordOpen.includes(n));
-  const entry = c => `<article class="coord sub request-entry">
-    <div class="request-heading"><h3>${c.ps?`<span class="request-stage">${esc(c.ps)}</span>`:""}<span class="request-title">${esc(cTitle(c))}</span>${(!c.req && S.cfix[c.id]?.title)||hasPartFix(c)?semTag("fix","직접 수정"):""}${S.cfix[c.id]?.wrong?semTag("wrong","잘못된 정보"):""}</h3><button class="iconbtn coedit" data-cedit3="${c.id}" aria-label="${esc(cTitle(c))} 수정">${ICON.pen}</button></div>
-    ${c.e?`<p class="request-note">${esc(c.e)}</p>`:""}
+  /* 패드·폰(제제 2026-11-10): 요청을 한 줄(번호·제목·통과한 옷)로 접어 두고 눌러서 펼침. 넓은 화면은 그대로 다 펼침 */
+  const compact = matchMedia("(max-width: 1199px)").matches;
+  const head = c => `${c.ps?`<span class="request-stage">${esc(c.ps)}</span>`:""}<span class="request-title">${esc(cTitle(c))}</span>${(!c.req && S.cfix[c.id]?.title)||hasPartFix(c)?semTag("fix","직접 수정"):""}${S.cfix[c.id]?.wrong?semTag("wrong","잘못된 정보"):""}`;
+  const body = c => `${c.e?`<p class="request-note">${esc(c.e)}</p>`:""}
     ${c.req?.text ? `<p class="req-text">“${esc(c.req.text.replace(/\s+/g, " "))}”</p>` : ""}
     ${(c.req?.conds || []).filter(x => x.startsWith("지정 옷")).map(x => `<p class="req-text">${esc(x.replace(/\s*\(#\d+\)/g, ""))}</p>`).join("")}
     ${factRows(PARTS.map(([k,l]) => [l,withClo(cPart(c,k),cm)]))}
-    ${reqMatchBlock(c.req, `c${c.id}`, c)}
+    ${reqMatchBlock(c.req, `c${c.id}`, c)}`;
+  const entry = c => { if (!compact || q) return `<article class="coord sub request-entry">
+    <div class="request-heading"><h3>${head(c)}</h3><button class="iconbtn coedit" data-cedit3="${c.id}" aria-label="${esc(cTitle(c))} 수정">${ICON.pen}</button></div>
+    ${body(c)}
   </article>`;
+    const op = !!S.reqX?.[c.id], sum = PARTS.map(([k]) => withClo(cPart(c,k),cm)).filter(Boolean).join(" · ");
+    return `<article class="coord sub request-entry compact ${op?"open":""}">
+    <div class="request-heading"><button type="button" class="reqrow" data-reqx="${c.id}" aria-expanded="${op}"><span class="reqrow-t">${head(c)}</span>${sum && !op ? `<span class="reqrow-s">${esc(sum)}</span>` : ""}</button>${op ? `<button class="iconbtn coedit" data-cedit3="${c.id}" aria-label="${esc(cTitle(c))} 수정">${ICON.pen}</button>` : ""}<span class="reqrow-c" aria-hidden="true">${op ? "▴" : "▾"}</span></div>
+    ${op ? body(c) : ""}
+  </article>`; };
   const all = Object.keys(groups).sort(byAppear);
   const shownCards = q ? names : names.filter(n => S.coordOpen.includes(n));
   const card = n => { const dn = cdone(n), fo = !!S.coordFixOpen[n]; return `<div class="fccard cocard ${dn?"cdone":""}" data-coname="${esc(n)}">
@@ -2707,6 +2716,21 @@ function patchKeep(oldEl, newEl, keep){
   }
   return true;
 }
+/* 스크롤 위치 기억(제제 2026-11-10): 폰에서 게임과 오가면 페이지가 다시 열려 맨 위로 가던 문제.
+   탭별 위치를 이 기기에 저장해 두고, 다시 열렸을 때(2시간 안) 같은 탭이면 데이터가 다 그려진 뒤 그 위치로 */
+const SCR_KEY = "fms-scroll", SCR_BOOT = Date.now();
+let scrPending = (() => { try{ const v = JSON.parse(localStorage.getItem(SCR_KEY) || "null"); return v && Date.now() - v.t < 2*3600e3 ? v : null; }catch(e){ return null; } })();
+const scrSave = () => { if (scrPending) return; try{ localStorage.setItem(SCR_KEY, JSON.stringify({tab:S.tab, sub:S.coordSub, y:Math.round(scrollY), t:Date.now()})); }catch(e){} };
+{ let tm = null; addEventListener("scroll", () => { clearTimeout(tm); tm = setTimeout(scrSave, 250); }, {passive:true});
+  addEventListener("pagehide", scrSave); document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") scrSave(); }); }
+function scrRestore(){
+  const p = scrPending; if (!p) return;
+  if (Date.now() - SCR_BOOT > 10000 || p.tab !== S.tab || (p.tab === "coord" && p.sub !== S.coordSub)){ scrPending = null; return; }
+  if (document.documentElement.scrollHeight >= p.y + innerHeight * 0.6){ scrollTo(0, p.y); }
+}
+addEventListener("touchstart", () => { scrPending = null; }, {passive:true, once:true});
+addEventListener("wheel", () => { scrPending = null; }, {passive:true, once:true});
+addEventListener("mousedown", () => { scrPending = null; }, {passive:true, once:true});
 function render(){
   counts();
   const ae = document.activeElement;
@@ -2721,6 +2745,7 @@ function render(){
     if (focusId){ const el=document.getElementById(focusId); if(el){ el.focus({preventScroll:true}); try{el.setSelectionRange(caret,caret)}catch(e){} } }
   }
   renderSheet();
+  if (scrPending) requestAnimationFrame(scrRestore);
   const qk = $("#quick");
   { const rb = document.querySelector('#fab [data-q="rank"]'); if (rb){ const R = curRank(); rb.hidden = R != null && R >= RANK_MAX; rb.querySelector(".fabrank").textContent = R != null ? `R${R}` : "R?"; if (rb.hidden && S.quick==="rank") S.quick = null; } }
   if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="memo" ? homeMemo(true) : S.quick==="rank" ? rankPanel() : upFinder(true, true)}</div>` : ""; qk.hidden = !S.quick; }
@@ -2783,6 +2808,7 @@ document.addEventListener("click", e => {
   if (d.fcdone !== undefined){ toggleFcDone(+d.fcdone); return; }
   if (d.mqg2){ S.mqG = d.mqg2; remember(); render(); return; }
   if (d.mqbuilt){ const [g, k] = d.mqbuilt.split("|").map(Number); mqToggleBuilt(g, k); return; }
+  if (d.reqx){ S.reqX = {...(S.reqX||{}), [d.reqx]: !S.reqX?.[d.reqx]}; remember(); render(); return; }
   if (d.reqall){ S.reqAll = {...(S.reqAll||{}), [d.reqall]: true}; render(); return; }
   if (d.reqopen){ S.reqOpen = {...(S.reqOpen||{}), [d.reqopen]: !S.reqOpen?.[d.reqopen]}; render(); return; }
   if (d.btdone !== undefined){ toggleBtDone(/^\d+$/.test(d.btdone) ? +d.btdone : d.btdone); return; }
