@@ -1405,7 +1405,8 @@ function viewClo(){
 }
 
 /* 코디 요청 수정: 제목이 바뀐 경우(새 제목 저장) / 잘못된 정보(표시만, 노트 전용). coordfix/k{id} */
-const cTitle = c => S.cfix[c.id]?.title || c.r;
+/* 요청 제목 = 사이트 조건 값(제제 2026-11-10: 노트 제목은 임의로 넣은 게 많아 사이트 기준으로). 지정 옷은 제목 아래 줄로 */
+const cTitle = c => { const cd = (c.req?.conds || []).filter(x => !x.startsWith("지정 옷")).map(x => x.replace(/^[^:]+:\s*/, "")); return cd.length ? cd.join(" · ") : (S.cfix[c.id]?.title || c.r); };
 const PARTS = [["t","상의"],["b","하의"],["o","아우터"],["a","액세서리"]];
 /* 저장 키는 부위 앞에 p를 붙임(pt/pb/po/pa). t는 저장 시각이라 겹치면 안 됨 */
 const PK = k => "p"+k;
@@ -1465,7 +1466,7 @@ function reqMatchBlock(rq, key, c){
   return `<div class="reqmatch">
     <button type="button" class="linkbtn reqmatch-btn" data-reqopen="${key}" aria-expanded="${open}">${open ? "추천 옷 접기 ▴" : `추천 옷 ${full.length}벌 · 만든 옷 ${doneN} ▾`}</button>
     ${open ? `<div class="reqmatch-body">
-      ${rq.text ? `<p class="req-text">“${esc(rq.text.replace(/\s+/g, " "))}”</p>` : ""}
+      ${rq.text && !c ? `<p class="req-text">“${esc(rq.text.replace(/\s+/g, " "))}”</p>` : ""}
       ${rq.rec.length ? `<div class="reqmatch-g"><span class="k">사이트 추천 코디</span><ul class="btset-items">${rq.rec.map(item).join("")}</ul></div>` : ""}
       ${groups.map(([l, ids]) => { const srt = ids.sort((a,b) => mine.has(b) - mine.has(a) || cloDone(CLO_BY_ID.get(b)) - cloDone(CLO_BY_ID.get(a))), cap = all ? srt : srt.slice(0, 12);
         return `<div class="reqmatch-g"><span class="k">${l} ${ids.length}${ids.length > 12 ? ` · 만든 옷 ${ids.filter(id => cloDone(CLO_BY_ID.get(id))).length}` : ""}</span><ul class="btset-items">${cap.map(item).join("")}</ul></div>`; }).join("")}
@@ -1488,9 +1489,10 @@ function viewCoordReq(){
   const open = n => q ? true : S.coordOpen.includes(n);
   const allOpen = names.length && names.every(n => S.coordOpen.includes(n));
   const entry = c => `<article class="coord sub request-entry">
-    <div class="request-heading"><h3>${c.ps?`<span class="request-stage">${esc(c.ps)}</span>`:""}<span class="request-title">${esc(cTitle(c))}</span>${S.cfix[c.id]?.title||hasPartFix(c)?semTag("fix","직접 수정"):""}${S.cfix[c.id]?.wrong?semTag("wrong","잘못된 정보"):""}</h3><button class="iconbtn coedit" data-cedit3="${c.id}" aria-label="${esc(cTitle(c))} 수정">${ICON.pen}</button></div>
+    <div class="request-heading"><h3>${c.ps?`<span class="request-stage">${esc(c.ps)}</span>`:""}<span class="request-title">${esc(cTitle(c))}</span>${(!c.req && S.cfix[c.id]?.title)||hasPartFix(c)?semTag("fix","직접 수정"):""}${S.cfix[c.id]?.wrong?semTag("wrong","잘못된 정보"):""}</h3><button class="iconbtn coedit" data-cedit3="${c.id}" aria-label="${esc(cTitle(c))} 수정">${ICON.pen}</button></div>
     ${c.e?`<p class="request-note">${esc(c.e)}</p>`:""}
-    ${c.req?.conds?.length ? `<div class="req-conds">${c.req.conds.map(x => `<span class="tag plain">${esc(x)}</span>`).join("")}</div>` : ""}
+    ${c.req?.text ? `<p class="req-text">“${esc(c.req.text.replace(/\s+/g, " "))}”</p>` : ""}
+    ${(c.req?.conds || []).filter(x => x.startsWith("지정 옷")).map(x => `<p class="req-text">${esc(x.replace(/\s*\(#\d+\)/g, ""))}</p>`).join("")}
     ${factRows(PARTS.map(([k,l]) => [l,withClo(cPart(c,k),cm)]))}
     ${reqMatchBlock(c.req, `c${c.id}`, c)}
   </article>`;
