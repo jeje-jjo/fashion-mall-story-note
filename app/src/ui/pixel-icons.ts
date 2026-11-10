@@ -4,7 +4,7 @@ import { FLAT as PACK } from "./flat-icons";
 import { LINE } from "./line-icons";
 
 /* 어떤 아이콘을 쓸지: "pack" = 소프트 플랫 부티크 묶음(지금 배포), "line" = 직접 그린 선 아이콘(제제 확인 대기) */
-const SET = "pack" as "pack" | "line";
+const SET = "line" as "pack" | "line";
 const FLAT = SET === "line" ? LINE : PACK;
 const CLS = SET === "line" ? "line-icon" : "flat-icon";
 

@@ -35,3 +35,11 @@
 - 체크 칸 안 표시는 색이 찬 칸 위라 ok 모양을 흰 선으로 쓴다.
 - 원본 파일(라이트·다크 SVG, PNG 16·24·32·48)은 `app/public/icons/ui/{light,dark}/`에 있다. 앱 대표 아이콘·파비콘도 묶음 것으로 교체했고, 로고는 라이트·다크 두 벌 중 하나만 보인다.
 - 목록 이미지: [screenshots/icon-list.png](screenshots/icon-list.png)
+
+## 직접 그린 선 아이콘으로 교체 (2026-11-10)
+- 제제가 묶음 아이콘과 비교해 보고 직접 그린 쪽으로 결정. 28종 전부 `app/src/ui/line-icons.ts`.
+- 24칸 격자, 선 1.75, 둥근 끝. 선은 글자색(currentColor)을 따라가고, 탭 아이콘 등 몇 개만 같은 색 16% 옅은 면을 깐다 → 스킨·메인 색상·다크 모드에 자동으로 맞는다.
+- 그림이 바뀐 것: 코디=마네킹, 최근 기록=되감기 시계, 개량=동그라미 속 위 화살표, 회차 연계=엇갈린 화살표, 칼=한 자루.
+- 앱 대표 아이콘·파비콘은 소프트 플랫 부티크 묶음 그대로.
+- 묶음 아이콘으로 되돌리려면 `app/src/ui/pixel-icons.ts`의 `SET`을 `"pack"`으로.
+- 요청서(이름·용도·색상): [icon-brief.md](icon-brief.md), 목록 이미지: [screenshots/icon-list.png](screenshots/icon-list.png)
