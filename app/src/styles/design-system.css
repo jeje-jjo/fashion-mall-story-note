@@ -1,0 +1,115 @@
+/* 글자·간격·작은 버튼 공통 규칙 (2026-11-10)
+   여러 시기에 붙인 스타일이 11.5 / 12 / 13px, 29~40px 높이로 섞여 있던 것을 한 단계표로 맞춘다.
+   색은 스킨(classic·atelier·paper)과 다크 모드 변수를 그대로 쓰고, 크기와 간격만 정한다.
+
+   단계표
+   - 구역 제목(장르·패션 체크·필요한 옵션 …)  --t-sec   14 / 휴대폰 13.5, 굵게
+   - 목록 제목(옷·시설 이름)                  --t-item  14 / 13.5
+   - 본문·칩 글자                             --t-body  12.5 / 12.5
+   - 작은 버튼·세그먼트                        --t-ctl   12 / 12
+   - 보조 설명·숫자                            --t-meta  11.5 / 11
+   - 작은 버튼 높이                            --h-ctl   32 / 30
+   - 간격                                     4 · 8 · 12 · 16 · 20 · 24 */
+:root:root[data-design="hybrid"] {
+  --t-sec: 14px; --t-item: 14px; --t-body: 12.5px; --t-ctl: 12px; --t-meta: 11.5px;
+  --h-ctl: 32px; --r-ctl: 8px;
+  --sp-sec: 18px;          /* 구역 사이(구분선 위아래) */
+  --sp-row: 10px;          /* 구역 제목과 내용 사이 */
+}
+@media (max-width: 739px) {
+  :root:root[data-design="hybrid"] {
+    --t-sec: 13.5px; --t-item: 13.5px; --t-meta: 11px;
+    --h-ctl: 30px; --sp-sec: 14px; --sp-row: 8px;
+  }
+}
+
+/* ---------- 구역 머리줄: 제목 | 작은 버튼들 ---------- */
+:root:root[data-design="hybrid"] .fhead { display: flex; align-items: center; justify-content: space-between; gap: 8px 10px; flex-wrap: wrap; }
+:root:root[data-design="hybrid"] .fhead .fh-l,
+:root:root[data-design="hybrid"] .fhead .fh-act { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
+:root:root[data-design="hybrid"] .fhead .fh-act { margin-left: auto; }
+:root:root[data-design="hybrid"] .fhead.rowhead { min-height: var(--h-ctl); margin-bottom: var(--sp-row); }
+:root:root[data-design="hybrid"] .fhead .sublbl,
+:root:root[data-design="hybrid"] .fhead.rowhead .sublbl {
+  font-size: var(--t-sec); font-weight: 700; letter-spacing: -.01em; color: var(--fg);
+  display: inline-flex; align-items: center; gap: 6px; margin-right: 4px; white-space: nowrap;
+}
+:root:root[data-design="hybrid"] .fhead .hint { font-size: var(--t-meta); color: var(--fg3); white-space: nowrap; }
+
+/* 구역 사이: 구분선 위아래 간격을 같게 */
+:root:root[data-design="hybrid"] .frowgap { margin-top: var(--sp-sec); padding-top: var(--sp-sec); }
+:root:root[data-design="hybrid"] .filter-toolbar { margin: 0 0 var(--sp-sec) !important; padding-bottom: 0; }
+:root:root[data-design="hybrid"] .tools.toolsgap { margin-bottom: 12px; }
+
+/* ---------- 작은 버튼 · 세그먼트: 높이·글자·모서리 하나로 ---------- */
+:root:root[data-design="hybrid"] .chip.sm,
+:root:root[data-design="hybrid"] .fhead .seg button,
+:root:root[data-design="hybrid"] .seg.mini button,
+:root:root[data-design="hybrid"] .pillseg button {
+  height: var(--h-ctl); min-height: var(--h-ctl); padding: 0 10px; font-size: var(--t-ctl); line-height: 1; border-radius: var(--r-ctl);
+}
+:root:root[data-design="hybrid"] .fhead .seg,
+:root:root[data-design="hybrid"] .seg.mini { padding: 2px; gap: 2px; border-radius: calc(var(--r-ctl) + 2px); }
+:root:root[data-design="hybrid"] .fhead .seg button,
+:root:root[data-design="hybrid"] .seg.mini button { height: calc(var(--h-ctl) - 4px); min-height: 0; }
+:root:root[data-design="hybrid"] .pillseg { padding: 2px; gap: 2px; }
+:root:root[data-design="hybrid"] .pillseg button { height: calc(var(--h-ctl) - 4px); min-height: 0; border-radius: 999px; padding: 0 12px; }
+/* 목록 위 상태·정렬 세그먼트(시설 등)도 같은 높이 */
+:root:root[data-design="hybrid"] .tools .seg:not(.wide) button { height: calc(var(--h-ctl) - 2px); font-size: var(--t-ctl); padding: 0 11px; }
+:root:root[data-design="hybrid"] .tools .seg:not(.wide) { padding: 3px; }
+
+/* 칩: 이름과 숫자 사이 간격, 숫자는 한 단계 작게 */
+:root:root[data-design="hybrid"] .chip:not(.sm) { font-size: var(--t-body); }
+:root:root[data-design="hybrid"] .chip b { font-size: var(--t-meta); font-weight: 500; margin-left: 5px; font-variant-numeric: tabular-nums; opacity: .8; }
+
+/* 의류 목록 바로가기: 툴바 오른쪽 끝에 작게 */
+:root:root[data-design="hybrid"] .filter-toolbar .catalog-jump {
+  display: inline-flex; align-items: center; gap: 4px; height: var(--h-ctl); padding: 0 2px;
+  font-size: var(--t-ctl); color: var(--fg2); text-decoration: none; white-space: nowrap;
+}
+:root:root[data-design="hybrid"] .filter-toolbar .catalog-jump b { font-weight: 650; color: var(--fg); font-variant-numeric: tabular-nums; }
+
+/* ---------- 필터 상자(의류 장르·옷본·재료·옵션) ---------- */
+:root:root[data-design="hybrid"] .filter-grid { gap: 10px; }
+:root:root[data-design="hybrid"] .filter-row { padding: 12px 14px; }
+:root:root[data-design="hybrid"] .filter-row .fhead.rowhead { margin-bottom: 10px; }
+@media (max-width: 739px) {
+  :root:root[data-design="hybrid"] .filter-grid { gap: 8px; }
+  :root:root[data-design="hybrid"] .filter-row { padding: 10px 12px; }
+  :root:root[data-design="hybrid"] .filter-row .fhead.rowhead { margin-bottom: 8px; }
+}
+
+/* 필요한 옵션 상자 */
+:root:root[data-design="hybrid"] .needopt { margin-top: var(--sp-sec); padding: 14px; }
+:root:root[data-design="hybrid"] .needopt .fhead { margin-bottom: 8px; }
+:root:root[data-design="hybrid"] .needopt .hint { font-size: var(--t-meta); }
+
+/* ---------- 목록 줄 ---------- */
+:root:root[data-design="hybrid"] .row .n { font-size: var(--t-item); font-weight: 600; line-height: 1.5; letter-spacing: -.005em; }
+:root:root[data-design="hybrid"] .row .s { font-size: var(--t-meta); color: var(--fg2); line-height: 1.6; }
+:root:root[data-design="hybrid"] .row .tag { font-size: 10.5px; }
+
+/* ---------- 카드 안 제목 ---------- */
+:root:root[data-design="hybrid"] .sec-h { align-items: baseline; gap: 8px; margin-bottom: 12px; }
+:root:root[data-design="hybrid"] .sec-h h2 { font-size: 16px; font-weight: 700; letter-spacing: -.02em; }
+:root:root[data-design="hybrid"] .sec-h > span { font-size: var(--t-meta); color: var(--fg3); }
+@media (max-width: 739px) {
+  :root:root[data-design="hybrid"] .sec-h h2 { font-size: 15px; }
+}
+
+/* 상단 세그먼트(코디 하위 탭 등)는 한 단계 큰 그대로 두고 높이만 맞춤 */
+:root:root[data-design="hybrid"] .seg.wide button { height: 38px; font-size: 13.5px; }
+@media (max-width: 739px) {
+  :root:root[data-design="hybrid"] .seg.wide button { height: 36px; font-size: 13px; }
+}
+
+@media (max-width: 739px) {
+  /* 휴대폰: 보기·상태 두 묶음이 한 줄에 들어가게 */
+  :root:root[data-design="hybrid"] .cloview { gap: 6px; }
+  :root:root[data-design="hybrid"] .pillseg button { padding: 0 8px; font-size: 11.5px; }
+  :root:root[data-design="hybrid"] .filter-toolbar,
+  :root:root[data-design="hybrid"] .filter-toolbar .fh-l { flex-wrap: nowrap; gap: 5px; }
+  :root:root[data-design="hybrid"] .filter-toolbar .chip.sm,
+  :root:root[data-design="hybrid"] .filter-toolbar .seg button { padding: 0 7px; font-size: 11.5px; white-space: nowrap; }
+  :root:root[data-design="hybrid"] .filter-toolbar .catalog-jump .cj-w { display: none; }
+}

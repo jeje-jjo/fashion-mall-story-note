@@ -2,6 +2,7 @@ import "./styles/legacy.css";
 import "./styles/pixel-diary.css";
 import "./styles/appearance.css";
 import "./styles/responsive-polish.css";
+import "./styles/design-system.css";
 import { installPixelIcons } from "./ui/pixel-icons";
 import { restoreAppearance } from "./ui/appearance";
 
