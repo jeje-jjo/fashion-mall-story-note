@@ -1,0 +1,90 @@
+/* 기존 색·구조·필터 동작을 유지하며 간격과 글자 크기만 조정한다. */
+.ui-icon { display:inline-block; flex:none; vertical-align:middle; shape-rendering:geometricPrecision; }
+:root:root[data-design="hybrid"] .brandmark .ui-icon { width:24px; height:24px; }
+:root:root[data-design="hybrid"] nav.tabs .ui-icon { width:21px; height:21px; }
+:root:root[data-design="hybrid"] .iconbtn .ui-icon { width:18px; height:18px; }
+:root:root[data-design="hybrid"] .hbtn .ui-icon { width:17px; height:17px; }
+:root:root[data-design="hybrid"] .ck .ui-icon { width:14px; height:14px; stroke-width:2.3; }
+:root:root[data-design="hybrid"] .fab .ui-icon { width:19px; height:19px; }
+:root:root[data-design="hybrid"] .btn .ui-icon { width:15px; height:15px; }
+:root:root[data-design="hybrid"] .app { gap:18px; }
+:root:root[data-design="hybrid"] .stack { gap:18px; }
+:root:root[data-design="hybrid"] .card { padding:20px; }
+:root:root[data-design="hybrid"] .card.flush { padding:7px 20px; }
+:root:root[data-design="hybrid"] .card.subnav { padding:0; }
+:root:root[data-design="hybrid"] .filter-toolbar { margin-bottom:15px!important; }
+:root:root[data-design="hybrid"] .filter-row { padding:10px 12px; }
+:root:root[data-design="hybrid"] .filter-row .fhead.rowhead { margin-bottom:8px; }
+:root:root[data-design="hybrid"] .chips, :root:root[data-design="hybrid"] .cfoldchips { gap:6px; }
+:root:root[data-design="hybrid"] .chip { font-size:12px; min-height:32px; }
+:root:root[data-design="hybrid"] .chip.sm { font-size:11.5px; min-height:29px; height:30px; }
+:root:root[data-design="hybrid"] .fhead.rowhead .sublbl { font-size:12.5px; }
+:root:root[data-design="hybrid"] .cloview { gap:8px; }
+:root:root[data-design="hybrid"] .pillseg button { font-size:12px; }
+:root:root[data-design="hybrid"] .row { gap:10px; padding:15px 0; }
+:root:root[data-design="hybrid"] .row .body { min-width:0; }
+:root:root[data-design="hybrid"] .row .n { font-size:13px; line-height:1.55; overflow-wrap:anywhere; }
+:root:root[data-design="hybrid"] .row .s { font-size:11.5px; line-height:1.6; margin-top:4px; }
+:root:root[data-design="hybrid"] .rowvals { font-size:11px; gap:12px; font-variant-numeric:tabular-nums; }
+:root:root[data-design="hybrid"] .row>button[data-tclo],
+:root:root[data-design="hybrid"] .row>button[data-tfac],
+:root:root[data-design="hybrid"] .row>button[data-put] { min-width:38px; min-height:42px; }
+:root:root[data-design="hybrid"] .detail.item-detail { margin-left:48px; padding:12px; }
+:root:root[data-design="hybrid"] .detail.item-detail .detail-layout { gap:10px; }
+:root:root[data-design="hybrid"] .detail.item-detail .info-section { padding:11px 12px; }
+:root:root[data-design="hybrid"] .detail.item-detail .fact-rows { gap:6px; }
+:root:root[data-design="hybrid"] .detail.item-detail .fact-rows dt { font-size:11.5px; }
+:root:root[data-design="hybrid"] .detail.item-detail .fact-rows dd { font-size:12px; overflow-wrap:anywhere; }
+:root:root[data-design="hybrid"] .detail.item-detail .info-list,
+:root:root[data-design="hybrid"] .detail.item-detail .usage-row ul { font-size:12px; line-height:1.65; }
+:root:root[data-design="hybrid"] .detail.item-detail .metric-strip dt { font-size:10.5px; }
+:root:root[data-design="hybrid"] .detail.item-detail .metric-strip dd { font-size:12.5px; }
+:root:root[data-design="hybrid"] .detail.item-detail .pair-group li { font-size:11.5px; line-height:1.6; }
+:root:root[data-design="hybrid"] .reqrow-t { font-size:13px; line-height:1.6; }
+:root:root[data-design="hybrid"] .reqrow-s { font-size:12px; line-height:1.6; }
+:root:root[data-design="hybrid"] .request-heading h3 { font-size:14px; line-height:1.6; }
+@media(min-width:740px) and (max-width:1179px) {
+ :root:root[data-design="hybrid"] .card { padding:18px; }
+ :root:root[data-design="hybrid"] .card.flush { padding:6px 18px; }
+ :root:root[data-design="hybrid"] .card.subnav { padding:0; }
+ :root:root[data-design="hybrid"] .detail.item-detail { margin-left:44px; }
+ :root:root[data-design="hybrid"] .filter-row { padding:10px; }
+ :root:root[data-design="hybrid"] .rowvals { gap:10px; }
+}
+@media(max-width:739px) {
+ :root:root[data-design="hybrid"] .app { gap:14px; }
+ :root:root[data-design="hybrid"] .stack { gap:14px; }
+ :root:root[data-design="hybrid"] .card { padding:14px 12px; }
+ :root:root[data-design="hybrid"] .card.flush { padding:5px 12px; }
+ :root:root[data-design="hybrid"] .card.subnav { padding:0; }
+ :root:root[data-design="hybrid"] .brandmark { width:32px; height:32px; }
+ :root:root[data-design="hybrid"] .brandmark .ui-icon { width:22px; height:22px; }
+ :root:root[data-design="hybrid"] .brandbar .bn-top { gap:5px; }
+ :root:root[data-design="hybrid"] .brandbar h1#ttl { font-size:12px; }
+ :root:root[data-design="hybrid"] .brandbar #sub { font-size:9px; }
+ :root:root[data-design="hybrid"] .filter-row { padding:9px 10px; }
+ :root:root[data-design="hybrid"] .filter-row .fhead.rowhead { margin-bottom:7px; }
+ :root:root[data-design="hybrid"] .fhead.rowhead .sublbl { font-size:12px; }
+ :root:root[data-design="hybrid"] .chip { font-size:11.5px; height:32px; padding:0 9px; }
+ :root:root[data-design="hybrid"] .chip.sm { font-size:11px; min-height:29px; height:29px; padding:0 8px; }
+ :root:root[data-design="hybrid"] .pillseg button { font-size:11px; height:29px; padding:0 8px; }
+ :root:root[data-design="hybrid"] .pillseg { padding:3px; }
+ :root:root[data-design="hybrid"] .filter-toolbar { margin-bottom:12px!important; }
+ :root:root[data-design="hybrid"] .row { padding:12px 0; gap:7px; }
+ :root:root[data-design="hybrid"] .row .n { font-size:12.5px; }
+ :root:root[data-design="hybrid"] .row .s { font-size:11px; }
+ :root:root[data-design="hybrid"] .detail.item-detail { margin-left:0; padding:10px; }
+ :root:root[data-design="hybrid"] .detail.item-detail .info-section { padding:10px 11px; }
+ :root:root[data-design="hybrid"] .rowvals { font-size:10px; gap:8px; }
+ /* iPhone Safari의 입력 시 강제 확대 방지. 목록·칩 글씨와 별도로 둔다. */
+ :root:root[data-design="hybrid"] input:not([type="checkbox"]):not([type="radio"]),
+ :root:root[data-design="hybrid"] select,
+ :root:root[data-design="hybrid"] textarea { font-size:16px; }
+ :root:root[data-design="hybrid"] .search { height:40px; }
+}
+@media(max-width:359px) {
+ :root:root[data-design="hybrid"] .brandname { font-size:10.5px; }
+ :root:root[data-design="hybrid"] .hdr-r { gap:4px; }
+ :root:root[data-design="hybrid"] .hbtn { width:32px; height:32px; }
+ :root:root[data-design="hybrid"] .brandbar .btn { padding-left:8px; padding-right:8px; }
+}
