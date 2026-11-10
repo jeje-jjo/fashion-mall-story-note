@@ -342,20 +342,21 @@ function toast(msg, undo){
 }
 $("#toastUndo").onclick = () => { $("#toast").classList.remove("show"); undoFn && undoFn(); };
 
-function togglePut(id, it){
+function togglePut(id, it, noUndo){
+  const undo = noUndo ? undefined : () => { togglePut(id, it, true); toast("되돌렸어요"); };
   const f = DATA.fac.find(x => x.id === id);
   const base = putShown(f);
   const put = base.includes(it) ? base.filter(x => x !== it) : [...base, it];
   const all = needOf(f).every(x => put.includes(x));
   if (!all && facDone(f)){
     persist("fac", id, {put, done:false}, {kind:"fac", id, name:facName(f), from:true, to:false});
-    toast(`${facName(f)} ${it} 넣음 취소 · 완료를 풀었어요`);
+    toast(`${facName(f)} ${it} 넣음 취소 · 완료를 풀었어요`, undo);
   } else if (all && !facDone(f)){
     persist("fac", id, {put, done:true}, {kind:"fac", id, name:facName(f), from:false, to:true});
-    toast(`${facName(f)} 상성 좋음을 다 넣어서 완료로 바꿨어요`);
+    toast(`${facName(f)} 상성 좋음을 다 넣어서 완료로 바꿨어요`, undo);
   } else {
     persist("fac", id, {put}, null);
-    toast(`${facName(f)} ${it} ${put.includes(it)?"넣음":"넣음 취소"}`);
+    toast(`${facName(f)} ${it} ${put.includes(it)?"넣음":"넣음 취소"}`, undo);
   }
 }
 /* 항목으로 찾기에서 보이는 시설 전부에 한 번에 넣기(되돌리기 가능) */
@@ -1003,11 +1004,11 @@ function viewFac(){
       const d = facDone(f), opened = S.facOpen===f.id, nm = facName(f), put = putShown(f);
       return `<div class="${opened?"open":""}">
         <div class="row ${d?"done":""} ${noStore(f)?"nostore":""}">
-          <button data-tfac="${f.id}" aria-label="${esc(nm)} ${d?"미완료로":"전체 완료로"} 바꾸기">${ckFac(f)}</button>
+          ${canPut ? `<button data-put="${f.id}|${esc(it)}" aria-label="${esc(nm)}에 ${esc(it)} ${put.includes(it)?"넣음 취소":"넣음"}" title="${esc(it)}만 체크해요. 좋음 항목을 다 넣으면 시설 완료">${ck(d || put.includes(it))}</button>`
+            : `<button data-tfac="${f.id}" aria-label="${esc(nm)} ${d?"미완료로":"전체 완료로"} 바꾸기">${ckFac(f)}</button>`}
           <button class="body" data-ofac="${f.id}" style="text-align:left">
             <div class="t"><span class="n">${esc(nm)}</span>${noStore(f)?`<span class="tag nostore">아직 없는 매장</span>`:""}${typeTag(f.type)}${facPartial(f)?semTag("part","일부완료"):""}${fcTag(f)}${f.p40?p40Tag(f):""}</div>
           </button>
-          ${canPut && notPut(f) ? `<button class="btn sm ghost" data-put="${f.id}|${esc(it)}">넣었어요</button>` : ""}
           ${opened && hybrid() ? `<button class="iconbtn act" data-sheet="fac|${f.id}" aria-label="${esc(nm)} 이름 수정">${ICON.pen}</button>` : ""}
           <button class="iconbtn" data-ofac="${f.id}" aria-label="자세히">${ICON.chev}</button>
         </div>
