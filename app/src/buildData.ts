@@ -18,6 +18,8 @@ export const TABLES = [
   "site_comment_replies", "site_activities", "site_items", "site_goods",
   // 전체 정보 xlsx에서 묶은 표(2026-11-10): 요청별 조건·맞는 옷, 계절별 판매 점수 평균
   "req_site", "sales_avg",
+  // 자료 탭에 보여 줄 전체 정보 xlsx 표(2026-11-10 제제: 묵히지 말고 자료에 다)
+  "full_clothes", "full_outfit_sets", "full_coord_requests", "full_fashion_checks", "full_battles", "full_sales_guests", "full_codes", "full_faq",
 ] as const;
 export type Tables = Record<(typeof TABLES)[number], Row[]>;
 
@@ -307,9 +309,35 @@ export function buildData(t: Tables) {
     ["site_carryover_choices", "이어받기"], ["site_comment_replies", "댓글 답하기"], ["site_activities", "활동"], ["site_goods", "상품"],
   ] as const;
   L.refTables = REF.map(([k, label]) => ({ key: k, label, rows: ((t as any)[k] || []).slice().sort((a: Row, b: Row) => (a.row ?? 0) - (b.row ?? 0)) }));
+  /* 자료 탭에 더 넣는 표(2026-11-10): [열 키, 보여 줄 이름] 순서대로 c0.. 로 바꿔 넣는다. 첫 열이 카드 제목 */
+  const refCols2: Record<string, Record<string, string>> = {};
+  const fcEx = (v: any) => String(v ?? "").replace(/시설\s*(\d+)\s*\/\s*clothesValue\s*(\d+)/, "시설 점수 $1 · 코디 점수 $2").replace(/^value\s*([\d,]+)$/, "기준값(품질·매력·능력) $1");
+  const asRef = (key: string, label: string, rows: Row[], spec: [string, string, ((v: any, r: Row) => any)?][]) => {
+    refCols2[key] = Object.fromEntries(spec.map(([, l], i) => [`c${i}`, l]));
+    L.refTables.push({ key, label, rows: rows.map((r, n) => Object.fromEntries([["row", n + 1], ...spec.map(([k, , f], i) => [`c${i}`, f ? f(r[k], r) : r[k]])])) });
+  };
+  const byRow = (k: string) => ((t as any)[k] || []).slice().sort((a: Row, b: Row) => (a.row ?? 0) - (b.row ?? 0));
+  const REQ_SPEC: [string, string, ((v: any, r: Row) => any)?][] = [["c1", "제목", (v, r) => `${v} · ${r.c2 ?? ""}`], ["c0", "항목 ID"], ["c3", "대사·설명"], ["c4", "장르 조건"], ["c5", "스타일 조건"], ["c6", "분류 조건"], ["c7", "태그 조건"], ["c8", "계절 조건"], ["c9", "베이스 조건"], ["c10", "색 조건"], ["c11", "옵션 조건"], ["c12", "지정 옷"], ["c13", "추가 정보", fcEx], ["c14", "상대 코디"], ["c16", "맞는 옷 수"], ["c17", "사이트 추천 코디"]];
+  asRef("x_clothes", "옷 전체 정보", byRow("full_clothes"), [["c1", "이름", (v, r) => `${v} #${r.c0}`], ["c2", "분류"], ["c3", "장르"], ["c4", "스타일"], ["c5", "색"], ["c6", "계절"], ["c7", "성별"], ["c8", "손님 성향"], ["c9", "품질"], ["c10", "인기"], ["c11", "가격", (v) => v == null ? v : `${Number(v).toLocaleString()}G`], ["c12", "재고"], ["c13", "Tier(추정)"], ["c14", "베이스"], ["c15", "옵션"], ["c16", "태그·특성"], ["c17", "입수 방법"], ["c18", "포함된 세트"], ["c19", "잘 어울림"], ["c20", "안 어울림"]]);
+  asRef("x_recipes", "옷 재료", [...t.recipes].sort((a, b) => ["옷본", "재료", "옵션", "희귀 옵션"].indexOf(a.kind) - ["옷본", "재료", "옵션", "희귀 옵션"].indexOf(b.kind) || (a.price ?? 0) - (b.price ?? 0)),
+    [["name", "이름"], ["kind", "구분", (v) => ({ "옷본": "옷 베이스(옷본)", "재료": "형태 옵션(재료)", "옵션": "장식 옵션", "희귀 옵션": "희귀 옵션" } as any)[v] || v], ["price", "개방 비용·가격", (v) => v == null ? v : `${Number(v).toLocaleString()}G`], ["tier", "Tier"], ["upParam", "upParam"], ["styleBonus", "스타일 보너스"], ["clothesCount", "쓰는 옷 수"]]);
+  asRef("x_sales_avg", "판매 점수 평균", [...t.sales_avg].map((r): Row => ({ ...r, name: t.clothes.find((c) => c.id === r.id)?.name ?? `#${r.id}` })).sort((a: Row, b: Row) => (b.sa ?? 0) - (a.sa ?? 0)),
+    [["name", "옷", (v, r) => `${v} #${r.id}`], ["sa", "봄·가을"], ["su", "여름"], ["wi", "겨울"]]);
+  asRef("x_sales_guests", "판매 손님", byRow("full_sales_guests"), [["c1", "손님"], ["c2", "성별"], ["c3", "손님 성향"], ["c4", "좋아하는 장르"], ["c5", "좋아하는 스타일"], ["c6", "좋아하는 색"]]);
+  asRef("x_outfit_sets", "코디 세트(사이트)", byRow("full_outfit_sets"), [["c0", "세트", (v, r) => `세트 ${v} · ${r.c1 ?? ""} ${r.c2 ?? ""}`], ["c3", "상의"], ["c5", "하의"], ["c7", "셋업"], ["c9", "아우터"], ["c11", "액세서리"]]);
+  asRef("x_coord_requests", "손님 요청(사이트)", byRow("full_coord_requests"), REQ_SPEC);
+  // 패션 체크: 대사는 '46 0계 시설도…'처럼 깨져 있고 항목 ID는 사이트 번호와 달라서 뺌
+  asRef("x_fashion_checks", "패션 체크(사이트)", byRow("full_fashion_checks"), REQ_SPEC.filter(([k]) => k !== "c0" && k !== "c3"));
+  asRef("x_battles", "배틀(사이트)", byRow("full_battles"), REQ_SPEC);
+  asRef("x_trophies", "트로피", byRow("site_trophies"), [["c0", "트로피"], ["c1", "힌트"], ["c2", "조건"], ["c3", "점수"], ["c4", "보상"]]);
+  asRef("x_missions", "미션", byRow("site_missions"), [["c2", "미션"], ["c0", "분류"], ["c1", "단계"], ["c3", "보상 아이템"]]);
+  asRef("x_chars", "캐릭터", [...t.characters].sort((a, b) => (a.siteId ?? 0) - (b.siteId ?? 0)), [["name", "이름"], ["type", "구분"], ["profile", "나이·마을·성향"], ["likes", "좋아함"], ["info", "발견·해금"]]);
+  asRef("x_codes", "분류 사전", byRow("full_codes"), [["c2", "표기"], ["c0", "분류"], ["c1", "코드"]]);
+  asRef("x_faq", "설명·FAQ", byRow("full_faq"), [["c1", "질문·항목", (v, r) => `${r.c0} · ${v}`], ["c2", "설명"]]);
+  L.refTables = L.refTables.filter((x: any) => x.rows.length);
   L.alias = alias;
   // 자료 표 열 이름(ref 표의 columns, 2026-11-06 기준)
-  L.refCols = REF_COLS;
+  L.refCols = { ...REF_COLS, ...refCols2 };
   L.terms = Object.fromEntries(TERM);
   L.idMap = { clo: Object.fromEntries(cloMap), fac: Object.fromEntries(facMap) };
   return L;

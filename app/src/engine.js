@@ -2653,15 +2653,23 @@ function todayGo(go){
    열 이름은 사이트 표기 그대로. 돈은 G로 바꿔 보여 준다. 출처: KairoHistory */
 const TERM_RE = Object.keys(DATA.terms||{}).length ? new RegExp(Object.keys(DATA.terms).sort((a,b) => b.length - a.length).map(x => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "g") : null;
 const moneyG = v => { let t = String(v ?? "").replace(/¥\s?([\d,]+)/g, "$1G"); if (TERM_RE) t = t.replace(TERM_RE, m => DATA.terms[m]); return t; };
+/* 자료 묶음(2026-11-10): 표가 29개라 휴대폰에서 칩이 화면을 다 덮어서 묶음 → 표 두 줄로 */
+const REF_GROUPS = [["옷", ["x_clothes","x_recipes","x_sales_avg","x_sales_guests","site_grades","site_formulas"]], ["코디·요청", ["x_outfit_sets","x_coord_requests","x_fashion_checks","x_battles","x_codes"]],
+  ["진행", ["site_exams","site_studies","site_skills","x_trophies","x_missions","site_clear_points","site_carryover_choices","site_fever","x_faq"]], ["가게·사람", ["x_chars","site_celebrities","site_uniforms","site_investments","site_sales_trips","site_items","site_goods","site_comment_replies","site_activities"]]];
 function viewRef(){
-  const tabs = DATA.refTables || [], cur = tabs.find(t => t.key===S.refKey) || tabs[0]; if (!cur) return `<section class="card"><div class="empty">자료가 없어요</div></section>`;
+  const all = DATA.refTables || [];
+  const grpOf = k => (REF_GROUPS.find(([, ks]) => ks.includes(k)) || ["기타"])[0];
+  const groups = [...REF_GROUPS.map(([g]) => g), ...(all.some(t => grpOf(t.key) === "기타") ? ["기타"] : [])].filter(g => all.some(t => grpOf(t.key) === g));
+  const g = groups.includes(S.refG) ? S.refG : (all.find(t => t.key === S.refKey) ? grpOf(S.refKey) : groups[0]);
+  const tabs = all.filter(t => grpOf(t.key) === g), cur = tabs.find(t => t.key===S.refKey) || tabs[0]; if (!cur) return `<section class="card"><div class="empty">자료가 없어요</div></section>`;
   const cols = Object.keys(cur.rows[0] || {}).filter(k => /^c\d+$/.test(k)).sort((a,b) => +a.slice(1) - +b.slice(1));
   const lab = (DATA.refCols||{})[cur.key] || {};
   const q = (S.refQ||"").trim();
   const rows = cur.rows.filter(r => !q || cols.some(k => String(r[k]??"").includes(q)));
   const shown = rows.slice(0, S.refAll ? 1000 : 60);
   return `<section class="card">
-    <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">자료</span><span class="hint">공략 사이트 표 ${tabs.length}개</span></span></div>
+    <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">자료</span><span class="hint">공략 사이트 표 ${all.length}개</span></span></div>
+    <div class="seg wide refgrp" style="margin-bottom:8px">${groups.map(x => `<button class="${x===g?"on":""}" data-refg="${x}" aria-pressed="${x===g}">${x}</button>`).join("")}</div>
     <div class="chips">${tabs.map(t => `<button class="chip sm ${t.key===cur.key?"on":""}" data-refk="${t.key}" aria-pressed="${t.key===cur.key}">${esc(t.label)} <span class="hint" style="margin:0">${t.rows.length}</span></button>`).join("")}</div>
     <div class="tools toolsgap"><input class="search" id="refQ" placeholder="${esc(cur.label)} 안에서 검색" value="${esc(q)}" aria-label="자료 검색"></div>
     <div class="hint" style="margin-top:8px">출처: KairoHistory(개인 참고용, 카이로소프트 공식 아님)</div>
@@ -2867,6 +2875,7 @@ document.addEventListener("click", e => {
   if (d.mqg2){ S.mqG = d.mqg2; remember(); render(); return; }
   if (d.mqbuilt){ const [g, k] = d.mqbuilt.split("|").map(Number); mqToggleBuilt(g, k); return; }
   if (d.goalst !== undefined){ S.goalSt = d.goalst === "" ? null : +d.goalst; render(); return; }
+  if (d.refg){ S.refG = d.refg; S.refKey = null; S.refQ = ""; S.refAll = false; render(); return; }
   if (d.reqx){ S.reqX = {...(S.reqX||{}), [d.reqx]: !S.reqX?.[d.reqx]}; remember(); render(); return; }
   if (d.reqall){ S.reqAll = {...(S.reqAll||{}), [d.reqall]: true}; render(); return; }
   if (d.reqopen){ S.reqOpen = {...(S.reqOpen||{}), [d.reqopen]: !S.reqOpen?.[d.reqopen]}; render(); return; }
