@@ -944,7 +944,7 @@ function fcInfoCard(oi){
     <div class="fc-h"><span class="fcnum">${oi+1}</span><b class="fc-n">${esc(checkName(oi))}</b>
       ${hybrid()?`<button class="iconbtn act" data-sheet="fc|${oi}" aria-label="이름·기록 수정">${ICON.pen}</button>`:""}<button class="iconbtn act ${fcDone(oi)?"on":""}" data-fcdone="${oi}" aria-label="패션 체크 ${oi+1} ${fcDone(oi)?"완료 취소":"완료"}" aria-pressed="${fcDone(oi)}">${ICON.ok}</button>${hasNote?`<button class="iconbtn act ${noteOpen?"on":""}" data-act="fcnote" aria-label="주석 보기" aria-expanded="${noteOpen}">${ICON.note}</button>`:""}
       <span class="fc-c">${main.length?`${n} / ${main.length}`:"대상 없음"}</span></div>
-    <div class="check-overview">${factRows([["요구 조건",c.req],["보상",c.reward]])}</div>
+    <div class="check-overview">${factRows([["시설 조건",c.req],["코디 조건",(c.site?.req?.conds||[]).map(x => x.replace(/^[^:]+:\s*/, "")).join(" + ") || (c.site?.req ? "없음" : null)],["코디 점수",c.site?.req?.cv!=null ? nf0(c.site.req.cv) : null],["보상",c.reward]])}</div>
     ${fcSiteLine(c.site)}
     ${reqMatchBlock(c.site?.req, "f"+oi)}
     ${scoreLine(oi) ? `<button type="button" class="linkbtn" data-fcrec="${oi}" aria-expanded="${S.fcRecOpen===oi}">${S.fcRecOpen===oi?"기록 접기":"기록 보기"}</button>${S.fcRecOpen===oi ? scoreLine(oi) : ""}` : ""}

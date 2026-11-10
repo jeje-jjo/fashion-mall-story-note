@@ -36,7 +36,9 @@ export function buildData(t: Tables) {
   // 상하 궁합: 사이트는 하의 쪽에만 목록이 있고 8개까지만 보인다(+n은 잘림). 이름 → 사이트 번호로 바꿔 둔다.
   const salesBy = new Map<number, { sa: number; su: number; wi: number }>((t.sales_avg || []).map((r) => [r.id, { sa: r.sa, su: r.su, wi: r.wi }]));
   const reqBy = new Map<string, Row>((t.req_site || []).map((r) => [r.key, r]));
-  const reqOf = (r: Row | undefined) => r ? { title: r.title, person: r.person, text: r.text, conds: r.conds || [], extra: r.extra, oppo: r.oppo || [], rec: r.rec || [],
+  // 패션 체크 추가 정보 "시설 39 / clothesValue 860": clothesValue = 필요 코디 점수(제제 확인 2026-11-10). 시설 숫자는 뜻이 확실하지 않아 화면에 안 씀
+  const exNum = (r: Row, k: string) => { const m = String(r.extra || "").match(new RegExp(k + "\\s*(\\d+)")); return m ? +m[1] : null; };
+  const reqOf = (r: Row | undefined) => r ? { facN: exNum(r, "시설"), cv: exNum(r, "clothesValue"), title: r.title, person: r.person, text: r.text, conds: r.conds || [], extra: r.extra, oppo: r.oppo || [], rec: r.rec || [],
     full: r.full || [], part: (r.part || []).map((x: string) => { const [id, k] = String(x).split(":"); return { id: +id, k: +k }; }) } : null;
   const idBySite = new Map<string, number>(t.clothes.map((r) => [r.siteName, r.id]));
   const pairIds = (s: unknown) => String(s ?? "").replace(/\s*\+\d+\s*$/, "").split(",")
