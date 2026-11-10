@@ -1047,7 +1047,7 @@ async function toggleVerify(k){
 }
 /* 다른 가게 직원 배틀(사이트에만 있음, 노트 기록 없음): 참가비·등장 조건·보상만 */
 function btExtraList(){
-  return `<div class="btextra">${(DATA.battlesExtra||[]).map(b => `<div class="fccard ${btDone(btKeyX(b))?"btdone":""}"><div class="fc-h"><b class="fc-n">${esc(b.name)}</b>${btDoneBtn(btKeyX(b), b.name)}${b.site?.fee!=null?`<span class="fc-c">${nf0(b.site.fee)}G</span>`:""}</div>${btSiteBlock({...b.site, fee:null}, null, true)}</div>`).join("")}<div class="hint">다른 가게 직원 배틀은 사이트에만 있어 기록 칸은 없고, ✓로 승리만 체크해요 · 출처: KairoHistory 배틀</div></div>`;
+  return `<div class="btextra">${(DATA.battlesExtra||[]).map(b => `<div class="fccard ${btDone(btKeyX(b))?"btdone":""}"><div class="fc-h"><b class="fc-n">${esc(b.name)}</b>${btDoneBtn(btKeyX(b), b.name)}${b.site?.fee!=null?`<span class="fc-c">${nf0(b.site.fee)}G</span>`:""}</div>${btSiteBlock({...b.site, fee:null}, {noSrc:true})}</div>`).join("")}<div class="hint">다른 가게 직원 배틀은 사이트에만 있어 기록 칸은 없고, ✓로 승리만 체크해요 · 출처: KairoHistory 배틀</div></div>`;
 }
 function battleRow(){
   const sel = S.cloBt, o = S.btOpen !== false, on = !!S.cloBtView;
@@ -1064,18 +1064,34 @@ function btTotals(i){ const r = bRec(i), b = DATA.battles[i]; const sl = btSlots
   const sum = f => { const v = sl.reduce((a,x) => a + (Number(x[f])||0), 0); return v || null; }; return {q:sum("q"), c:sum("charm"), s:r.stat ?? null}; }
 const btTryRow = (t, n, b) => `<div class="bttry-row"><span class="k">${n+1}차</span><span class="btres">${[["q","품질"],["c","매력"],["s",esc(b.stat)]].map(([k,l]) => `<span class="v">${l} <b>${t[k]!=null?nf0(+t[k]):"-"}</b>${t.res?.[k]?`<i class="${t.res[k]==="성공"?"ok":"ng"}">${t.res[k]}</i>`:""}</span>`).join("")}</span><span class="d">${fmtT(t.t)}</span></div>${t.wear?.length ? `<div class="bttry-wear">${t.wear.map(x => `<div><span class="k">${(BT_SLOTS.find(s => s[0]===x.k)||[])[1]||""}</span><span class="n">${esc(x.n||"-")}</span><span class="v">품질 <b>${x.q!=null?nf0(+x.q):"-"}</b></span><span class="v">매력 <b>${x.charm!=null?nf0(+x.charm):"-"}</b></span></div>`).join("")}</div>` : ""}`;
 /* 전투 사이트 기준(제제 원칙: 기준값 먼저): 요청·의류 조건·기준값(품질·매력·능력치, 코디 합계)·참가비·보상, 일치 의류·추천 세트 */
-function btSiteBlock(st, mine, noSrc){
+/* 보상 글 정리: "해금 캐릭터: / 오립우 / 해금 시설: / 현관 / 해금 시설: / 귀여운 바닥" → 해금 캐릭터 오립우 · 해금 시설 현관, 귀여운 바닥 */
+function fmtWin(w){
+  if (!w) return null; const out = []; let cur = null;
+  String(w).split(/\s*\/\s*/).filter(Boolean).forEach(t => { const m = t.match(/^([^:]+):\s*(.*)$/);
+    if (m){ const k = m[1].trim(); cur = out.find(x => x.k === k) || (out.push({k, v:[]}), out[out.length-1]); if (m[2]) cur.v.push(m[2].trim()); }
+    else if (cur) cur.v.push(t.trim()); else out.push({k:"", v:[t.trim()]}); });
+  return out.map(x => (x.k ? `${x.k} ` : "") + x.v.join(", ")).join(" · ");
+}
+const btAppear = a => a ? String(a).replace(/^조건:\s*/, "").replace(/^배틀:\s*(.+)$/, "$1 승리 후") : null;
+const btStatName = (st, fb) => fb || (String(st?.request || "").match(/(\S+)\s*능력도/) || [])[1] || "능력치";
+/* 전투 상세(제제 2026-11-10 정리): 조건·보상 한 칸 / 맞는 의류·추천 세트·상대 코디 / 상대 기준과 내 기록(결과 버튼 포함).
+   예전 '내 전투 준비'(노트 조건·보상 옵션·점원 능력)와 합계 줄은 위와 겹쳐서 없앰. 요청 문장도 조건+능력과 같은 말이라 뺌 */
+function btSiteBlock(st, o = {}){
   if (!st) return "";
-  const values = st.values || [];
-  const labels = ["품질", "매력", "능력치"];
-  const comparisons = values.map((v,i) => v == null ? "" : `<div class="comparison-row"><span>${labels[i]}</span><strong>${nf0(v)}</strong><span>${mine?.[i] == null ? "미기록" : `내 ${nf0(mine[i])}`}</span>${mine?.[i] == null ? "" : `<span class="${mine[i]>=v?"bt-ok":"bt-ng"}">${mine[i]>=v?"+":"−"}${nf0(Math.abs(mine[i]-v))}</span>`}</div>`).join("");
+  const {mine, stat, res, i, noSrc} = o, rec = mine != null;
+  const values = st.values || [], sn = btStatName(st, stat);
+  const keys = ["q","c","s"], labels = ["품질", "매력", sn];
+  const rsBtn = (k, l) => { const v = res?.[k]; return `<button class="rs ${v==="성공"?"ok":v==="실패"?"ng":""}" data-btres="${i}|${k}" aria-label="${l} 결과: ${v||"미정"}">${v||"결과"}</button>`; };
+  const comparisons = values.map((v,n) => v == null ? "" : `<div class="comparison-row ${rec?"":"norec"}"><span>${labels[n]}</span><strong>${nf0(v)}</strong>${rec ? `<span>${mine[n] == null ? "-" : nf0(mine[n])}</span>${mine[n] == null ? "<span></span>" : `<span class="${mine[n]>=v?"bt-ok":"bt-ng"}">${mine[n]>=v?"+":"−"}${nf0(Math.abs(mine[n]-v))}</span>`}<span>${rsBtn(keys[n], labels[n])}</span>` : ""}</div>`).join("");
+  const cond = (st.clothCond || "").split(";").map(x => x.trim()).filter(Boolean).map(x => { const m = x.match(/^([^:]+):\s*(.*)$/); return m ? [m[1], m[2]] : ["조건", x]; });
+  const facts = factRows([...(cond.length ? [["의류 조건", cond.map(x => x[1]).join(" · ")]] : []), ...(values[2] != null || stat ? [["능력", sn]] : []), ["보상", fmtWin(st.win)], ["참가비", st.fee == null ? null : nf0(st.fee) + " G"], ["등장", btAppear(st.appear)]]);
   const clothes = [...new Map((st.clothes || []).map(x => ({x,c:CLO_BY_ID.get(x.id)})).filter(x => x.c).map(x => [x.c.id,x])).values()].sort((a,b) => cloDone(b.c)-cloDone(a.c));
   /* 추천 세트: 같은 번호의 코디 세트가 있으면 구성 옷과 완료 상태까지, 누르면 코디 > 코디 세트의 그 세트로(2026-11-09) */
   const sets = (st.sets || []).map(x => { const set = (DATA.sets || []).find(s => s.id===x.setId), inf = set && setInfo(set);
     if (!inf) return `<li>세트 ${x.setId} · ${esc(x.result || "")}</li>`;
     return `<li class="btset ${inf.left?"":"is-done"}"><button type="button" class="btset-h" data-gset="${x.setId}" title="코디 세트에서 보기"><strong>세트 ${x.setId}</strong><span>${esc([set.genre, set.sub].filter(Boolean).join(" · "))}</span><span>${esc(x.result || "")}</span><span class="btset-c">${inf.left?`${inf.done}/${inf.total} 완료`:"완성"} ›</span></button>
       <ul class="btset-items">${inf.items.map(it => it.c ? `<li><span class="inline-state ${cloDone(it.c)?"is-done":""}">${cloDone(it.c)?"✓":"○"}</span>${esc(cloName(it.c))}</li>` : `<li><span class="inline-state">·</span>${esc(it.name || "#"+it.id)}</li>`).join("")}</ul></li>`; });
-  return `<div class="battle-detail">${st.request?`<p class="battle-request">${esc(st.request)}</p>`:""}<div class="detail-layout"><div class="detail-column">${st.clothCond?infoSection("의류 조건",textList(st.clothCond.split(";").map(x=>x.trim()).filter(Boolean))):""}${comparisons?infoSection("상대 기준과 내 기록",`<div class="comparison-table"><div class="comparison-label"><span>항목</span><span>상대 기준</span><span>내 기록</span><span>차이</span></div>${comparisons}</div>`):""}${infoSection("보상과 참가 조건",factRows([["참가비",st.fee==null?null:nf0(st.fee)+" G"],["보상",st.win&&st.win.replace(/\s*\/\s*/g," · ")],["등장",st.appear]]))}</div><div class="detail-column">${clothes.length?infoSection(`조건에 맞는 의류 · ${clothes.filter(x=>cloDone(x.c)).length}/${clothes.length} 완료`,`<ul class="info-list">${clothes.map(({c})=>`<li><span class="inline-state ${cloDone(c)?"is-done":""}">${cloDone(c)?"✓":"○"}</span>${esc(cloName(c))}</li>`).join("")}</ul>`):""}${sets.length?infoSection("추천 세트",`<ul class="info-list btsets">${sets.join("")}</ul>`+`<p class="section-note">사이트 추천입니다. 세트 조건 결합은 미확정이에요. 세트를 누르면 코디 세트로 가요.</p>`):""}${st.opponentOutfit?referenceBlock(`opponent-${st.id}`,"상대 코디",`<p>${esc(st.opponentOutfit.replace(/\s*#\d+/g,""))}</p>`):""}</div></div>${noSrc?"":`<p class="source-caption">${st.preview?"화면 검토용 예시 수치":"기준값: KairoHistory 배틀·코디 세트"}</p>`}</div>`;
+  return `<div class="battle-detail"><div class="detail-layout"><div class="detail-column">${infoSection("조건과 보상", facts)}</div><div class="detail-column">${clothes.length?infoSection(`조건에 맞는 의류 · ${clothes.filter(x=>cloDone(x.c)).length}/${clothes.length} 완료`,`<ul class="info-list">${clothes.map(({c})=>`<li><span class="inline-state ${cloDone(c)?"is-done":""}">${cloDone(c)?"✓":"○"}</span>${esc(cloName(c))}</li>`).join("")}</ul>`):""}${sets.length?infoSection("추천 세트",`<ul class="info-list btsets">${sets.join("")}</ul>`+`<p class="section-note">사이트 추천입니다. 세트 조건 결합은 미확정이에요. 세트를 누르면 코디 세트로 가요.</p>`):""}${st.opponentOutfit?referenceBlock(`opponent-${st.id}`,"상대 코디",`<p>${esc(st.opponentOutfit.replace(/\s*#\d+/g,""))}</p>`):""}</div></div>${comparisons?`<div class="btcompare">${infoSection(rec?"상대 기준과 내 기록":"상대 기준",`<div class="comparison-table ${rec?"":"norec"}"><div class="comparison-label ${rec?"":"norec"}"><span>항목</span><span>상대</span>${rec?"<span>내 기록</span><span>차이</span><span>결과</span>":""}</div>${comparisons}</div>`)}</div>`:""}${noSrc?"":`<p class="source-caption">${st.preview?"화면 검토용 예시 수치":"기준값: KairoHistory 배틀·코디 세트"}</p>`}</div>`;
 }
 function battleCard(i){
   const b = DATA.battles[i], r = bRec(i), cs = bCond(i), noteOpen = !!S.btNote;
@@ -1083,16 +1099,14 @@ function battleCard(i){
   const slots = btSlots(i).map(([k,l,j]) => { const v = r.slots?.[k] || {}; const n = v.n ?? (b.ex[j]||""); return {k, l, n, charm:v.charm, q:v.q}; }).filter(x => x.n || x.charm || x.q);
   const sum = slots.reduce((a,x) => a + (Number(x.charm)||0), 0), qsum = slots.reduce((a,x) => a + (Number(x.q)||0), 0);
   const res = r.res || {}, ov = btOverall(res) || (r.result ? {cls:r.result==="성공"?"green":"red", t:r.result} : null);
-  const resBtn = (key, label, v) => `<span class="v">${label} <b>${v!=null&&v!==""?nf0(+v):"-"}</b><button class="rs ${res[key]==="성공"?"ok":res[key]==="실패"?"ng":""}" data-btres="${i}|${key}" aria-label="${label} 결과: ${res[key]||"미정"}">${res[key]==="성공"?"성공":res[key]==="실패"?"실패":"결과"}</button></span>`;
   const tries = r.tries || [], prev = r.prev || [];
   return `<div class="fccard btcard">
     <div class="fc-h"><b class="fc-n">${esc(b.name)}</b>
       <button class="iconbtn act" data-sheet="bt|${i}" aria-label="전투 기록 수정">${ICON.pen}</button>${btDoneBtn(i, b.name)}${b.note?`<button class="iconbtn act ${noteOpen?"on":""}" data-act="btnote" aria-label="코멘트 보기" aria-expanded="${noteOpen}">${ICON.note}</button>`:""}
       ${ov?`<span class="tag ${ov.cls}">${ov.t}</span>`:""}<span class="fc-c">추천 ${rec}벌</span></div>
-    ${btSiteBlock(b.site, [qsum||null, sum||null, r.stat ?? null])}
-    <div class="battle-notebook">${infoSection("내 전투 준비",factRows([["노트 조건",cs.length?cs.join(" · "):"조건 없음"],["보상 옵션",b.reward],["점원 능력",b.stat]]))}</div>
-    ${slots.length || r.stat || tries.length || prev.length || r.res ? `<div class="btslots">${slots.map(x => `<div class="btslot"><span class="k">${x.l}</span><span class="n">${esc(x.n||"-")}</span>${x.q?`<span class="v">품질 <b>${nf0(+x.q)}</b></span>`:""}${x.charm?`<span class="v">매력 <b>${nf0(+x.charm)}</b></span>`:""}</div>`).join("")}
-      <div class="btslot sum"><span class="k">합계</span><span class="btres">${resBtn("q","품질",qsum||"")}${resBtn("c","매력",sum||"")}${resBtn("s",esc(b.stat),r.stat)}</span><button class="btn sm ghost bttry" data-bttry="${i}" title="지금 합계와 결과를 아래 기록에 남기고 결과를 비워요">재시도</button></div>
+    ${btSiteBlock(b.site, {mine:[qsum||null, sum||null, r.stat ?? null], stat:b.stat, res, i})}
+    ${slots.length || r.stat || tries.length || prev.length || r.res ? `<div class="btslots"><div class="btslots-h">내 코디</div>${slots.map(x => `<div class="btslot"><span class="k">${x.l}</span><span class="n">${esc(x.n||"-")}</span>${x.q?`<span class="v">품질 <b>${nf0(+x.q)}</b></span>`:""}${x.charm?`<span class="v">매력 <b>${nf0(+x.charm)}</b></span>`:""}</div>`).join("")}
+      <div class="btslot sum"><span class="hint">합계와 결과는 위 표에 있어요</span><button class="btn sm ghost bttry" data-bttry="${i}" title="지금 합계와 결과를 아래 기록에 남기고 결과를 비워요">재시도</button></div>
       ${tries.length || prev.length ? `<button type="button" class="linkbtn" data-btrec="${i}" aria-expanded="${!!S.btRecOpen?.[i]}">${S.btRecOpen?.[i]?"기록 접기":`시도 기록 보기 ${tries.length + prev.length}건`}</button>` : ""}
       ${(tries.length || prev.length) && S.btRecOpen?.[i] ? `<div class="bttries">${tries.map((t,n) => btTryRow(t, n, b)).join("")}${prev.length ? `<div class="prevfold"><button type="button" class="prevbtn" data-btprev="${i}" aria-expanded="${!!S.btPrevOpen?.[i]}">이전 회차 기록 ${prev.length}건 ${S.btPrevOpen?.[i]?"접기 ▴":"보기 ▾"}</button></div>${S.btPrevOpen?.[i] ? prev.map((t,n) => btTryRow(t, n, b)).join("") : ""}` : ""}</div>` : ""}
     </div>` : ""}

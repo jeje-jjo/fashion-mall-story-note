@@ -544,3 +544,12 @@ nav.tabs { background: var(--card); }
 .chip.fcdone svg { width: 12px; height: 12px; margin-right: 3px; vertical-align: -1px; }
 .btextra .fccard.btdone > :not(.fc-h) { opacity: .45; }
 .btextra .fccard.btdone .fc-n { color: var(--fg3); }
+
+/* 전투 상세 정리(제제 2026-11-10): 표에 결과 버튼 칸 추가, 기록 없는 표는 두 칸 */
+:root:root .btcompare { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+:root:root .comparison-label, :root:root .comparison-row { grid-template-columns: minmax(48px,1fr) 1fr 1fr 1fr auto; }
+:root:root .comparison-label.norec, :root:root .comparison-row.norec { grid-template-columns: 1fr 1fr; }
+:root:root .comparison-label > span:last-child:not(:nth-child(2)) { min-width: 44px; }
+:root:root .comparison-row .rs { font-size: 11px; padding: 2px 8px; }
+:root:root .btslots-h { font-size: 12.5px; font-weight: 650; color: var(--fg2); margin: 4px 0 6px; }
+:root:root .btslot.sum .hint { flex: 1; font-size: 11.5px; }
