@@ -529,7 +529,7 @@ const bGenreIdx = c => { const i = BATTLE_GENRE.indexOf(c.c); return i >= 0 && D
 const autoBattle = c => { const i = bGenreIdx(c); if (i < 0) return -1; const cs = bCond(i); return cs.length && cs.every(t => termHit(c, t)) ? i : -1; };
 const battleOf = c => { const m = S.cbattle[c.id]; if (m) return m.on ? DATA.battles.findIndex(b => b.name===m.name) : -1; return autoBattle(c); };
 const bRate = (c, i) => { const cs = bCond(i); return cs.length ? `${cs.filter(t => termHit(c, t)).length}/${cs.length}` : ""; };
-const optLine = c => { const o = optOf(c); const bi = battleOf(c); const bt = bi >= 0 ? semTag("battle", btWorn(c) ? "전투 · ⚔️" : `전투${bRate(c, bi) ? " · " + bRate(c, bi) : ""}`) : "";
+const optLine = c => { const o = optOf(c); const bi = battleOf(c); const bt = bi >= 0 ? semTag("battle", btWorn(c) ? `전투 · ${ICON.sword}` : `전투${bRate(c, bi) ? " · " + bRate(c, bi) : ""}`) : "";
   if (!o || (!o.guest && !o.like && !o.likeType)) return bt ? `<div class="optline">${bt}</div>` : "";
   const likeTag = o.like ? (o.likeType==="아이템" ? semTag("item", `${esc(o.likeDetail||SEED)}(${esc(o.like)})`)
     : o.likeType==="신규 매장" ? semTag("shop", `${esc(o.likeDetail||"매장 미정")}(${esc(o.like)})`)
@@ -1396,7 +1396,7 @@ function viewClo(){
         <div class="row ${d?"done":""} ${btOn && btHits(c)===btCs.length && btCs.length ? "btfull" : ""}">
           ${tr ? `<button data-tclo="${c.id}" aria-pressed="${!!d}" aria-label="${esc(cloName(c))} 완료 바꾸기">${ck(d)}</button>` : `<span style="width:26px;flex:none"></span>`}
           <button class="body" data-oclo="${c.id}" aria-expanded="${opened}" style="text-align:left">
-            <div class="t"><span class="item-number">#${String(c.id).padStart(3,"0")}</span><span class="n">${esc(cloName(c))}</span>${catTag(c.c)}${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}${rowOptTags(c)}${isChal(c)?`<span class="tag chal">${btWorn(c) ? "챌린지 · ⚔️" : "챌린지"}</span>`:""}${btOn ? btMatchTag(c) : ""}${Object.keys(S.clofix[c.id]||{}).length?semTag("fix","수정됨"):""}${want?`<span class="tag blue">원함</span>`:shop?`<span class="tag amber">상점</span>`:""}</div>
+            <div class="t"><span class="item-number">#${String(c.id).padStart(3,"0")}</span><span class="n">${esc(cloName(c))}</span>${catTag(c.c)}${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}${rowOptTags(c)}${isChal(c)?`<span class="tag chal">${btWorn(c) ? `챌린지 · ${ICON.sword}` : "챌린지"}</span>`:""}${btOn ? btMatchTag(c) : ""}${Object.keys(S.clofix[c.id]||{}).length?semTag("fix","수정됨"):""}${want?`<span class="tag blue">원함</span>`:shop?`<span class="tag amber">상점</span>`:""}</div>
             <div class="s"><span class="sspec">${[c.p,c.m,c.o].filter(Boolean).map(esc).join(" · ")}${X?` — ${esc(X)}`:""}</span>${cloUseTags(c)}</div>
           </button>
 
