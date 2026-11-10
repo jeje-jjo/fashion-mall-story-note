@@ -1,0 +1,18 @@
+{
+  "baseCommit": "8c1c218",
+  "viewports": [
+    320,
+    390,
+    768,
+    1440
+  ],
+  "horizontalOverflow": false,
+  "themeSwitchPreserves": [
+    "search",
+    "expanded detail",
+    "progress",
+    "content"
+  ],
+  "editorOpenClose": true,
+  "pageErrors": []
+}

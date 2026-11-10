@@ -7,10 +7,15 @@ export function metricStrip(rows, label = "주요 수치") {
   return `<dl class="metric-strip" aria-label="${safeText(label)}">${rows.filter(([,v]) => v != null && v !== "").map(([k,v]) => `<div><dt>${safeText(k)}</dt><dd>${safeText(v)}</dd></div>`).join("")}</dl>`;
 }
 
+function previewFactTags(key, value) {
+  if (import.meta.env.MODE !== "preview" || !["옷본", "재료", "옵션", "색", "계절", "태그", "종류", "손님 성향"].includes(key)) return safeText(value);
+  return String(value).split("·").map(v => `<span class="studio-fact-tag">${safeText(v.trim())}</span>`).join(" ");
+}
+
 export function factRows(rows) {
   rows = rows.filter(([,v]) => v != null && v !== "");
   if (!rows.length) return "";
-  return `<dl class="fact-rows">${rows.filter(([,v]) => v != null && v !== "").map(([k,v]) => `<div><dt>${safeText(k)}</dt><dd>${safeText(v)}</dd></div>`).join("")}</dl>`;
+  return `<dl class="fact-rows">${rows.filter(([,v]) => v != null && v !== "").map(([k,v]) => `<div><dt>${safeText(k)}</dt><dd>${previewFactTags(k,v)}</dd></div>`).join("")}</dl>`;
 }
 
 export function infoSection(title, body, className = "") {

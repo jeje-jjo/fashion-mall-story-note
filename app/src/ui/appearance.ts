@@ -6,6 +6,7 @@ export const SKINS = [
 ] as const;
 
 export function validSkin(value: unknown): string {
+  if (import.meta.env.MODE === "preview" && value === "studio") return "studio";
   return SKINS.some(skin => skin.id === value) ? String(value) : "classic";
 }
 
