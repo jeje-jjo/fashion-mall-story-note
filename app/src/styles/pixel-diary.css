@@ -586,3 +586,12 @@ nav.tabs { background: var(--card); }
 .reqrow-c { color: var(--fg3); font-size: 12px; padding-top: 9px; }
 :root:root .request-grid .request-entry.compact { padding: 2px 0; }
 :root:root .request-entry.compact .reqrow { padding: 4px 0; }
+
+/* 목표치 빠른 보기(2026-11-10) */
+.goalpanel .goal-b { padding: 8px 0; border-top: 1px solid var(--line); }
+.goalpanel .goal-row { display: grid; grid-template-columns: 88px auto 1fr; gap: 8px; align-items: baseline; padding: 3px 0; font-size: 13px; font-variant-numeric: tabular-nums; }
+.goalpanel .goal-row > b { text-align: right; min-width: 52px; }
+.goalpanel .goal-row .k { color: var(--fg2); font-size: 12.5px; }
+.goalpanel .goal-row .w { color: var(--fg3); font-size: 12px; }
+.goalpanel .goal-row .w b { color: var(--fg); }
+.goalpanel .goal-b:first-of-type .goal-row { grid-template-columns: 88px 1fr; }

@@ -2716,6 +2716,29 @@ function patchKeep(oldEl, newEl, keep){
   }
   return true;
 }
+/* 목표치 빠른 보기(제제 2026-11-10): 챌린지 배틀 + 패션 체크를 다 깨려면 필요한 최소값.
+   배틀 품질·매력, 패션 체크 코디 점수는 입은 옷 합계, 직원 능력은 그 배틀의 능력(접객·속도·솜씨) 하나. 승리·완료 체크한 것은 '남은 것'에서 빠짐 */
+function goalPanel(){
+  const bts = DATA.battles.map((b, i) => ({i, b, v: b.site?.values || [], done: btDone(i)})).filter(x => x.v.length);
+  const fcs = DATA.checks.map((c, oi) => ({oi, c, cv: c.site?.req?.cv, done: fcDone(oi)})).filter(x => x.cv != null);
+  const left = a => a.filter(x => !x.done);
+  const mx = (a, f) => a.reduce((m, x) => f(x) != null && (!m || f(x) > f(m)) ? x : m, null);
+  const stats = [...new Set(bts.map(x => x.b.stat).filter(Boolean))];
+  const row = (k, x, val, who) => `<div class="goal-row"><span class="k">${k}</span><b>${val != null ? nf0(val) : "-"}</b><span class="w">${x ? esc(who(x)) : "모두 끝"}</span></div>`;
+  const block = (title, B, F) => `<div class="goal-b"><div class="sublbl" style="margin:0 0 4px">${title}</div>
+    ${row("품질 합계", mx(B, x => x.v[0]), mx(B, x => x.v[0])?.v[0], x => bShort(x.i))}
+    ${row("매력 합계", mx(B, x => x.v[1]), mx(B, x => x.v[1])?.v[1], x => bShort(x.i))}
+    ${row("코디 점수", mx(F, x => x.cv), mx(F, x => x.cv)?.cv, x => `패션 체크 ${x.oi+1}`)}
+    ${stats.map(st => { const a = B.filter(x => x.b.stat === st), m = mx(a, x => x.v[2]); return row(st === "-" ? "직원 특기" : `직원 ${st}`, m, m?.v[2], x => bShort(x.i)); }).join("")}</div>`;
+  const nb = left(bts)[0], nf = left(fcs)[0];
+  const next = `<div class="goal-b"><div class="sublbl" style="margin:0 0 4px">바로 다음</div>
+    ${nb ? `<div class="goal-row"><span class="k">${esc(bShort(nb.i))}</span><span class="w">품질 <b>${nf0(nb.v[0])}</b> · 매력 <b>${nf0(nb.v[1])}</b> · ${esc(!nb.b.stat || nb.b.stat === "-" ? "특기 능력" : nb.b.stat)} <b>${nf0(nb.v[2])}</b></span></div>` : ""}
+    ${nf ? `<div class="goal-row"><span class="k">패션 체크 ${nf.oi+1}</span><span class="w">코디 점수 <b>${nf0(nf.cv)}</b>${(nf.c.site?.req?.conds||[]).length ? ` · ${esc(nf.c.site.req.conds.map(x => x.replace(/^[^:]+:\s*/, "")).join(" + "))}` : ""}</span></div>` : ""}
+    ${!nb && !nf ? `<div class="hint">챌린지와 패션 체크를 모두 끝냈어요</div>` : ""}</div>`;
+  return `<div class="goalpanel"><div class="sublbl" style="margin:0 0 8px">목표치 <span class="hint">챌린지 ${bts.filter(x => x.done).length}/${bts.length} · 패션 체크 ${fcs.filter(x => x.done).length}/${fcs.length} · 합계 기준</span></div>
+    ${next}${block("남은 것 전부 깨려면(최대값)", left(bts), left(fcs))}${bts.some(x => x.done) || fcs.some(x => x.done) ? block("전체 기준(끝낸 것 포함)", bts, fcs) : ""}
+    <div class="hint">품질·매력·코디 점수는 입은 옷 합계, 직원 능력은 출전 직원 한 명 기준 · 출처: KairoHistory 배틀·패션 체크</div></div>`;
+}
 /* 스크롤 위치 기억(제제 2026-11-10): 폰에서 게임과 오가면 페이지가 다시 열려 맨 위로 가던 문제.
    탭별 위치를 이 기기에 저장해 두고, 다시 열렸을 때(2시간 안) 같은 탭이면 데이터가 다 그려진 뒤 그 위치로 */
 const SCR_KEY = "fms-scroll", SCR_BOOT = Date.now();
@@ -2748,7 +2771,7 @@ function render(){
   if (scrPending) requestAnimationFrame(scrRestore);
   const qk = $("#quick");
   { const rb = document.querySelector('#fab [data-q="rank"]'); if (rb){ const R = curRank(); rb.hidden = R != null && R >= RANK_MAX; rb.querySelector(".fabrank").textContent = R != null ? `R${R}` : "R?"; if (rb.hidden && S.quick==="rank") S.quick = null; } }
-  if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="memo" ? homeMemo(true) : S.quick==="rank" ? rankPanel() : upFinder(true, true)}</div>` : ""; qk.hidden = !S.quick; }
+  if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="memo" ? homeMemo(true) : S.quick==="rank" ? rankPanel() : S.quick==="goal" ? goalPanel() : upFinder(true, true)}</div>` : ""; qk.hidden = !S.quick; }
   document.querySelectorAll("#fab [data-q]").forEach(b => { const on = S.quick===b.dataset.q; b.classList.toggle("on", on); b.setAttribute("aria-expanded", on); });
   const rp = $("#recentPanel"); if (rp){ rp.innerHTML = S.recentOpen ? recentPanel() : ""; rp.hidden = !S.recentOpen; }
   $("#recentBtn")?.classList.toggle("on", !!S.recentOpen); $("#recentBtn")?.setAttribute("aria-expanded", !!S.recentOpen);
