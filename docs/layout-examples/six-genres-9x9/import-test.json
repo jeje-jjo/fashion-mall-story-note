@@ -1,0 +1,53 @@
+{
+  "roundtrip": true,
+  "plans": [
+    {
+      "name": "쿨 · 마네킹 총 10개 · 외곽 9개 일렬 9×9",
+      "imported": true,
+      "objects": 27,
+      "synergy": 120,
+      "expected": 120,
+      "guideDesks": 0
+    },
+    {
+      "name": "큐트 · 마네킹 총 10개 · 외곽 9개 일렬 9×9",
+      "imported": true,
+      "objects": 27,
+      "synergy": 120,
+      "expected": 120,
+      "guideDesks": 0
+    },
+    {
+      "name": "성숙 · 마네킹 총 10개 · 외곽 9개 일렬 9×9",
+      "imported": true,
+      "objects": 27,
+      "synergy": 120,
+      "expected": 120,
+      "guideDesks": 0
+    },
+    {
+      "name": "레트로 · 마네킹 총 10개 · 외곽 9개 일렬 9×9",
+      "imported": true,
+      "objects": 27,
+      "synergy": 120,
+      "expected": 120,
+      "guideDesks": 0
+    },
+    {
+      "name": "하드 · 마네킹 총 10개 · 외곽 9개 일렬 9×9",
+      "imported": true,
+      "objects": 27,
+      "synergy": 120,
+      "expected": 120,
+      "guideDesks": 0
+    },
+    {
+      "name": "서브컬처 · 마네킹 총 10개 · 외곽 9개 일렬 9×9",
+      "imported": true,
+      "objects": 27,
+      "synergy": 120,
+      "expected": 120,
+      "guideDesks": 0
+    }
+  ]
+}
