@@ -1,59 +1,36 @@
-/** 직접 설계한 16×16 도트 아이콘. 정수 격자의 면만 사용해 작은 화면에서도 또렷하게 표시한다. */
-const marks: Record<string, string> = {
-  clo: "M4 2h2v1H4zM10 2h2v1H10zM3 3h3v1H3zM10 3h3v1H10zM2 4h2v1H2zM6 4h4v1H6zM12 4h2v1H12zM1 5h2v1H1zM13 5h2v1H13zM1 6h3v1H1zM12 6h3v1H12zM3 7h1v1H3zM12 7h1v1H12zM3 8h1v1H3zM12 8h1v1H12zM3 9h1v1H3zM12 9h1v1H12zM3 10h1v1H3zM12 10h1v1H12zM3 11h1v1H3zM12 11h1v1H12zM3 12h1v1H3zM12 12h1v1H12zM3 13h10v1H3z",
-  fac: "M4 2h8v1H4zM3 3h10v1H3zM2 4h12v1H2zM2 5h1v1H2zM5 5h2v1H5zM9 5h2v1H9zM13 5h1v1H13zM2 7h12v1H2zM3 8h10v1H3zM3 9h1v1H3zM5 9h2v1H5zM9 9h2v1H9zM12 9h1v1H12zM3 10h1v1H3zM5 10h2v1H5zM12 10h1v1H12zM3 11h1v1H3zM12 11h1v1H12zM3 12h1v1H3zM12 12h1v1H12zM3 13h6v1H3zM11 13h2v1H11z",
-  coord: "M4 2h4v1H4zM3 3h1v1H3zM8 3h1v1H8zM10 3h3v1H10zM3 4h1v1H3zM8 4h1v1H8zM10 4h1v1H10zM12 4h1v1H12zM3 5h6v1H3zM10 5h3v1H10zM4 6h4v1H4zM11 7h2v1H11zM3 9h6v1H3zM11 9h2v1H11zM2 10h8v1H2zM12 10h2v1H12zM1 11h2v1H1zM9 11h2v1H9zM12 11h2v1H12zM1 12h2v1H1zM9 12h2v1H9zM12 12h2v1H12zM1 13h10v1H1zM12 13h2v1H12z",
-  tool: "M3 2h10v1H3zM3 3h1v1H3zM5 3h1v1H5zM12 3h1v1H12zM2 4h4v1H2zM12 4h1v1H12zM3 5h1v1H3zM5 5h1v1H5zM7 5h4v1H7zM12 5h1v1H12zM3 6h1v1H3zM5 6h1v1H5zM12 6h1v1H12zM2 7h4v1H2zM12 7h1v1H12zM3 8h1v1H3zM5 8h1v1H5zM7 8h4v1H7zM12 8h1v1H12zM3 9h1v1H3zM5 9h1v1H5zM12 9h1v1H12zM2 10h4v1H2zM12 10h1v1H12zM3 11h1v1H3zM5 11h1v1H5zM7 11h3v1H7zM12 11h1v1H12zM3 12h1v1H3zM5 12h1v1H5zM12 12h1v1H12zM3 13h10v1H3z",
-  shop: "M3 2h11v1H3zM3 3h1v1H3zM5 3h1v1H5zM13 3h1v1H13zM2 4h4v1H2zM8 4h3v1H8zM13 4h1v1H13zM3 5h1v1H3zM5 5h1v1H5zM10 5h1v1H10zM13 5h1v1H13zM3 6h1v1H3zM5 6h1v1H5zM10 6h1v1H10zM13 6h1v1H13zM2 7h4v1H2zM9 7h1v1H9zM13 7h1v1H13zM3 8h1v1H3zM5 8h1v1H5zM8 8h1v1H8zM10 8h1v1H10zM13 8h1v1H13zM3 9h1v1H3zM5 9h1v1H5zM7 9h1v1H7zM11 9h1v1H11zM13 9h1v1H13zM2 10h4v1H2zM7 10h5v1H7zM13 10h1v1H13zM3 11h1v1H3zM5 11h9v1H5zM3 12h1v1H3zM5 12h1v1H5zM13 12h1v1H13zM3 13h11v1H3z",
-  check: "M12 4h2v1H12zM11 5h3v1H11zM10 6h3v1H10zM9 7h3v1H9zM2 8h2v1H2zM8 8h3v1H8zM2 9h3v1H2zM7 9h3v1H7zM3 10h6v1H3zM4 11h4v1H4zM5 12h2v1H5z",
-  ok: "M12 4h2v1H12zM11 5h3v1H11zM10 6h3v1H10zM9 7h3v1H9zM2 8h2v1H2zM8 8h3v1H8zM2 9h3v1H2zM7 9h3v1H7zM3 10h6v1H3zM4 11h4v1H4zM5 12h2v1H5z",
-  chev: "M5 2h2v1H5zM5 3h3v1H5zM6 4h3v1H6zM7 5h3v1H7zM8 6h3v1H8zM9 7h3v1H9zM9 8h3v1H9zM8 9h3v1H8zM7 10h3v1H7zM6 11h3v1H6zM5 12h3v1H5zM5 13h2v1H5z",
-  clock: "M5 1h6v1H5zM3 2h2v1H3zM11 2h2v1H11zM2 3h1v1H2zM13 3h1v1H13zM2 4h1v1H2zM7 4h1v1H7zM13 4h1v1H13zM1 5h1v1H1zM7 5h1v1H7zM14 5h1v1H14zM1 6h1v1H1zM7 6h1v1H7zM14 6h1v1H14zM1 7h1v1H1zM7 7h1v1H7zM14 7h1v1H14zM1 8h1v1H1zM7 8h4v1H7zM14 8h1v1H14zM1 9h1v1H1zM14 9h1v1H14zM1 10h1v1H1zM14 10h1v1H14zM2 11h1v1H2zM13 11h1v1H13zM2 12h1v1H2zM13 12h1v1H13zM3 13h2v1H3zM11 13h2v1H11zM5 14h6v1H5z",
-  log: "M5 1h6v1H5zM3 2h2v1H3zM11 2h2v1H11zM2 3h1v1H2zM13 3h1v1H13zM2 4h1v1H2zM7 4h1v1H7zM13 4h1v1H13zM1 5h1v1H1zM7 5h1v1H7zM14 5h1v1H14zM1 6h1v1H1zM7 6h1v1H7zM14 6h1v1H14zM1 7h1v1H1zM7 7h1v1H7zM14 7h1v1H14zM1 8h1v1H1zM7 8h4v1H7zM14 8h1v1H14zM1 9h1v1H1zM14 9h1v1H14zM1 10h1v1H1zM14 10h1v1H14zM2 11h1v1H2zM13 11h1v1H13zM2 12h1v1H2zM13 12h1v1H13zM3 13h2v1H3zM11 13h2v1H11zM5 14h6v1H5z",
-  cal: "M5 1h1v1H5zM10 1h1v1H10zM5 2h1v1H5zM10 2h1v1H10zM2 3h12v1H2zM2 4h1v1H2zM5 4h1v1H5zM10 4h1v1H10zM13 4h1v1H13zM2 5h1v1H2zM13 5h1v1H13zM2 6h12v1H2zM2 7h1v1H2zM13 7h1v1H13zM2 8h1v1H2zM13 8h1v1H13zM2 9h1v1H2zM5 9h2v1H5zM9 9h2v1H9zM13 9h1v1H13zM2 10h1v1H2zM13 10h1v1H13zM2 11h1v1H2zM5 11h2v1H5zM13 11h1v1H13zM2 12h1v1H2zM13 12h1v1H13zM2 13h12v1H2z",
-  upg: "M7 2h3v1H7zM6 3h5v1H6zM5 4h7v1H5zM4 5h5v1H4zM10 5h3v1H10zM3 6h3v1H3zM7 6h2v1H7zM11 6h3v1H11zM3 7h2v1H3zM7 7h2v1H7zM12 7h2v1H12zM7 8h2v1H7zM7 9h2v1H7zM7 10h2v1H7zM7 11h2v1H7zM2 12h2v1H2zM12 12h2v1H12zM2 13h2v1H2zM12 13h2v1H12zM2 14h12v1H2z",
-  up: "M7 2h3v1H7zM6 3h5v1H6zM5 4h7v1H5zM4 5h5v1H4zM10 5h3v1H10zM3 6h3v1H3zM7 6h2v1H7zM11 6h3v1H11zM3 7h2v1H3zM7 7h2v1H7zM12 7h2v1H12zM7 8h2v1H7zM7 9h2v1H7zM7 10h2v1H7zM7 11h2v1H7zM7 12h2v1H7zM7 13h2v1H7z",
-  target: "M4 1h8v1H4zM2 2h2v1H2zM12 2h2v1H12zM2 3h2v1H2zM12 3h2v1H12zM1 4h1v1H1zM14 4h1v1H14zM1 5h1v1H1zM5 5h6v1H5zM14 5h1v1H14zM1 6h1v1H1zM5 6h1v1H5zM10 6h1v1H10zM14 6h1v1H14zM1 7h1v1H1zM5 7h1v1H5zM7 7h2v1H7zM10 7h1v1H10zM14 7h1v1H14zM1 8h1v1H1zM5 8h1v1H5zM7 8h2v1H7zM10 8h1v1H10zM14 8h1v1H14zM1 9h1v1H1zM5 9h1v1H5zM10 9h1v1H10zM14 9h1v1H14zM1 10h1v1H1zM5 10h6v1H5zM14 10h1v1H14zM1 11h1v1H1zM14 11h1v1H14zM2 12h2v1H2zM12 12h2v1H12zM2 13h2v1H2zM12 13h2v1H12zM4 14h8v1H4z",
-  warn: "M7 1h2v1H7zM6 2h1v1H6zM9 2h1v1H9zM6 3h1v1H6zM9 3h1v1H9zM5 4h1v1H5zM10 4h1v1H10zM5 5h1v1H5zM7 5h2v1H7zM10 5h1v1H10zM4 6h1v1H4zM7 6h2v1H7zM11 6h1v1H11zM4 7h1v1H4zM7 7h2v1H7zM11 7h1v1H11zM3 8h1v1H3zM7 8h2v1H7zM12 8h1v1H12zM3 9h1v1H3zM7 9h2v1H7zM12 9h1v1H12zM2 10h1v1H2zM13 10h1v1H13zM2 11h1v1H2zM13 11h1v1H13zM1 12h1v1H1zM7 12h2v1H7zM14 12h1v1H14zM1 13h1v1H1zM14 13h1v1H14zM1 14h14v1H1z",
-  carry: "M4 2h7v1H4zM11 3h2v1H11zM14 3h1v1H14zM13 4h2v1H13zM13 5h2v1H13zM13 6h2v1H13zM10 7h5v1H10zM1 8h5v1H1zM1 9h2v1H1zM1 10h2v1H1zM1 11h2v1H1zM1 12h1v1H1zM3 12h2v1H3zM5 13h7v1H5z",
-  dots: "M2 7h2v1H2zM7 7h2v1H7zM12 7h2v1H12zM2 8h2v1H2zM7 8h2v1H7zM12 8h2v1H12z",
-  pen: "M11 2h2v1H11zM12 3h2v1H12zM12 4h2v1H12zM9 5h1v1H9zM11 5h2v1H11zM8 6h5v1H8zM7 7h5v1H7zM6 8h5v1H6zM5 9h5v1H5zM4 10h5v1H4zM3 11h5v1H3zM2 12h1v1H2zM5 12h2v1H5zM2 13h4v1H2zM7 14h7v1H7z",
-  tagic: "M2 2h7v1H2zM2 3h1v1H2zM9 3h1v1H9zM2 4h1v1H2zM4 4h2v1H4zM10 4h1v1H10zM2 5h1v1H2zM4 5h2v1H4zM11 5h1v1H11zM2 6h1v1H2zM12 6h1v1H12zM2 7h1v1H2zM13 7h1v1H13zM2 8h1v1H2zM14 8h1v1H14zM3 9h1v1H3zM13 9h1v1H13zM4 10h1v1H4zM12 10h1v1H12zM5 11h1v1H5zM11 11h1v1H11zM6 12h1v1H6zM10 12h1v1H10zM7 13h1v1H7zM9 13h1v1H9zM8 14h1v1H8z",
-  sword: "M2 2h2v1H2zM12 2h2v1H12zM2 3h3v1H2zM11 3h3v1H11zM2 4h4v1H2zM10 4h3v1H10zM4 5h3v1H4zM9 5h3v1H9zM5 6h6v1H5zM6 7h4v1H6zM6 8h4v1H6zM5 9h6v1H5zM2 10h1v1H2zM4 10h3v1H4zM9 10h3v1H9zM13 10h1v1H13zM3 11h3v1H3zM10 11h3v1H10zM3 12h2v1H3zM11 12h2v1H11zM1 13h2v1H1zM5 13h1v1H5zM10 13h1v1H10zM13 13h2v1H13zM1 14h2v1H1zM13 14h2v1H13z",
-  spark: "M7 1h2v1H7zM7 2h2v1H7zM6 3h4v1H6zM6 4h4v1H6zM5 5h6v1H5zM3 6h10v1H3zM1 7h14v1H1zM1 8h14v1H1zM3 9h10v1H3zM5 10h6v1H5zM6 11h4v1H6zM6 12h4v1H6zM7 13h2v1H7zM7 14h2v1H7z",
-  star: "M7 1h2v1H7zM6 2h4v1H6zM6 3h4v1H6zM5 4h6v1H5zM1 5h14v1H1zM2 6h12v1H2zM3 7h10v1H3zM4 8h8v1H4zM4 9h8v1H4zM3 10h10v1H3zM3 11h4v1H3zM9 11h4v1H9zM2 12h3v1H2zM11 12h3v1H11zM2 13h2v1H2zM12 13h2v1H12z",
-  info: "M5 1h6v1H5zM3 2h2v1H3zM11 2h2v1H11zM2 3h1v1H2zM13 3h1v1H13zM2 4h1v1H2zM7 4h2v1H7zM13 4h1v1H13zM1 5h1v1H1zM7 5h2v1H7zM14 5h1v1H14zM1 6h1v1H1zM14 6h1v1H14zM1 7h1v1H1zM7 7h2v1H7zM14 7h1v1H14zM1 8h1v1H1zM7 8h2v1H7zM14 8h1v1H14zM1 9h1v1H1zM7 9h2v1H7zM14 9h1v1H14zM1 10h1v1H1zM7 10h2v1H7zM14 10h1v1H14zM2 11h1v1H2zM7 11h2v1H7zM13 11h1v1H13zM2 12h1v1H2zM13 12h1v1H13zM3 13h2v1H3zM11 13h2v1H11zM5 14h6v1H5z",
-  note: "M2 2h12v1H2zM2 3h1v1H2zM13 3h1v1H13zM2 4h1v1H2zM13 4h1v1H13zM2 5h1v1H2zM5 5h6v1H5zM13 5h1v1H13zM2 6h1v1H2zM13 6h1v1H13zM2 7h1v1H2zM13 7h1v1H13zM2 8h1v1H2zM5 8h4v1H5zM13 8h1v1H13zM2 9h1v1H2zM13 9h1v1H13zM2 10h1v1H2zM13 10h1v1H13zM2 11h12v1H2zM2 12h2v1H2zM2 13h1v1H2z",
-  x: "M3 3h2v1H3zM11 3h2v1H11zM3 4h3v1H3zM10 4h3v1H10zM4 5h3v1H4zM9 5h3v1H9zM5 6h6v1H5zM6 7h4v1H6zM6 8h4v1H6zM5 9h6v1H5zM4 10h3v1H4zM9 10h3v1H9zM3 11h3v1H3zM10 11h3v1H10zM3 12h2v1H3zM11 12h2v1H11z",
-  trophy: "M5 2h6v1H5zM2 3h4v1H2zM10 3h4v1H10zM2 4h1v1H2zM4 4h2v1H4zM10 4h2v1H10zM13 4h1v1H13zM2 5h1v1H2zM4 5h2v1H4zM10 5h2v1H10zM13 5h1v1H13zM2 6h4v1H2zM10 6h4v1H10zM3 7h10v1H3zM6 8h4v1H6zM7 9h2v1H7zM7 10h2v1H7zM7 11h2v1H7zM5 12h6v1H5zM4 13h8v1H4z",
-  home: "M7 2h2v1H7zM6 3h4v1H6zM5 4h6v1H5zM4 5h3v1H4zM9 5h3v1H9zM3 6h3v1H3zM10 6h3v1H10zM2 7h3v1H2zM11 7h3v1H11zM2 8h12v1H2zM4 9h1v1H4zM11 9h1v1H11zM4 10h1v1H4zM11 10h1v1H11zM4 11h1v1H4zM11 11h1v1H11zM4 12h1v1H4zM11 12h1v1H11zM4 13h3v1H4zM9 13h3v1H9z",
-  search: "M3 2h6v1H3zM2 3h1v1H2zM9 3h1v1H9zM2 4h1v1H2zM9 4h1v1H9zM2 5h1v1H2zM9 5h1v1H9zM2 6h1v1H2zM9 6h1v1H9zM2 7h1v1H2zM9 7h1v1H9zM2 8h1v1H2zM9 8h1v1H9zM3 9h6v1H3zM10 10h2v1H10zM10 11h3v1H10zM11 12h3v1H11zM12 13h3v1H12zM13 14h2v1H13z",
-};
+/* 아이콘: 소프트 플랫 부티크 묶음(2026-11-10 제제). 탭·버튼·작은 기호 전부 같은 그림체.
+   SVG를 문서 안에 바로 넣고 색은 CSS 변수로 칠한다 → 라이트·다크·스킨에 따라 자동으로 바뀐다(design-system.css). */
+import { FLAT } from "./flat-icons";
 
-export function pixelIcon(name: string) {
-  return `<svg class="ui-icon pixel-icon${name === 'chev' ? ' chev' : ''}" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" stroke="none" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path d="${marks[name] ?? marks.shop}"/></svg>`;
-}
-
-/* 더스티 로즈 도트 아이콘(2026-11-10 제제가 준 아이콘 묶음 B): 색이 들어간 PNG.
-   흐려지지 않게 원본 크기(16·24·32px) 그대로만 쓴다. 나머지 작은 기호(체크·연필·화살표 등)는 위 SVG 그대로. */
-const PNG_ICONS = ["clo", "fac", "coord", "tool", "clock", "cal", "target", "upg"];
 const BASE = (import.meta as any).env?.BASE_URL ?? "/";
-export function pngIcon(name: string, px: 16 | 24 | 32 = 24) {
-  return `<img class="ui-icon png-icon" src="${BASE}icons/ui/${name}-${px}.png?v=rose-1" width="${px}" height="${px}" alt="" aria-hidden="true" draggable="false" decoding="async">`;
+const V = "flat-1";
+
+/** 같은 그림을 다른 이름으로도 부른다(예전 코드에서 쓰던 이름) */
+const ALIAS: Record<string, string> = { star: "spark" };
+
+export function flatIcon(name: string, px = 24) {
+  const key = FLAT[name] ? name : (ALIAS[name] ?? "shop");
+  return `<svg class="ui-icon flat-icon fi-${key}${name === "chev" ? " chev" : ""}" width="${px}" height="${px}" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${FLAT[key]}</svg>`;
 }
-/** 머리줄·로그인 화면 로고: 앱 대표 아이콘 */
-const appMark = (px: number, src: string) => `<img class="app-mark" src="${BASE}icons/${src}?v=rose-1" width="${px}" height="${px}" alt="" aria-hidden="true" draggable="false">`;
+/** 예전 이름 유지(다른 파일에서 부를 수 있음) */
+export const pixelIcon = (name: string) => flatIcon(name, 16);
+
+/** 머리줄·로그인 화면 로고: 앱 대표 아이콘(라이트·다크 두 벌, CSS로 하나만 보인다) */
+const appMark = (px: number) =>
+  ["light", "dark"].map(t => `<img class="app-mark app-${t}" src="${BASE}icons/${t}/app-128.png?v=${V}" width="${px}" height="${px}" alt="" aria-hidden="true" draggable="false">`).join("");
 
 export function installPixelIcons() {
+  /* 체크 칸(.ck) 안 표시는 색이 찬 동그라미 위에 올라가므로 칸 모양 없이 체크만(흰 선) 쓴다 */
+  const names = [...Object.keys(FLAT), ...Object.keys(ALIAS)];
   (window as any).__FMS_ICONS__ = {
-    ...Object.fromEntries(Object.keys(marks).map(name => [name, pixelIcon(name)])),
-    ...Object.fromEntries(["clo", "fac", "coord", "tool"].map(name => [name, pngIcon(name, 24)])),
+    ...Object.fromEntries(names.map(n => [n, flatIcon(n)])),
+    check: flatIcon("ok").replace("flat-icon", "flat-icon on-fill"),
+    "check-box": flatIcon("check"),
   };
-  document.querySelectorAll<HTMLElement>('.brandmark[data-pixel]').forEach(el => { el.innerHTML = appMark(32, "app-128.png"); el.classList.add("has-app"); });
-  document.querySelectorAll<HTMLElement>('.gate-mark[data-pixel]').forEach(el => { el.innerHTML = appMark(64, "app-128.png"); });
-  document.getElementById('recentBtn')!.innerHTML = pngIcon('clock', 24);
-  document.querySelector('#fab [data-q="memo"]')!.innerHTML = pngIcon('cal', 24);
-  document.querySelector('#fab [data-q="up"]')!.innerHTML = pngIcon('upg', 24);
-  document.querySelector('#fab [data-q="goal"]')!.innerHTML = pngIcon('target', 24);
+  document.querySelectorAll<HTMLElement>('.brandmark[data-pixel]').forEach(el => { el.innerHTML = appMark(32); el.classList.add("has-app"); });
+  document.querySelectorAll<HTMLElement>('.gate-mark[data-pixel]').forEach(el => { el.innerHTML = appMark(64); });
+  document.getElementById('recentBtn')!.innerHTML = flatIcon('clock');
+  document.querySelector('#fab [data-q="memo"]')!.innerHTML = flatIcon('cal');
+  document.querySelector('#fab [data-q="up"]')!.innerHTML = flatIcon('upg');
+  document.querySelector('#fab [data-q="goal"]')!.innerHTML = flatIcon('target');
 }
-export { PNG_ICONS };

@@ -28,3 +28,10 @@
 - 코드: `app/src/ui/pixel-icons.ts`의 `pngIcon`, 크기는 `design-system.css` 맨 아래.
 
 전체 아이콘 이름·쓰이는 곳: ![아이콘 목록](screenshots/icon-list.png)
+
+## 소프트 플랫 부티크 묶음으로 전부 교체 (2026-11-10)
+- 제제가 준 `fashion-mall-story-note-soft-flat-boutique.zip`의 28종을 탭·버튼·작은 기호 전부에 적용. 도트 SVG와 로즈 도트 PNG는 뺐다.
+- SVG 도형은 `app/src/ui/flat-icons.ts`에 넣어 문서 안에 바로 그린다. 색은 CSS 변수 `--ic-ln`(선), `--ic-soft`(옅은 면), `--ic-fill`(진한 면)로 칠하고, 다크 모드는 밝은 로즈로 자동 전환한다(design-system.css).
+- 체크 칸 안 표시는 색이 찬 칸 위라 ok 모양을 흰 선으로 쓴다.
+- 원본 파일(라이트·다크 SVG, PNG 16·24·32·48)은 `app/public/icons/ui/{light,dark}/`에 있다. 앱 대표 아이콘·파비콘도 묶음 것으로 교체했고, 로고는 라이트·다크 두 벌 중 하나만 보인다.
+- 목록 이미지: [screenshots/icon-list.png](screenshots/icon-list.png)

@@ -166,16 +166,31 @@
   :root:root[data-design="hybrid"] .needopt { padding: 12px; }
 }
 
-/* ---------- 더스티 로즈 도트 아이콘(PNG) ---------- */
-/* 원본 24px 그대로(아이폰 3배·패드 2배에서도 정수 배율이라 또렷함) */
-:root:root[data-design="hybrid"] .png-icon { width: 24px; height: 24px; image-rendering: pixelated; flex: none; }
-:root:root[data-design="hybrid"] nav.tabs .png-icon,
-:root:root[data-design="hybrid"] .fab .png-icon,
-:root:root[data-design="hybrid"] .hbtn .png-icon { width: 24px; height: 24px; }
-/* 머리줄 로고는 앱 대표 아이콘 자체가 액자 모양이라 바깥 상자를 없앤다 */
+/* ---------- 소프트 플랫 부티크 아이콘(SVG를 문서에 바로 넣음) ---------- */
+/* 색 3가지: 선(--ic-ln) · 옅은 면(--ic-soft, 45%) · 진한 면(--ic-fill). 묶음 원본 색 그대로 */
+:root { --ic-ln: #956773; --ic-soft: #E9C3C7; --ic-fill: #C58D98; }
+:root[data-theme="dark"] { --ic-ln: #F0C8CD; --ic-soft: #AF7888; --ic-fill: #DDA5AF; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ic-ln: #F0C8CD; --ic-soft: #AF7888; --ic-fill: #DDA5AF; } }
+:root:root .flat-icon { stroke: var(--ic-ln); shape-rendering: geometricPrecision; image-rendering: auto; flex: none; }
+:root:root .flat-icon .i-soft { fill: var(--ic-soft); fill-opacity: .45; }
+:root:root .flat-icon .i-fill { fill: var(--ic-fill); stroke: var(--ic-ln); }
+/* 색이 찬 바탕 위(체크 칸 켜짐 등)에서는 흰 선 하나로 */
+:root:root .flat-icon.on-fill { stroke: #fff; stroke-width: 2.6; }
+/* 탭·오른쪽 둥근 버튼·최근 기록 버튼은 24px */
+:root:root[data-design="hybrid"] nav.tabs .flat-icon,
+:root:root[data-design="hybrid"] .fab .flat-icon,
+:root:root[data-design="hybrid"] .hbtn .flat-icon { width: 24px; height: 24px; }
+/* 머리줄 로고는 앱 대표 아이콘 자체가 액자 모양이라 바깥 상자를 없앤다. 라이트·다크 중 하나만 보인다 */
 :root:root[data-design="hybrid"] .brandmark.has-app { background: none; border: 0; box-shadow: none; padding: 0; width: 36px; height: 36px; }
-:root:root[data-design="hybrid"] .brandmark.has-app .app-mark { width: 36px; height: 36px; image-rendering: auto; display: block; }
+:root:root[data-design="hybrid"] .brandmark.has-app .app-mark { width: 36px; height: 36px; display: block; }
 .gate-mark .app-mark { width: 64px; height: 64px; display: block; margin: 0 auto; }
+.app-mark.app-dark { display: none !important; }
+:root[data-theme="dark"] .app-mark.app-light { display: none !important; }
+:root[data-theme="dark"] .app-mark.app-dark { display: block !important; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .app-mark.app-light { display: none !important; }
+  :root:not([data-theme="light"]) .app-mark.app-dark { display: block !important; }
+}
 @media (max-width: 739px) {
   :root:root[data-design="hybrid"] .brandmark.has-app,
   :root:root[data-design="hybrid"] .brandmark.has-app .app-mark { width: 32px; height: 32px; }

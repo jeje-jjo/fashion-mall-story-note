@@ -1,0 +1,33 @@
+/* 소프트 플랫 부티크 아이콘(2026-11-10 제제가 준 묶음). 원본 SVG에서 도형만 꺼내고,
+ 색은 CSS 변수(--ic-ln 선, --ic-soft 옅은 면, --ic-fill 진한 면)로 바꿔 라이트·다크·스킨을 따라가게 했다.
+ 원본 파일은 public/icons/ui/{light,dark}/ 에 그대로 있다. */
+export const FLAT: Record<string, string> = {
+ "cal": "<rect class=\"i-soft\" x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M8 3v4M16 3v4\"/><path class=\"i-fill\" d=\"M7 13h3v3H7zM14 13h3v3h-3z\"/>",
+ "carry-back": "<path d=\"M20 7V4h-8M4 17v3h8M4 7v5h5M20 17v-5h-5\"/><path d=\"m7 9-3 3 3 3M17 9l3 3-3 3\"/>",
+ "carry": "<path d=\"M4 7V4h8m8 13v3h-8M20 7v5h-5M4 17v-5h5\"/><path d=\"m17 9 3 3-3 3M7 9l-3 3 3 3\"/>",
+ "check": "<rect x=\"3.5\" y=\"3.5\" width=\"17\" height=\"17\" rx=\"3\"/><path d=\"m7 12 3.5 3.5L17 9\"/>",
+ "chev": "<path d=\"m9 5 7 7-7 7\"/>",
+ "clo": "<path class=\"i-soft\" d=\"M9 4.5h6l1.4 2.2 3.1 2.1-2.2 3.4-2.3-1.3V20H9v-9.1l-2.3 1.3-2.2-3.4 3.1-2.1z\"/><path d=\"M9 4.5 12 7l3-2.5M10 9h4\"/>",
+ "clock": "<path class=\"i-soft\" d=\"M4 5h11v14H4z\"/><path d=\"M7 9h5M7 12h4M7 15h3\"/><circle class=\"i-fill\" cx=\"17\" cy=\"16.5\" r=\"4.2\"/><path d=\"M17 14.1v2.6l1.5 1\"/>",
+ "coord": "<path class=\"i-soft\" d=\"M4 11h7v9H4zM13 11h7v9h-7z\"/><path d=\"M7.5 10V8a2 2 0 1 0-2-2M16.5 10V8a2 2 0 1 0-2-2M4 12l3.5-2 3.5 2M13 12l3.5-2 3.5 2M5 15h5M14 15h5\"/><path class=\"i-fill\" d=\"M13 11h7v9h-7z\"/>",
+ "dots": "<circle class=\"i-fill\" cx=\"5\" cy=\"12\" r=\"1.7\"/><circle class=\"i-fill\" cx=\"12\" cy=\"12\" r=\"1.7\"/><circle class=\"i-fill\" cx=\"19\" cy=\"12\" r=\"1.7\"/>",
+ "fac": "<path class=\"i-soft\" d=\"M4 10h16v10H4z\"/><path d=\"M5 4h14l2 6H3zM5 10c1.2 2 2.8 2 4 0 1.2 0 2.2-.8 3-2 1 1.2 2 2 3 2s2.8-.8 4-2M7 20v-6h5v6M15 14h3v3h-3\"/><path class=\"i-fill\" d=\"M5 5h14l1.4 4H3.6z\"/>",
+ "home": "<path class=\"i-soft\" d=\"M4 10 12 3l8 7v11h-6v-7h-4v7H4z\"/>",
+ "info": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 10.5v6M12 7.5v.2\"/>",
+ "log": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 6v6l4 2\"/>",
+ "note": "<path class=\"i-soft\" d=\"M5 3h14v18H5z\"/><path d=\"M8 7h8M8 11h8M8 15h5\"/>",
+ "ok": "<path d=\"m4 12 5 5 11-11\"/>",
+ "pen": "<path class=\"i-soft\" d=\"m5 16 10-10 3 3L8 19l-4 1z\"/><path d=\"m13 8 3 3M15 6l2-2a1.4 1.4 0 0 1 2 0l1 1a1.4 1.4 0 0 1 0 2l-2 2M4 20l4-1\"/>",
+ "search": "<circle cx=\"10.5\" cy=\"10.5\" r=\"6.5\"/><path d=\"m15.4 15.4 5 5\"/>",
+ "shop": "<path class=\"i-soft\" d=\"M5 10h14v10H5z\"/><path d=\"M4 5h16l1 5H3zM5 10a2.5 2.5 0 0 0 4 0 2.5 2.5 0 0 0 4 0 2.5 2.5 0 0 0 4 0 2.5 2.5 0 0 0 4 0M9 20v-7h6v7\"/>",
+ "spark": "<path class=\"i-fill\" d=\"M12 2.5 14.5 9.5 21.5 12l-7 2.5L12 21.5l-2.5-7L2.5 12l7-2.5z\"/>",
+ "sword": "<path d=\"m5 3 13 13m1-11L6 18M6.5 6.5l-2-2M17.5 6.5l2-2M3 20l3-3M18 17l3 3M4 14l6 6M14 20l6-6\"/>",
+ "tagic": "<path class=\"i-soft\" d=\"M3 4h10l8 8-9 9-9-9z\"/><circle cx=\"8\" cy=\"8\" r=\"1.5\"/>",
+ "target": "<circle class=\"i-soft\" cx=\"10\" cy=\"13\" r=\"8\"/><circle cx=\"10\" cy=\"13\" r=\"4.7\"/><circle class=\"i-fill\" cx=\"10\" cy=\"13\" r=\"1.5\"/><path d=\"m10 13 8-8m-1.5 0V2.7M18 5h2.3\"/>",
+ "tool": "<rect class=\"i-soft\" x=\"4\" y=\"6\" width=\"16\" height=\"14\" rx=\"2.4\"/><path d=\"M9 6V4.5A1.5 1.5 0 0 1 10.5 3h3A1.5 1.5 0 0 1 15 4.5V6M4 11h16M10 11v3h4v-3\"/><path class=\"i-fill\" d=\"M10 11v3h4v-3z\"/>",
+ "trophy": "<path class=\"i-soft\" d=\"M7 4h10v7a5 5 0 0 1-10 0z\"/><path d=\"M7 6H4v3c0 2 1.2 3 3.5 3M17 6h3v3c0 2-1.2 3-3.5 3M12 16v4M8 21h8\"/>",
+ "up": "<path d=\"M12 21V3m-7 7 7-7 7 7\"/>",
+ "upg": "<path class=\"i-soft\" d=\"M3 18h18v2H3zM5 14h4v4H5zM10 11h4v7h-4zM15 7h4v11h-4z\"/><path d=\"M4 10.5 9 7l4 2 6-6M15.7 3H19v3.3\"/><path class=\"i-fill\" d=\"M15 7h4v11h-4z\"/>",
+ "warn": "<path class=\"i-soft\" d=\"M10.3 4.3a2 2 0 0 1 3.4 0l8 13.7a2 2 0 0 1-1.7 3H4a2 2 0 0 1-1.7-3z\"/><path d=\"M12 9v5.5M12 17.7v.2\"/>",
+ "x": "<path d=\"M5 5 19 19M19 5 5 19\"/>"
+};
