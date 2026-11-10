@@ -100,3 +100,8 @@ npm run build:preview && PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/ch
   - 클라우드 세션 주의: 환경의 네트워크 비밀(Firestore OAuth 토큰)이 firestore.googleapis.com 요청의 Authorization을 덮어써서 401이 남.
     FIRESTORE_API=https://firestore.mtls.googleapis.com/v1/ 를 주고 push/pull 스크립트를 실행하면 firebase 로그인 토큰으로 됨.
   - 전투 승리 체크는 제제가 앱에서 직접 넣음(b0·b1, bx0~bx11 = runs/r8).
+
+- 2026-11-10 마네킹 세트로 바꿈(제제): 마네킹 하나 = 봄·가을·여름·겨울 풀세트(상의+하의/셋업, 아우터, 액세서리), 세 계절끼리 안 겹침, 장르마다 10개, 그 장르 옷만, 다른 마네킹과는 덜 쓴 옷 먼저.
+  옷 풀은 cloMade(체크 옷은 완료, 일반 옷은 만든 걸로 보되 필요한 옵션에 넣은 옷 제외). 만든 마네킹만 runs/rN/mannequins/g{장르순번}k{0~9} {built, genre, outfits:{sa,su,wi}} 저장(조합 고정).
+  못 만드는 장르와 만들 수 있는 개수는 '오늘 할 일'에 나옴. 예전 1벌짜리 마네킹 m1~m5 문서는 읽기만 남김.
+- 2026-11-10 req_site(요청별 조건·맞는 옷)·sales_avg(계절별 판매 점수 평균) 표: tools/sheets/build_req_site.py. 코디 손님 요청·패션 체크에 '추천 옷' 펼치기.

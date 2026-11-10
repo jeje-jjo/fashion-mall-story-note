@@ -569,3 +569,9 @@ nav.tabs { background: var(--card); }
 .reqmatch-g { margin-bottom: 8px; }
 .reqmatch-g > .k { display: block; font-size: 11.5px; font-weight: 650; color: var(--fg2); }
 .reqmatch-g li.mine { font-weight: 700; }
+
+/* 마네킹 세트(2026-11-10) */
+.mqset .mqset-row { display: grid; grid-template-columns: 56px 1fr; gap: 8px; align-items: start; padding: 6px 0; border-top: 1px solid var(--line); }
+.mqset .mqset-s { font-size: 12px; font-weight: 650; color: var(--fg2); padding-top: 3px; }
+.mqset.built { border-color: color-mix(in srgb, var(--green, #16a34a) 45%, var(--line)); background: color-mix(in srgb, var(--green, #16a34a) 5%, var(--card)); }
+.chip .cnt { font-size: .85em; color: var(--fg3); margin-left: 3px; }

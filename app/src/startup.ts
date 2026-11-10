@@ -38,7 +38,7 @@ $("gateLogin").addEventListener("click", () => {
 });
 
 if (MOCK) {
-  boot(mockDb());
+  const m = mockDb(); (window as any).__mockDb = m; boot(m);
 } else {
   let started = false;
   onAuthStateChanged(auth, (u) => {
