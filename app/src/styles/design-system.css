@@ -208,3 +208,7 @@
 /* ---------- 체크 칸: 초록 대신 메인 색상(빈티지 로즈 등)으로 ---------- */
 :root:root:root .ck.on { background: var(--blue); border-color: var(--blue); box-shadow: none; }
 :root:root .line-icon.on-fill { stroke: var(--card); }
+
+/* ---------- 초록(완료·성공·동기화) 전부 메인 색상으로 통일 ----------
+   --green을 쓰는 곳(동기화 점, 성공 태그, 필요 알약, 마네킹 만듦 등)이 스킨·팔레트의 메인 색을 따라간다 */
+:root:root:root { --green: var(--blue); --green-soft: var(--blue-soft); }
