@@ -1,3 +1,4 @@
+import { prepareRoseWorkflow, mountRoseWorkflow } from "./ui/rose-workflow";
 import { buildData, TABLES, type Tables } from "./buildData";
 import { startEngine } from "./engine-loader";
 import { mockDb } from "./mockdb";
@@ -8,6 +9,10 @@ const tables = Object.fromEntries(TABLES.map(name => [name, []])) as unknown as 
 (window as any).__FMS_PREVIEW__ = true;
 document.getElementById("previewBanner")!.hidden = false;
 document.getElementById("previewBanner")!.textContent = "화면 검토용 미리보기 · 일부 수치·관계는 레이아웃 예시이며 실제 진행과 다릅니다.";
+if (new URLSearchParams(location.search).has("rose") || import.meta.env.VITE_ROSE_PREVIEW === "1") {
+  prepareRoseWorkflow();
+  mountRoseWorkflow();
+}
 startEngine(addPreviewDetails(buildData(tables)), mockDb(), () => undefined).then(() => {
   document.getElementById("gate")!.hidden = true;
 }).catch(() => {

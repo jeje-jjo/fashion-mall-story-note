@@ -109,7 +109,7 @@ if (!Array.isArray(S.upStaffs)) S.upStaffs = [];
 /* 2026-11-06 제제 결정: 의류 칩 줄은 모두 다중 선택이 기본(한 번만 켬, 이후엔 고른 대로) */
 try{ if (localStorage.getItem("fms-v2-multi") !== "1"){ S.cloMulti = true; localStorage.setItem("fms-v2-multi", "1"); } }catch(e){}
 /* 의류 필터는 열 때마다 전부 접힌 상태로 시작(선택은 유지) */
-S.cloExp = {}; S.btOpen = false;
+S.cloExp = import.meta.env.MODE === "preview" && document.documentElement.dataset.skin === "dried-rose" ? {opt:true} : {}; S.btOpen = false;
 if (S.facSort==="타입순") S.facSort = "장르순";
 if (S.facSort==="필요 적은순") S.facSort = "좋음 적은순";
 const tabFromHash = location.hash.replace("#","");

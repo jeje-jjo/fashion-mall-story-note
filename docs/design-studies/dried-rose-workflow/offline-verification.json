@@ -1,0 +1,15 @@
+{
+  "singleFilePreview": true,
+  "realEngine": true,
+  "isolatedMockStorage": true,
+  "viewport": 834,
+  "initialExampleSelections": 26,
+  "normalAndSpecialSelectionsLinked": true,
+  "horizontalScrollPreserved": [
+    "genre strip",
+    "normal options in dock"
+  ],
+  "tabVerticalScrollPreserved": true,
+  "facilityItemCheckAndSwitch": true,
+  "errors": []
+}

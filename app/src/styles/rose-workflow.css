@@ -1,0 +1,963 @@
+
+/* 기록·필터·계산은 실제 엔진을 사용한다. 이 디자인은 preview 모드 전용이다. */
+:root:root[data-skin="dried-rose"] {
+  --bg: #f7f3f1;
+  --card: #fffdfb;
+  --soft: #f6f0ef;
+  --soft2: #eadcde;
+  --fg: #493d40;
+  --fg2: #76656a;
+  --fg3: #99858a;
+  --line: #e9dfe0;
+  --blue: #a67685;
+  --blue-ink: #845363;
+  --blue-soft: #f3e5e9;
+  --green: #71816a;
+  --green-soft: #eef2e9;
+  --on-accent: #fffdfb;
+  --press: #a6768508;
+  --reading-width: 1440px;
+}
+:root:root[data-skin="dried-rose"] body {
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--fg);
+  letter-spacing: -.018em;
+  -webkit-font-smoothing: antialiased;
+}
+:root:root[data-skin="dried-rose"] .app {
+  padding-top: 20px;
+  gap: 14px;
+}
+:root:root[data-skin="dried-rose"] .brandbar {
+  padding-bottom: 15px;
+  gap: 10px;
+  border-color: #e5d8db;
+}
+:root:root[data-skin="dried-rose"] .brandmark {
+  height: 34px;
+  width: 34px;
+  border: 1px solid #cfabb5;
+  border-radius: 6px;
+  background: #f3e3e8;
+  box-shadow: 2px 2px 0 #ead7dd;
+  color: #a37182;
+}
+:root:root[data-skin="dried-rose"] .brandmark .pixel-icon {
+  height: 23px;
+  width: 23px;
+}
+:root:root[data-skin="dried-rose"] .brandname {
+  font: 650 13px/1.5 var(--font);
+}
+:root:root[data-skin="dried-rose"] .brandbar h1#ttl {
+  font: 650 14px/1.5 var(--font);
+}
+:root:root[data-skin="dried-rose"] .brandbar #sub {
+  font-size: 10px;
+  color: #a48b94;
+}
+:root:root[data-skin="dried-rose"] .hbtn {
+  height: 30px;
+  width: 30px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+:root:root[data-skin="dried-rose"] .sync {
+  font-size: 10px;
+  color: #9b8790;
+}
+:root:root[data-skin="dried-rose"] .wiki-link {
+  font-size: 10px;
+  text-decoration: none;
+  color: #9a818a;
+}
+:root:root[data-skin="dried-rose"] .preview-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: #f0e7e8;
+  color: #a18490;
+  border: 1px solid #e8d9df;
+  border-radius: 4px;
+  font-size: 9px;
+  line-height: 1.6;
+}
+.rose-compare {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+.rose-compare button {
+  font-size: 9px;
+  border: 1px solid #d9bdc7;
+  border-radius: 3px;
+  padding: 3px 7px;
+  background: #fffdfb;
+  color: #997180;
+}
+.rose-compare button[data-skin="dried-rose"] {
+  background: #ab7d8d;
+  border-color: #ab7d8d;
+  color: #fff;
+}
+:root:root[data-skin="dried-rose"] .stack {
+  gap: 15px;
+}
+:root:root[data-skin="dried-rose"] .card {
+  border: 1px solid #e6dadd;
+  border-radius: 9px;
+  padding: 17px 19px;
+  background: var(--card);
+  box-shadow: 0 2px 4px #6c3d5003;
+}
+:root:root[data-skin="dried-rose"] .card.subnav {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+:root:root[data-skin="dried-rose"] .card.flush {
+  padding: 4px 16px;
+}
+:root:root[data-skin="dried-rose"] .catalog-head.slim {
+  margin-bottom: 7px;
+}
+:root:root[data-skin="dried-rose"] .catalog-jump {
+  font-size: 10px;
+  text-decoration: none;
+  color: #aa8796;
+}
+:root:root[data-skin="dried-rose"] .ctools {
+  gap: 9px;
+}
+:root:root[data-skin="dried-rose"] .ctools .search {
+  height: 34px;
+  font-size: 11px;
+  border: 1px solid #e9dfe0;
+  border-radius: 5px;
+  background: #fcf9f7;
+}
+:root:root[data-skin="dried-rose"] .toolsgap {
+  margin-bottom: 12px;
+}
+:root:root[data-skin="dried-rose"] .pillseg,:root:root[data-skin="dried-rose"] .seg {
+  padding: 3px;
+  border-radius: 5px;
+  background: #f5efef;
+  border: 1px solid #e9dfe1;
+  gap: 2px;
+}
+:root:root[data-skin="dried-rose"] .pillseg button,:root:root[data-skin="dried-rose"] .seg button {
+  height: 29px;
+  padding: 0 10px;
+  font-size: 10px;
+  border-radius: 3px;
+  color: #9b838e;
+}
+:root:root[data-skin="dried-rose"] .pillseg button.on,:root:root[data-skin="dried-rose"] .seg button.on {
+  background: #fffdfb;
+  box-shadow: 0 1px 3px #79465b0a;
+  color: #936175;
+  font-weight: 650;
+}
+:root:root[data-skin="dried-rose"] .filter-toolbar {
+  padding: 9px 0 11px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 0!important;
+}
+:root:root[data-skin="dried-rose"] .filter-grid {
+  display: block;
+}
+:root:root[data-skin="dried-rose"] .filter-row {
+  padding: 12px 0;
+  border-bottom: 1px solid #eee5e6;
+  margin: 0;
+  background: none;
+  border-radius: 0;
+}
+:root:root[data-skin="dried-rose"] .fhead.rowhead {
+  margin-bottom: 7px;
+  gap: 8px;
+  align-items: center;
+}
+:root:root[data-skin="dried-rose"] .fhead.rowhead .sublbl {
+  font-size: 11px;
+  font-weight: 650;
+  color: #856573;
+}
+:root:root[data-skin="dried-rose"] .rdot {
+  width: 4px;
+  height: 4px;
+  border-radius: 1px;
+}
+:root:root[data-skin="dried-rose"] .fh-l,:root:root[data-skin="dried-rose"] .fh-act {
+  gap: 5px;
+}
+:root:root[data-skin="dried-rose"] .chips,:root:root[data-skin="dried-rose"] .cfoldchips {
+  gap: 5px;
+}
+:root:root[data-skin="dried-rose"] .chip {
+  height: 33px;
+  padding: 0 9px;
+  border-radius: 4px;
+  background: #faf7f5;
+  color: #97808b;
+  border: 1px solid #eadfe2;
+  font-size: 10.5px;
+  font-weight: 500;
+  gap: 5px;
+  box-shadow: none;
+}
+:root:root[data-skin="dried-rose"] .chip b {
+  font: 9px/1.4 ui-monospace,monospace;
+  color: #ad929e;
+  opacity: 1;
+}
+:root:root[data-skin="dried-rose"] .chip.on {
+  background: #f2dfe5;
+  color: #8a5a6e;
+  border-color: #d4acbb;
+  box-shadow: inset 0 -1px 0 #e7cdd7;
+  font-weight: 650;
+}
+:root:root[data-skin="dried-rose"] .chip.on b {
+  color: #a67b8d;
+  opacity: 1;
+}
+:root:root[data-skin="dried-rose"] .chip.zero:not(.on) {
+  opacity: 1;
+  color: #b19fa6;
+  background: #fcfaf8;
+  border-color: #f1e9e9;
+}
+:root:root[data-skin="dried-rose"] .chip.spchip {
+  background: #fcf8fa;
+  border-color: #d4bacb;
+  border-style: dashed;
+  color: #a08398;
+}
+:root:root[data-skin="dried-rose"] .chip.spchip.on {
+  background: #ad7e91;
+  border-color: #ad7e91;
+  border-style: solid;
+  color: #fff9fc;
+  box-shadow: inset 0 -1px 0 #986779;
+}
+:root:root[data-skin="dried-rose"] .chip.spchip.on b {
+  color: #f6e8ee;
+}
+:root:root[data-skin="dried-rose"] .chip.sm {
+  height: 26px;
+  font-size: 9px;
+  padding: 0 7px;
+  border-radius: 3px;
+}
+:root:root[data-skin="dried-rose"] .chip.fold,:root:root[data-skin="dried-rose"] .ghostchip,:root:root[data-skin="dried-rose"] .chip.mbtn {
+  background: none;
+  border-color: #ece1e4;
+  color: #ad939e;
+}
+:root:root[data-skin="dried-rose"] .chip[data-rmulti].on {
+  background: #efe1e7;
+  border-color: #d5b4c1;
+  color: #95687d;
+}
+:root:root[data-skin="dried-rose"] .cfoldchips.is-expanded {
+  overflow: visible;
+  flex-wrap: wrap;
+  mask-image: none;
+  -webkit-mask-image: none;
+  padding: 0;
+}
+:root:root[data-skin="dried-rose"] .cfoldchips.is-strip {
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+:root:root[data-skin="dried-rose"] .filter-row:has([data-cfold="opt"]) {
+  background: #fbf4f6;
+  margin: 0 -9px;
+  padding: 12px 9px;
+  border-bottom-color: #e9d5de;
+  border-radius: 0 0 6px 6px;
+}
+:root:root[data-skin="dried-rose"] .needopt {
+  padding: 11px 12px;
+  background: #f6eeee;
+  border: 1px solid #eee0e5;
+  border-radius: 5px;
+  margin-top: 12px;
+}
+:root:root[data-skin="dried-rose"] .needopt .sublbl {
+  font-size: 10px;
+  color: #9f7e8b;
+}
+:root:root[data-skin="dried-rose"] .hint {
+  font-size: 10px;
+  color: #ad919d;
+}
+:root:root[data-skin="dried-rose"] .frowgap {
+  margin-top: 12px;
+  padding-top: 11px;
+  border-color: #eee0e5;
+}
+:root:root[data-skin="dried-rose"] .legend {
+  padding: 10px 0 0;
+  font-size: 9px;
+  color: #ac8d9b;
+}
+:root:root[data-skin="dried-rose"] .legend .lgdot {
+  width: 4px;
+  height: 4px;
+}
+:root:root[data-skin="dried-rose"] .row {
+  padding: 12px 0;
+  min-height: 66px;
+  gap: 9px;
+  border-color: #eee3e6;
+}
+:root:root[data-skin="dried-rose"] .row .n {
+  font-size: 12px;
+  font-weight: 600;
+  color: #725260;
+}
+:root:root[data-skin="dried-rose"] .row .s {
+  font-size: 10.5px;
+  margin-top: 5px;
+  gap: 6px;
+  color: #a08290;
+}
+:root:root[data-skin="dried-rose"] .item-number {
+  font: 9px ui-monospace,monospace;
+  color: #b196a1;
+}
+:root:root[data-skin="dried-rose"] .rowvals {
+  font-size: 10px;
+  gap: 15px;
+  color: #a28694;
+}
+:root:root[data-skin="dried-rose"] .tag {
+  font-size: 9px;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+:root:root[data-skin="dried-rose"] .usemark {
+  font-size: 9px;
+  gap: 4px;
+}
+:root:root[data-skin="dried-rose"] .usemark i {
+  width: 4px;
+  height: 4px;
+}
+:root:root[data-skin="dried-rose"] .row>button[data-tclo],:root:root[data-skin="dried-rose"] .row>button[data-tfac],:root:root[data-skin="dried-rose"] .row>button[data-put] {
+  min-width: 38px;
+  min-height: 42px;
+}
+:root:root[data-skin="dried-rose"] .ck {
+  width: 19px;
+  height: 19px;
+  border: 1px solid #d7bbc7;
+  border-radius: 4px;
+  background: #fffdfb;
+}
+:root:root[data-skin="dried-rose"] .ck.on {
+  background: #ad8090;
+  border-color: #ad8090;
+}
+:root:root[data-skin="dried-rose"] .ck.part {
+  font-size: 8px;
+  color: #a17889;
+  background: #f4e5eb;
+}
+:root:root[data-skin="dried-rose"] .iconbtn {
+  color: #b196a3;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail {
+  margin: 0 0 15px 47px;
+  padding: 12px;
+  background: #fbf4f5;
+  border: 1px solid #ead9df;
+  border-radius: 7px;
+  box-shadow: inset 2px 0 #d7b3c1;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .metric-strip {
+  gap: 6px;
+  padding-bottom: 11px;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .metric-strip>div {
+  border-radius: 4px;
+  border-color: #e9dce1;
+  background: #fffdfb;
+  padding: 4px 9px;
+  gap: 8px;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .metric-strip dt {
+  font-size: 9px;
+  color: #b0909e;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .metric-strip dd {
+  font-size: 12px;
+  color: #8b6375;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .detail-layout {
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 9px;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .info-section {
+  padding: 11px;
+  border-color: #eee0e5;
+  border-radius: 5px;
+  background: #fffdfb;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .info-section>h3 {
+  font-size: 10px;
+  color: #a07c8e;
+  margin-bottom: 9px;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .info-section>h3:before {
+  width: 4px;
+  height: 4px;
+  background: #bd94a5;
+  border-radius: 0;
+  opacity: 1;
+  box-shadow: 3px -3px 0 #f1e0e7;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .fact-rows>div {
+  grid-template-columns: 52px minmax(0,1fr);
+  gap: 8px;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .fact-rows dt {
+  font-size: 9px;
+  color: #b0909e;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .fact-rows dd {
+  font-size: 11px;
+  color: #856674;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .usage-row {
+  grid-template-columns: 52px minmax(0,1fr);
+  gap: 8px;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .usage-row h4 {
+  font-size: 9px;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .usage-row ul,:root:root[data-skin="dried-rose"] .detail.item-detail .info-list {
+  font-size: 11px;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .style-scores>div {
+  font-size: 9px;
+  padding: 3px 7px;
+  border-radius: 4px;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .style-scores strong {
+  font-size: 10px;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .pair-group li {
+  font-size: 10px;
+  border-radius: 4px;
+  padding: 3px 7px;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .pair-group h4 {
+  font-size: 10px;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .source-caption {
+  font-size: 8px;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .detail-actions .btn {
+  font-size: 10px!important;
+  height: 29px!important;
+  border-radius: 4px;
+}
+:root:root[data-skin="dried-rose"] .detail.item-detail .text-action {
+  font-size: 10px;
+}
+:root:root[data-skin="dried-rose"] .facility-catalog .pills {
+  gap: 6px;
+}
+:root:root[data-skin="dried-rose"] .pill {
+  font-size: 11px;
+  padding: 6px 10px;
+  min-height: 32px;
+  border: 1px solid #e8dce2;
+  background: #fcf8f7;
+  color: #a28294;
+  border-radius: 4px;
+}
+:root:root[data-skin="dried-rose"] .pill b {
+  font: 9px ui-monospace,monospace;
+}
+:root:root[data-skin="dried-rose"] .pill.need {
+  background: #af8193;
+  color: #fff7fc;
+  border-color: #af8193;
+}
+:root:root[data-skin="dried-rose"] .rowpills {
+  padding-left: 47px;
+  padding-bottom: 10px;
+  gap: 6px;
+}
+:root:root[data-skin="dried-rose"] .rowpills .pill {
+  font-size: 10px;
+  padding: 5px 9px;
+  min-height: 29px;
+}
+:root:root[data-skin="dried-rose"] .filterline {
+  font-size: 10px;
+  color: #ac8a9b;
+}
+:root:root[data-skin="dried-rose"] .fccard,:root:root[data-skin="dried-rose"] .cocard {
+  border-radius: 7px;
+  border-color: #e8dce2;
+  padding: 16px;
+  box-shadow: none;
+}
+:root:root[data-skin="dried-rose"] .request-heading h3 {
+  font-size: 12px;
+}
+:root:root[data-skin="dried-rose"] .request-stage {
+  font-size: 9px;
+  color: #b08a9b;
+}
+:root:root[data-skin="dried-rose"] .sec-h h2 {
+  font-size: 15px;
+}
+:root:root[data-skin="dried-rose"] .srcnote {
+  font-size: 8px;
+  color: #bca4ae;
+}
+:root:root[data-skin="dried-rose"] .fab {
+  gap: 7px;
+}
+:root:root[data-skin="dried-rose"] .fab button {
+  height: 36px;
+  width: 36px;
+  border-radius: 6px;
+  border-color: #e6d6dd;
+  box-shadow: 0 3px 10px #84526705;
+  background: #fffdfb;
+  color: #a4748b;
+}
+:root:root[data-skin="dried-rose"] :focus-visible {
+  outline: 2px solid #b98d9e;
+  outline-offset: 3px;
+}
+#roseDock {
+  position: fixed;
+  z-index: 23;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #fffaf9f7;
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid #dcbecb;
+  box-shadow: 0 5px 16px #7d4c6010;
+  padding: 9px 21px 11px;
+}
+#roseDock[hidden] {
+  display: none!important;
+}
+:root:not([data-skin="dried-rose"]) #roseDock {
+  display: none!important;
+}
+.rose-dock-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+.rose-dock-heading>b {
+  font-size: 11px;
+  color: #966a80;
+}
+.rose-dock-heading>b>span {
+  font-size: 9px;
+  font-weight: 400;
+  color: #b391a3;
+  margin-left: 7px;
+}
+.rose-back {
+  margin-left: auto;
+  font-size: 9px;
+  color: #a47d91;
+  border: 1px solid #e6cfd9;
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+.rose-dock-chips {
+  display: flex!important;
+  flex-wrap: wrap!important;
+  gap: 5px!important;
+  margin: 0!important;
+  padding: 0!important;
+  max-height: 150px;
+  overflow: auto!important;
+}
+:root:root[data-skin="dried-rose"] #roseDock .chip {
+  height: 29px;
+  padding: 0 8px;
+  font-size: 10px;
+}
+:root:root[data-skin="dried-rose"] #roseDock .pill {
+  font-size: 10px;
+  min-height: 28px;
+  padding: 4px 8px;
+}
+.rose-dock-steps {
+  display: flex;
+  gap: 5px;
+  margin-left: auto;
+}
+.rose-dock-steps+.rose-back {
+  margin-left: 0;
+}
+:root:root[data-skin="dried-rose"] body.rose-dock-visible .sumbar {
+  display: none!important;
+}
+:root:root[data-skin="dried-rose"] .sumbar {
+  font-size: 10px;
+}
+@media(min-width:1180px) {
+  :root:root[data-skin="dried-rose"] body {
+    padding-left: 193px;
+    padding-right: 30px;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs {
+    width: 158px;
+    padding: 30px 12px;
+    background: #f0e7e9;
+    border-right: 1px solid #e1cdd5;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs:before {
+    content: 'ROSE / NOTE';
+    font: 600 9px/1.6 ui-monospace,monospace;
+    letter-spacing: .15em;
+    color: #b58b9d;
+    padding: 3px 12px 35px;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs:after {
+    content: '한 번의 체크,\A 조금 더 가벼운 기록.';
+    white-space: pre;
+    position: absolute;
+    bottom: 32px;
+    left: 23px;
+    color: #bc99aa;
+    font-size: 9px;
+    line-height: 1.8;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs button {
+    min-height: 47px;
+    flex-direction: row;
+    padding: 10px 12px;
+    gap: 11px;
+    font-size: 12px;
+    border-radius: 5px;
+    color: #a47d90;
+    margin-bottom: 5px;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs button.on {
+    background: #fff9f8;
+    color: #95677c;
+    box-shadow: 0 1px 3px #8f536c08;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs button.on:after {
+    display: none;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs .pixel-icon {
+    height: 18px;
+    width: 18px;
+  }
+  :root:root[data-skin="dried-rose"] .sumbar {
+    left: 158px;
+  }
+  :root:root[data-skin="dried-rose"] #roseDock {
+    left: 158px;
+    padding-left: 35px;
+    padding-right: 30px;
+  }
+}
+@media(min-width:740px) and (max-width:1179px) {
+  :root:root[data-skin="dried-rose"] body {
+    padding: 0 20px 95px;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs {
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: 0;
+    width: auto;
+    height: 62px;
+    border-right: 0;
+    border-top: 1px solid #e4cfd9;
+    background: #fff8f8f5;
+    padding: 6px 20px;
+    backdrop-filter: blur(16px);
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs:before {
+    display: none;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs .in {
+    width: 100%;
+    max-width: none;
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 7px;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs button {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    height: 46px;
+    padding: 9px;
+    font-size: 12px;
+    gap: 10px;
+    border-radius: 6px;
+    color: #b08b9f;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs button.on {
+    background: #f2e0e8;
+    color: #96687f;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs button.on:after {
+    display: none;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs .tic {
+    width: auto;
+    height: auto;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs button.on .tic {
+    background: none;
+  }
+  :root:root[data-skin="dried-rose"] .sumbar {
+    left: 0;
+    right: 0;
+  }
+  :root:root[data-skin="dried-rose"] .fab {
+    bottom: 80px;
+    right: 10px;
+  }
+}
+@media(max-width:739px) {
+  :root:root[data-skin="dried-rose"] body {
+    padding-left: 11px;
+    padding-right: 11px;
+  }
+  :root:root[data-skin="dried-rose"] .app {
+    padding-top: 13px;
+    gap: 11px;
+  }
+  :root:root[data-skin="dried-rose"] .brandbar h1#ttl {
+    font-size: 12px;
+  }
+  :root:root[data-skin="dried-rose"] .brandname {
+    font-size: 11px;
+  }
+  :root:root[data-skin="dried-rose"] .brandbar #sub {
+    font-size: 8px;
+  }
+  :root:root[data-skin="dried-rose"] .brandmark {
+    height: 29px;
+    width: 29px;
+  }
+  :root:root[data-skin="dried-rose"] .preview-banner {
+    font-size: 8px;
+    flex-wrap: wrap;
+  }
+  :root:root[data-skin="dried-rose"] .card {
+    padding: 13px 11px;
+  }
+  :root:root[data-skin="dried-rose"] .card.flush {
+    padding: 4px 10px;
+  }
+  :root:root[data-skin="dried-rose"] .chip {
+    height: 34px;
+    font-size: 10px;
+    padding: 0 8px;
+  }
+  :root:root[data-skin="dried-rose"] .chip.sm {
+    height: 28px;
+    font-size: 9px;
+  }
+  :root:root[data-skin="dried-rose"] .filter-row {
+    padding: 10px 0;
+  }
+  :root:root[data-skin="dried-rose"] .detail.item-detail {
+    margin-left: 0;
+    padding: 10px;
+  }
+  :root:root[data-skin="dried-rose"] .detail.item-detail .detail-layout {
+    grid-template-columns: minmax(0,1fr);
+  }
+  :root:root[data-skin="dried-rose"] .row .n {
+    font-size: 12px;
+  }
+  :root:root[data-skin="dried-rose"] .rowvals {
+    font-size: 9px;
+    gap: 8px;
+  }
+  :root:root[data-skin="dried-rose"] .rowpills {
+    padding-left: 42px;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs {
+    background: #fffaf9f5;
+    border-color: #e8d6df;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs button {
+    font-size: 10px;
+    color: #b390a2;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs button.on {
+    color: #94657d;
+  }
+  :root:root[data-skin="dried-rose"] nav.tabs button.on .tic {
+    background: #f3e0e9;
+  }
+  #roseDock {
+    padding: 8px 12px 10px;
+  }
+  .rose-dock-chips {
+    max-height: 137px;
+  }
+  :root:root[data-skin="dried-rose"] #roseDock .chip {
+    height: 30px;
+    font-size: 9px;
+    padding: 0 7px;
+  }
+  .rose-dock-heading>b>span {
+    font-size: 8px;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  :root:root[data-skin="dried-rose"] * {
+    scroll-behavior: auto!important;
+    transition: none!important;
+  }
+}
+/* 선택 전후 폭을 고정해 옵션을 넣고 뺄 때 이웃 칩이 움직이지 않게 한다. */
+:root:root[data-skin="dried-rose"] .cfoldchips>.chip {
+  font-weight: 500;
+}
+:root:root[data-skin="dried-rose"] .cfoldchips>.chip b {
+  min-width: 26px;
+  text-align: right;
+  font-size: 8px;
+}
+:root:root[data-skin="dried-rose"] #roseDock .chip {
+  font-weight: 500;
+}
+:root:root[data-skin="dried-rose"] #roseDock .chip b {
+  min-width: 26px;
+  text-align: right;
+  font-size: 8px;
+}
+:root:root[data-skin="dried-rose"] #roseDock .rose-dock-general {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 5px;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: #dec0ce transparent;
+}
+#roseDock .rose-dock-general>.chip {
+  flex: none;
+}
+#roseDock .rose-dock-special {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding-top: 5px;
+  border-top: 1px dashed #ead4df;
+}
+:root:root[data-skin="dried-rose"] .chip.on {
+  color: #855069;
+}
+:root:root[data-skin="dried-rose"] .row .n {
+  color: #71505f;
+}
+/* 필터를 먼저 보여 주되 중복 카운터가 목록을 과하게 밀어내지 않도록 마감. */
+:root:root[data-skin="dried-rose"] .wardrobe-card {
+  position: relative;
+}
+:root:root[data-skin="dried-rose"] .wardrobe-card .catalog-head.slim {
+  position: absolute;
+  top: 26px;
+  right: 30px;
+  margin: 0;
+  z-index: 1;
+}
+:root:root[data-skin="dried-rose"] .wardrobe-card .search {
+  padding-right: 110px;
+}
+:root:root[data-skin="dried-rose"] .filter-row {
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid #eee2e7;
+  box-shadow: none;
+}
+:root:root[data-skin="dried-rose"] .filter-row .fhead.rowhead {
+  margin-bottom: 5px;
+}
+:root:root[data-skin="dried-rose"] .filter-row .fhead .chip.sm {
+  height: 23px;
+  font-size: 9px;
+}
+:root:root[data-skin="dried-rose"] .needopt.optcnt>.pills {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #dcbacb transparent;
+  padding-bottom: 5px;
+}
+:root:root[data-skin="dried-rose"] .needopt.optcnt>.pills>.pill {
+  flex: none;
+}
+:root:root[data-skin="dried-rose"] .chip {
+  color: #926e81;
+}
+:root:root[data-skin="dried-rose"] .chip.on {
+  color: #78475e;
+}
+:root:root[data-skin="dried-rose"] .chip.spchip.on {
+  color: #fffafd;
+}
+:root:root[data-skin="dried-rose"] .row .n {
+  color: #654654;
+}
+:root:root[data-skin="dried-rose"] .row .s {
+  color: #987789;
+}
+:root:root[data-skin="dried-rose"] .fhead.rowhead .sublbl {
+  color: #875c72;
+}
+@media(max-width:739px) {
+  :root:root[data-skin="dried-rose"] .wardrobe-card .catalog-head.slim {
+    top: 23px;
+    right: 22px;
+  }
+}
+:root:root[data-skin="dried-rose"] #roseDock .pill b {
+  min-width: 16px;
+  text-align: right;
+}
+/* 바탕은 빛바랜 로즈로, 반복해서 읽는 선택 상태는 충분히 진하게. */
+:root:root[data-skin="dried-rose"] .chip.spchip.on {
+  background: #9e6b81;
+  border-color: #9e6b81;
+  box-shadow: inset 0 -1px 0 #89596d;
+}
+:root:root[data-skin="dried-rose"] .chip.spchip.on b {
+  color: #fff6fb;
+}
+:root:root[data-skin="dried-rose"] .cfoldchips>.chip b {
+  color: #a17b8e;
+}
+:root:root[data-skin="dried-rose"] .chip.zero:not(.on) {
+  color: #9b7d8e;
+}
+
