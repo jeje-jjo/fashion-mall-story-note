@@ -1,0 +1,53 @@
+{
+  "roundtrip": true,
+  "plans": [
+    {
+      "name": "쿨",
+      "imported": true,
+      "objects": 41,
+      "synergy": 565,
+      "expected": 565,
+      "guideDesks": 0
+    },
+    {
+      "name": "큐트",
+      "imported": true,
+      "objects": 41,
+      "synergy": 565,
+      "expected": 565,
+      "guideDesks": 0
+    },
+    {
+      "name": "성숙",
+      "imported": true,
+      "objects": 41,
+      "synergy": 565,
+      "expected": 565,
+      "guideDesks": 0
+    },
+    {
+      "name": "레트로",
+      "imported": true,
+      "objects": 41,
+      "synergy": 565,
+      "expected": 565,
+      "guideDesks": 0
+    },
+    {
+      "name": "하드",
+      "imported": true,
+      "objects": 41,
+      "synergy": 565,
+      "expected": 565,
+      "guideDesks": 0
+    },
+    {
+      "name": "서브컬처",
+      "imported": true,
+      "objects": 41,
+      "synergy": 565,
+      "expected": 565,
+      "guideDesks": 0
+    }
+  ]
+}
