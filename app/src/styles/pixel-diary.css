@@ -553,3 +553,8 @@ nav.tabs { background: var(--card); }
 :root:root .comparison-row .rs { font-size: 11px; padding: 2px 8px; }
 :root:root .btslots-h { font-size: 12.5px; font-weight: 650; color: var(--fg2); margin: 4px 0 6px; }
 :root:root .btslot.sum .hint { flex: 1; font-size: 11.5px; }
+/* 전투: 상대 기준은 조건과 보상 아래, 내 코디는 추천 세트 아래(제제 2026-11-10) */
+:root:root .detail-column .btcompare { margin-top: 16px; padding-top: 0; border-top: 0; }
+:root:root .btmy { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+:root:root .btmy-act { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 10px; }
+:root:root .btcard > .bttries { margin-top: 10px; }
