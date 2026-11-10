@@ -559,3 +559,13 @@ nav.tabs { background: var(--card); }
 :root:root .btmy-act { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 10px; }
 :root:root .btcard > .bttries { margin-top: 10px; }
 :root:root .btmy + .reference-block, :root:root .btmy + details { margin-top: 12px; }
+
+/* 요청별 사이트 조건·추천 옷(2026-11-10) */
+.req-conds { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0 8px; }
+.reqmatch { margin-top: 8px; }
+.reqmatch-btn { font-size: 12.5px; }
+.reqmatch-body { margin-top: 8px; padding: 10px 12px; border-radius: 8px; background: color-mix(in srgb, var(--line) 30%, transparent); }
+.req-text { margin: 0 0 8px; font-size: 12.5px; color: var(--fg2); line-height: 1.55; }
+.reqmatch-g { margin-bottom: 8px; }
+.reqmatch-g > .k { display: block; font-size: 11.5px; font-weight: 650; color: var(--fg2); }
+.reqmatch-g li.mine { font-weight: 700; }

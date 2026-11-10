@@ -945,6 +945,7 @@ function fcInfoCard(oi){
       <span class="fc-c">${main.length?`${n} / ${main.length}`:"대상 없음"}</span></div>
     <div class="check-overview">${factRows([["요구 조건",c.req],["보상",c.reward]])}</div>
     ${fcSiteLine(c.site)}
+    ${reqMatchBlock(c.site?.req, "f"+oi)}
     ${scoreLine(oi) ? `<button type="button" class="linkbtn" data-fcrec="${oi}" aria-expanded="${S.fcRecOpen===oi}">${S.fcRecOpen===oi?"기록 접기":"기록 보기"}</button>${S.fcRecOpen===oi ? scoreLine(oi) : ""}` : ""}
     ${noteOpen ? `${alt.length?`<div class="altline">대신 가능: ${alt.map(f => `<span class="${facDone(f)?"altdone":""}">${esc(facName(f))}${facDone(f)?" ✓":""}</span>`).join(" · ")}</div>`:""}${c.note?`<div class="note-bar" style="margin-top:8px">${esc(c.note)}</div>`:""}` : ""}
     ${!hybrid() ? fcEditForm(oi) : ""}
@@ -1448,6 +1449,32 @@ function coordJump(n){
   el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
   setTimeout(() => el.classList.remove("flash"), 1700);
 }
+/* 사이트 요청 정보(전체 정보 xlsx, 2026-11-10): 요청 문장·조건은 위에, 맞는 옷은 펼쳐서.
+   손님 요청은 제제가 통과한 옷(노트 기록)이 먼저, 그 아래에 사이트에서 조건에 맞는 옷 */
+const RQ_KIND = [["상의","상의"],["셋업","셋업"],["하의","하의"],["아우터","아우터"],["액세서리","액세서리"]];
+function reqMatchBlock(rq, key, c){
+  if (!rq || !(rq.full.length || rq.part.length || rq.rec.length)) return "";
+  const open = !!S.reqOpen?.[key], all = !!S.reqAll?.[key], mine = new Set(c ? Object.values(c.ids || {}).flat() : []);
+  const nm = id => { const x = CLO_BY_ID.get(id); return x ? cloName(x) : `#${id}`; };
+  const item = id => { const x = CLO_BY_ID.get(id), d = x && cloDone(x); return `<li class="${mine.has(id)?"mine":""}"><span class="inline-state ${d?"is-done":""}">${d?"✓":"○"}</span>${esc(nm(id))}</li>`; };
+  const full = rq.full.filter(id => CLO_BY_ID.get(id));
+  const doneN = full.filter(id => cloDone(CLO_BY_ID.get(id))).length;
+  const groups = RQ_KIND.map(([k,l]) => [l, full.filter(id => CLO_BY_ID.get(id)?.site?.kind === k)]).filter(([,l]) => l.length);
+  const best = rq.part.length ? Math.max(...rq.part.map(x => x.k)) : 0;
+  const part = rq.part.filter(x => x.k === best && CLO_BY_ID.get(x.id)).map(x => x.id);
+  return `<div class="reqmatch">
+    <button type="button" class="linkbtn reqmatch-btn" data-reqopen="${key}" aria-expanded="${open}">${open ? "추천 옷 접기 ▴" : `추천 옷 ${full.length}벌 · 만든 옷 ${doneN} ▾`}</button>
+    ${open ? `<div class="reqmatch-body">
+      ${rq.text ? `<p class="req-text">“${esc(rq.text.replace(/\s+/g, " "))}”</p>` : ""}
+      ${rq.rec.length ? `<div class="reqmatch-g"><span class="k">사이트 추천 코디</span><ul class="btset-items">${rq.rec.map(item).join("")}</ul></div>` : ""}
+      ${groups.map(([l, ids]) => { const srt = ids.sort((a,b) => mine.has(b) - mine.has(a) || cloDone(CLO_BY_ID.get(b)) - cloDone(CLO_BY_ID.get(a))), cap = all ? srt : srt.slice(0, 12);
+        return `<div class="reqmatch-g"><span class="k">${l} ${ids.length}${ids.length > 12 ? ` · 만든 옷 ${ids.filter(id => cloDone(CLO_BY_ID.get(id))).length}` : ""}</span><ul class="btset-items">${cap.map(item).join("")}</ul></div>`; }).join("")}
+      ${!all && groups.some(([, ids]) => ids.length > 12) ? `<button type="button" class="linkbtn" data-reqall="${key}">나머지 ${groups.reduce((n, [, ids]) => n + Math.max(0, ids.length - 12), 0)}벌 더 보기</button>` : ""}
+      ${!full.length && part.length ? `<div class="reqmatch-g"><span class="k">일부 일치(조건 ${best}개)</span><ul class="btset-items">${part.slice(0, 20).map(item).join("")}</ul></div>` : ""}
+      <p class="section-note">조건에 모두 맞는 옷이에요(사이트 기준, 게임에서는 한 벌만 맞아도 될 수 있어요)${c ? ". 굵은 글씨는 내가 통과한 옷" : ""} · 출처: KairoHistory 요청 맞추기</p>
+    </div>` : ""}
+  </div>`;
+}
 function viewCoordReq(){
   const q = S.coordQ.trim();
   const cm = cloRenamed();
@@ -1463,7 +1490,9 @@ function viewCoordReq(){
   const entry = c => `<article class="coord sub request-entry">
     <div class="request-heading"><h3>${c.ps?`<span class="request-stage">${esc(c.ps)}</span>`:""}<span class="request-title">${esc(cTitle(c))}</span>${S.cfix[c.id]?.title||hasPartFix(c)?semTag("fix","직접 수정"):""}${S.cfix[c.id]?.wrong?semTag("wrong","잘못된 정보"):""}</h3><button class="iconbtn coedit" data-cedit3="${c.id}" aria-label="${esc(cTitle(c))} 수정">${ICON.pen}</button></div>
     ${c.e?`<p class="request-note">${esc(c.e)}</p>`:""}
+    ${c.req?.conds?.length ? `<div class="req-conds">${c.req.conds.map(x => `<span class="tag plain">${esc(x)}</span>`).join("")}</div>` : ""}
     ${factRows(PARTS.map(([k,l]) => [l,withClo(cPart(c,k),cm)]))}
+    ${reqMatchBlock(c.req, `c${c.id}`, c)}
   </article>`;
   const all = Object.keys(groups).sort(byAppear);
   const shownCards = q ? names : names.filter(n => S.coordOpen.includes(n));
@@ -2689,6 +2718,8 @@ document.addEventListener("click", e => {
   if (d.setdone){ toggleClo(+d.setdone); return; }
   if (d.act==="fcextra"){ S.fcExtra = !S.fcExtra; render(); return; }
   if (d.fcdone !== undefined){ toggleFcDone(+d.fcdone); return; }
+  if (d.reqall){ S.reqAll = {...(S.reqAll||{}), [d.reqall]: true}; render(); return; }
+  if (d.reqopen){ S.reqOpen = {...(S.reqOpen||{}), [d.reqopen]: !S.reqOpen?.[d.reqopen]}; render(); return; }
   if (d.btdone !== undefined){ toggleBtDone(/^\d+$/.test(d.btdone) ? +d.btdone : d.btdone); return; }
   if (d.fcrec){ S.fcRecOpen = S.fcRecOpen===+d.fcrec ? null : +d.fcrec; render(); return; }
   if (d.act==="btextra"){ S.btExtra = !S.btExtra; render(); return; }

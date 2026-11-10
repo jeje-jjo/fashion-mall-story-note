@@ -16,6 +16,8 @@ export const TABLES = [
   "site_skills", "site_studies", "site_exams", "site_investments", "site_sales_trips", "site_celebrities",
   "site_uniforms", "site_fever", "site_grades", "site_formulas", "site_clear_points", "site_carryover_choices",
   "site_comment_replies", "site_activities", "site_items", "site_goods",
+  // 전체 정보 xlsx에서 묶은 표(2026-11-10): 요청별 조건·맞는 옷, 계절별 판매 점수 평균
+  "req_site", "sales_avg",
 ] as const;
 export type Tables = Record<(typeof TABLES)[number], Row[]>;
 
@@ -32,6 +34,10 @@ export function buildData(t: Tables) {
 
   // ---------------- 옷
   // 상하 궁합: 사이트는 하의 쪽에만 목록이 있고 8개까지만 보인다(+n은 잘림). 이름 → 사이트 번호로 바꿔 둔다.
+  const salesBy = new Map<number, { sa: number; su: number; wi: number }>((t.sales_avg || []).map((r) => [r.id, { sa: r.sa, su: r.su, wi: r.wi }]));
+  const reqBy = new Map<string, Row>((t.req_site || []).map((r) => [r.key, r]));
+  const reqOf = (r: Row | undefined) => r ? { title: r.title, person: r.person, text: r.text, conds: r.conds || [], extra: r.extra, oppo: r.oppo || [], rec: r.rec || [],
+    full: r.full || [], part: (r.part || []).map((x: string) => { const [id, k] = String(x).split(":"); return { id: +id, k: +k }; }) } : null;
   const idBySite = new Map<string, number>(t.clothes.map((r) => [r.siteName, r.id]));
   const pairIds = (s: unknown) => String(s ?? "").replace(/\s*\+\d+\s*$/, "").split(",")
     .map((x) => idBySite.get(x.trim())).filter((x): x is number => x != null);
@@ -57,6 +63,7 @@ export function buildData(t: Tables) {
         acquire: r.acquire, good: r.goodWith, bad: r.badWith, tags: r.siteTags,
         goodIds: pairIds(r.goodWith), badIds: pairIds(r.badWith), pairCut: cut(r.goodWith) || cut(r.badWith),
         cols: cols(r.color ?? c.col),
+        sales: salesBy.get(r.id) || null,
       },
     };
   });
@@ -89,7 +96,7 @@ export function buildData(t: Tables) {
   const fcs = [...t.fashion_checks].sort((a, b) => a.id - b.id);
   L.checks = L.checks.map((c: any, i: number) => {
     const r = fcs.find((x) => x.id === i + 1);
-    return r ? { ...c, site: { id: r.id, critic: r.critic, prize: r.prize, option: r.rewardOption, appear: r.appear, win: r.success } } : c;
+    return r ? { ...c, site: { id: r.id, critic: r.critic, prize: r.prize, option: r.rewardOption, appear: r.appear, win: r.success, req: reqOf(reqBy.get(`f${r.id}`)) } } : c;
   });
   L.checksExtra = fcs.filter((r) => r.id > L.checks.length).map((r) => ({
     name: r.name, site: { id: r.id, critic: r.critic, prize: r.prize, option: r.rewardOption, appear: r.appear, win: r.success },
@@ -119,7 +126,7 @@ export function buildData(t: Tables) {
     const r = cr.get(c.id);
     if (!r) return c;
     const fx = COORD_ID_FIX[c.id] || {};
-    return { ...c, ids: { t: fx.t ?? r.topIds, b: fx.b ?? r.bottomIds, o: fx.o ?? r.outerIds, a: fx.a ?? r.accIds } };
+    return { ...c, ids: { t: fx.t ?? r.topIds, b: fx.b ?? r.bottomIds, o: fx.o ?? r.outerIds, a: fx.a ?? r.accIds }, req: reqOf(reqBy.get(`c${c.id}`)) };
   });
 
   // ---------------- 게임에서 확인할 것: 기존 + 표에만 있는 것
