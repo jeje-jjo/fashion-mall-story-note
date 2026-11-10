@@ -9,7 +9,7 @@ const FLAT = SET === "line" ? LINE : PACK;
 const CLS = SET === "line" ? "line-icon" : "flat-icon";
 
 const BASE = (import.meta as any).env?.BASE_URL ?? "/";
-const V = "line-1";
+const V = "hanger-1";
 
 /** 같은 그림을 다른 이름으로도 부른다(예전 코드에서 쓰던 이름) */
 const ALIAS: Record<string, string> = { star: "spark" };

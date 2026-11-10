@@ -49,3 +49,4 @@
 - 파일: app/public/icons/ (app·favicon·apple-touch·maskable, light/dark 폴더도 같은 그림). 원본 SVG는 app.svg, favicon.svg.
 - 목록 줄 체크 칸(.ck.on)은 초록 대신 메인 색상(--blue, 로즈 팔레트면 로즈)으로. 체크 선은 카드색.
 - 초록 전부 통일: `--green`·`--green-soft`를 메인 색상(`--blue`·`--blue-soft`)으로 바꿔 동기화 점, 성공 태그, 필요 알약, 마네킹 만듦 표시 등도 메인 색을 따라간다(design-system.css 맨 아래).
+- 앱 대표 아이콘·파비콘을 옷걸이(후보 B)로 교체: 로즈 둥근 네모 + 크림색 옷걸이(옅은 면 35%). 16~48px 파비콘은 선을 굵게, 면 없이.

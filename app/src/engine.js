@@ -2911,6 +2911,7 @@ document.addEventListener("click", e => {
   if (d.rsub){ S.recSub = d.rsub; S.confirmSync=false; remember(); render(); return; }
   if (d.act==="clkon" || d.act==="clkoff"){ try{ localStorage.setItem(CLK_KEY, d.act==="clkoff" ? "1" : "0"); }catch(e){} render(); return; }
   if (d.act==="clkdown"){ clickLogDownload(); return; }
+  if (d.act==="clklast"){ clickLogLast(); return; }
   if (d.msub){ S.moreSub = d.msub; remember(); render(); return; }
   if (d.act==="recent"){ S.recentOpen = !S.recentOpen; render(); return; }
   if (d.hgo){ homeGo(d.hgo); return; }
@@ -3334,7 +3335,8 @@ function clickLogCard(){
     <div class="sec-h"><h2>클릭 기록</h2><span>${off ? "이 기기에서 꺼짐" : `기록 중 · 이번에 ${CLK.sent + CLK.buf.length}건`}</span></div>
     <div class="setrow"><span class="setk">이 기기</span><div class="seg"><button type="button" class="${off?"":"on"}" data-act="clkon" aria-pressed="${!off}">켜기</button><button type="button" class="${off?"on":""}" data-act="clkoff" aria-pressed="${off}">끄기</button></div></div>
     <p class="hint" style="margin:8px 0 0">화면 개편 참고용으로 누른 버튼과 화면 상태만 모아요(입력한 글자는 저장 안 함). 마지막 회차가 끝나면 Claude에게 말해 주세요.</p>
-    <div style="margin-top:10px"><button type="button" class="btn ghost sm" data-act="clkdown">모은 기록 파일로 받기</button></div>
+    <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn ghost sm" data-act="clklast">마지막 기록 확인</button><button type="button" class="btn ghost sm" data-act="clkdown">모은 기록 파일로 받기</button></div>
+    ${clickLastView()}
   </section>`;
 }
 (() => {
@@ -3373,6 +3375,33 @@ function clickLogCard(){
   push({ k:"open", s1:st(), dev, sh:screen.height, sw:screen.width });
   window.__fmsClickFlush = flush;
 })();
+/* 마지막으로 저장된 클릭 기록 한 묶음만 불러와 보여 준다(전부 받기는 부담스러워서). 화면에만 두고 저장하지 않는다 */
+const CLK_DEV = {iphone:"아이폰", ipad:"아이패드", mac:"맥", other:"기타"};
+const CLK_TAB = {clo:"의류", fac:"시설", coord:"코디", tool:"도구", rec:"도구"};
+const CLK_KIND = {c:"클릭", ch:"선택", in:"입력", tg:"펼침", s:"스크롤", open:"열기"};
+function clickLastView(){
+  const L = S.clkLast; if (!L) return "";
+  if (L.loading) return `<p class="hint" style="margin:10px 0 0">불러오는 중…</p>`;
+  if (L.err) return `<p class="hint" style="margin:10px 0 0">${esc(L.err)}</p>`;
+  const ev = (L.ev || []).slice(-8).reverse();
+  return `<div class="clklast" style="margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-ctl,8px);background:var(--soft)">
+    <div style="font-size:var(--t-body);font-weight:700">마지막 저장 ${fmtT(L.t)} <span class="hint" style="font-weight:400">· ${CLK_DEV[L.dev] || esc(L.dev || "")} · ${L.round ? `${L.round}회차 · ` : ""}${L.n}건</span></div>
+    ${ev.length ? `<ul style="margin:6px 0 0;padding:0;list-style:none;font-size:var(--t-meta);color:var(--fg2);line-height:1.7">${ev.map(e => `<li>${fmtT(e.t).split(" ")[1]} · ${CLK_KIND[e.k] || esc(e.k || "")}${e.x ? ` · ${esc(e.x)}` : e.el && e.k !== "s" && e.k !== "open" ? ` · ${esc(e.el)}` : ""}${e.s1?.tab ? ` <span class="hint">(${esc(CLK_TAB[e.s1.tab] || e.s1.tab)} 탭)</span>` : ""}</li>`).join("")}</ul>` : ""}
+    <div class="hint" style="margin-top:6px">이 기기에서 아직 안 보낸 것 ${CLK.buf.length}건 · 지금까지 보낸 것 ${CLK.sent}건</div>
+  </div>`;
+}
+async function clickLogLast(){
+  if (!db){ toast("로그인한 상태에서 확인할 수 있어요"); return; }
+  S.clkLast = { loading:true }; render();
+  try{ await window.__fmsClickFlush?.(); }catch(e){}
+  let done = false;
+  const un = db.collection("uilog").orderBy("t", "desc").limit(1).onSnapshot(s => {
+    if (done) return; done = true; setTimeout(() => un?.(), 0);
+    const last = s.docs.map(d => d.data()).filter(Boolean).sort((a, b) => (b.t || 0) - (a.t || 0))[0];
+    S.clkLast = last ? { t:last.t, dev:last.dev, round:last.round, n:last.n || (last.ev || []).length, ev:last.ev || [] } : { err:"저장된 클릭 기록이 아직 없어요" };
+    render();
+  }, () => { S.clkLast = { err:"기록을 불러오지 못했어요" }; render(); });
+}
 /* 모은 기록을 한 파일(JSON)로 받기: Claude에게 넘기거나 드라이브 claude 폴더에 올릴 때 */
 function clickLogDownload(){
   if (!db){ toast("로그인한 상태에서 받을 수 있어요"); return; }
