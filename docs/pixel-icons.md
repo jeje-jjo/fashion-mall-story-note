@@ -26,3 +26,5 @@
 - 머리줄 로고와 로그인 화면: `app-128.png`(64px 격자 2배)를 32~36px, 64px로 표시.
 - 파비콘 `favicon.ico`·`favicon-16/32.png`, 홈 화면 `apple-touch-icon.png`, 매니페스트 `app-192/512`·`app-maskable-512`. 캐시 버전은 `?v=rose-1`. 예전 `app.svg`·`favicon.svg`는 지움.
 - 코드: `app/src/ui/pixel-icons.ts`의 `pngIcon`, 크기는 `design-system.css` 맨 아래.
+
+전체 아이콘 이름·쓰이는 곳: ![아이콘 목록](screenshots/icon-list.png)
