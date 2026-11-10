@@ -17,3 +17,12 @@
 아이콘은 `app/src/ui/pixel-icons.ts`, 대표 아이콘 원본은 `app/public/icons/app.svg`, 작은 원본은 `app/public/icons/favicon.svg`에 있다. 게임 원본 이미지 수집이나 DB 필드는 필요 없다.
 
 검증: 네 개 탭의 실제 표시 SVG가 도트 아이콘인지 검사했고, 320·390·768·834·1440px 가로 넘침과 PNG 크기·캐시 버전을 확인했다. 기존 Playwright 21개와 미리보기·운영 빌드도 통과했다. 기존 홈 화면 아이콘은 OS 캐시 때문에 다시 추가해야 새 그림으로 바뀔 수 있다.
+
+## 더스티 로즈 아이콘 묶음 B로 교체 (2026-11-10)
+
+제제가 준 아이콘 묶음(B soft outline)으로 바꿨다. 위의 단색 SVG 중 아래 8개와 대표 아이콘·파비콘만 바뀌고, 체크·연필·화살표 같은 작은 기호는 SVG 그대로다.
+
+- 탭(의류 `clo`·시설 `fac`·코디 `coord`·도구 `tool`), 최근 기록 `clock`, 오른쪽 버튼(달력 `cal`·목표치 `target`·개량 `upg`): `app/public/icons/ui/{이름}-{16|24|32}.png`. 화면에는 24px 원본 그대로 쓴다(아이폰 3배·패드 2배에서 정수 배율).
+- 머리줄 로고와 로그인 화면: `app-128.png`(64px 격자 2배)를 32~36px, 64px로 표시.
+- 파비콘 `favicon.ico`·`favicon-16/32.png`, 홈 화면 `apple-touch-icon.png`, 매니페스트 `app-192/512`·`app-maskable-512`. 캐시 버전은 `?v=rose-1`. 예전 `app.svg`·`favicon.svg`는 지움.
+- 코드: `app/src/ui/pixel-icons.ts`의 `pngIcon`, 크기는 `design-system.css` 맨 아래.

@@ -165,3 +165,18 @@
   :root:root[data-design="hybrid"] .pills { gap: 4px; }
   :root:root[data-design="hybrid"] .needopt { padding: 12px; }
 }
+
+/* ---------- 더스티 로즈 도트 아이콘(PNG) ---------- */
+/* 원본 24px 그대로(아이폰 3배·패드 2배에서도 정수 배율이라 또렷함) */
+:root:root[data-design="hybrid"] .png-icon { width: 24px; height: 24px; image-rendering: pixelated; flex: none; }
+:root:root[data-design="hybrid"] nav.tabs .png-icon,
+:root:root[data-design="hybrid"] .fab .png-icon,
+:root:root[data-design="hybrid"] .hbtn .png-icon { width: 24px; height: 24px; }
+/* 머리줄 로고는 앱 대표 아이콘 자체가 액자 모양이라 바깥 상자를 없앤다 */
+:root:root[data-design="hybrid"] .brandmark.has-app { background: none; border: 0; box-shadow: none; padding: 0; width: 36px; height: 36px; }
+:root:root[data-design="hybrid"] .brandmark.has-app .app-mark { width: 36px; height: 36px; image-rendering: auto; display: block; }
+.gate-mark .app-mark { width: 64px; height: 64px; display: block; margin: 0 auto; }
+@media (max-width: 739px) {
+  :root:root[data-design="hybrid"] .brandmark.has-app,
+  :root:root[data-design="hybrid"] .brandmark.has-app .app-mark { width: 32px; height: 32px; }
+}

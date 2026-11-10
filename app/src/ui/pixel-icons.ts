@@ -34,11 +34,26 @@ export function pixelIcon(name: string) {
   return `<svg class="ui-icon pixel-icon${name === 'chev' ? ' chev' : ''}" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" stroke="none" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path d="${marks[name] ?? marks.shop}"/></svg>`;
 }
 
-export function installPixelIcons() {
-  (window as any).__FMS_ICONS__ = Object.fromEntries(Object.keys(marks).map(name => [name, pixelIcon(name)]));
-  document.querySelectorAll<HTMLElement>('[data-pixel]').forEach(el => { el.innerHTML = pixelIcon(el.dataset.pixel!); });
-  document.getElementById('recentBtn')!.innerHTML = pixelIcon('clock');
-  document.querySelector('#fab [data-q="memo"]')!.innerHTML = pixelIcon('cal');
-  document.querySelector('#fab [data-q="up"]')!.innerHTML = pixelIcon('upg');
-  document.querySelector('#fab [data-q="goal"]')!.innerHTML = pixelIcon('target');
+/* 더스티 로즈 도트 아이콘(2026-11-10 제제가 준 아이콘 묶음 B): 색이 들어간 PNG.
+   흐려지지 않게 원본 크기(16·24·32px) 그대로만 쓴다. 나머지 작은 기호(체크·연필·화살표 등)는 위 SVG 그대로. */
+const PNG_ICONS = ["clo", "fac", "coord", "tool", "clock", "cal", "target", "upg"];
+const BASE = (import.meta as any).env?.BASE_URL ?? "/";
+export function pngIcon(name: string, px: 16 | 24 | 32 = 24) {
+  return `<img class="ui-icon png-icon" src="${BASE}icons/ui/${name}-${px}.png?v=rose-1" width="${px}" height="${px}" alt="" aria-hidden="true" draggable="false" decoding="async">`;
 }
+/** 머리줄·로그인 화면 로고: 앱 대표 아이콘 */
+const appMark = (px: number, src: string) => `<img class="app-mark" src="${BASE}icons/${src}?v=rose-1" width="${px}" height="${px}" alt="" aria-hidden="true" draggable="false">`;
+
+export function installPixelIcons() {
+  (window as any).__FMS_ICONS__ = {
+    ...Object.fromEntries(Object.keys(marks).map(name => [name, pixelIcon(name)])),
+    ...Object.fromEntries(["clo", "fac", "coord", "tool"].map(name => [name, pngIcon(name, 24)])),
+  };
+  document.querySelectorAll<HTMLElement>('.brandmark[data-pixel]').forEach(el => { el.innerHTML = appMark(32, "app-128.png"); el.classList.add("has-app"); });
+  document.querySelectorAll<HTMLElement>('.gate-mark[data-pixel]').forEach(el => { el.innerHTML = appMark(64, "app-128.png"); });
+  document.getElementById('recentBtn')!.innerHTML = pngIcon('clock', 24);
+  document.querySelector('#fab [data-q="memo"]')!.innerHTML = pngIcon('cal', 24);
+  document.querySelector('#fab [data-q="up"]')!.innerHTML = pngIcon('upg', 24);
+  document.querySelector('#fab [data-q="goal"]')!.innerHTML = pngIcon('target', 24);
+}
+export { PNG_ICONS };
