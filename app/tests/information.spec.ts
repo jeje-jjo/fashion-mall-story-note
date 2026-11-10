@@ -45,6 +45,8 @@ for (const width of [320, 390, 768, 1440]) {
     await fits();
     await page.locator('[data-tab="coord"]').click();
     await page.locator('[data-cochip]').first().click();
+    // 패드·폰 폭에서는 요청이 한 줄로 접혀 있어서 눌러 펼친다
+    if (await page.locator('[data-reqx]').count()) await page.locator('[data-reqx]').first().click();
     await expect(page.locator(".request-entry").first()).toContainText("상의");
     await fits();
     await page.locator('[data-tab="clo"]').click();
