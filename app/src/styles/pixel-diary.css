@@ -558,3 +558,4 @@ nav.tabs { background: var(--card); }
 :root:root .btmy { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 :root:root .btmy-act { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 10px; }
 :root:root .btcard > .bttries { margin-top: 10px; }
+:root:root .btmy + .reference-block, :root:root .btmy + details { margin-top: 12px; }
