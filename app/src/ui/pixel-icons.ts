@@ -1,6 +1,12 @@
 /* 아이콘: 소프트 플랫 부티크 묶음(2026-11-10 제제). 탭·버튼·작은 기호 전부 같은 그림체.
    SVG를 문서 안에 바로 넣고 색은 CSS 변수로 칠한다 → 라이트·다크·스킨에 따라 자동으로 바뀐다(design-system.css). */
-import { FLAT } from "./flat-icons";
+import { FLAT as PACK } from "./flat-icons";
+import { LINE } from "./line-icons";
+
+/* 어떤 아이콘을 쓸지: "pack" = 소프트 플랫 부티크 묶음(지금 배포), "line" = 직접 그린 선 아이콘(제제 확인 대기) */
+const SET = "pack" as "pack" | "line";
+const FLAT = SET === "line" ? LINE : PACK;
+const CLS = SET === "line" ? "line-icon" : "flat-icon";
 
 const BASE = (import.meta as any).env?.BASE_URL ?? "/";
 const V = "flat-1";
@@ -10,7 +16,7 @@ const ALIAS: Record<string, string> = { star: "spark" };
 
 export function flatIcon(name: string, px = 24) {
   const key = FLAT[name] ? name : (ALIAS[name] ?? "shop");
-  return `<svg class="ui-icon flat-icon fi-${key}${name === "chev" ? " chev" : ""}" width="${px}" height="${px}" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${FLAT[key]}</svg>`;
+  return `<svg class="ui-icon ${CLS} fi-${key}${name === "chev" ? " chev" : ""}" width="${px}" height="${px}" viewBox="0 0 24 24" fill="none" ${SET === "line" ? 'stroke="currentColor" stroke-width="1.75"' : 'stroke-width="1.7"'} stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${FLAT[key]}</svg>`;
 }
 /** 예전 이름 유지(다른 파일에서 부를 수 있음) */
 export const pixelIcon = (name: string) => flatIcon(name, 16);
@@ -24,7 +30,7 @@ export function installPixelIcons() {
   const names = [...Object.keys(FLAT), ...Object.keys(ALIAS)];
   (window as any).__FMS_ICONS__ = {
     ...Object.fromEntries(names.map(n => [n, flatIcon(n)])),
-    check: flatIcon("ok").replace("flat-icon", "flat-icon on-fill"),
+    check: flatIcon("ok").replace(CLS, `${CLS} on-fill`),
     "check-box": flatIcon("check"),
   };
   document.querySelectorAll<HTMLElement>('.brandmark[data-pixel]').forEach(el => { el.innerHTML = appMark(32); el.classList.add("has-app"); });

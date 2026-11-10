@@ -195,3 +195,12 @@
   :root:root[data-design="hybrid"] .brandmark.has-app,
   :root:root[data-design="hybrid"] .brandmark.has-app .app-mark { width: 32px; height: 32px; }
 }
+
+/* ---------- 노트 전용 선 아이콘(line-icons.ts) ---------- */
+:root:root .line-icon { stroke: currentColor; shape-rendering: geometricPrecision; image-rendering: auto; flex: none; }
+:root:root .line-icon .i-soft { fill: currentColor; fill-opacity: .16; stroke: none; }
+:root:root .line-icon .i-dot { fill: currentColor; stroke: none; }
+:root:root .line-icon.on-fill { stroke: #fff; stroke-width: 2.6; }
+:root:root[data-design="hybrid"] nav.tabs .line-icon,
+:root:root[data-design="hybrid"] .fab .line-icon,
+:root:root[data-design="hybrid"] .hbtn .line-icon { width: 24px; height: 24px; }
