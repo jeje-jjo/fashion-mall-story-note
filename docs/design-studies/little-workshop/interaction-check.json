@@ -1,0 +1,19 @@
+{
+  "offlineSelfContainedHTML": true,
+  "backendConnections": false,
+  "checks": [
+    "search",
+    "empty results and reset",
+    "genre filters",
+    "list scroll preserved across detail tabs",
+    "style scores",
+    "completion toggle",
+    "queue addition and view",
+    "facility genre and completion",
+    "requests and battle view",
+    "reference categories",
+    "mobile clothing and facility dialogs",
+    "Escape closes detail"
+  ],
+  "errors": []
+}

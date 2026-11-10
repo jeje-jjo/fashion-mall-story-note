@@ -19,9 +19,10 @@ function mockTables(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   base: "/fashion-mall-story-note/",
+  build: mode === "preview" ? { rollupOptions: { input: { main: path.resolve(__dirname, "index.html"), workbench: path.resolve(__dirname, "workbench.html") } } } : {},
   plugins: [mockTables()],
   define: { __BUILD__: JSON.stringify(Date.now().toString(36)) },
   server: { fs: { allow: [".."] } },
-});
+}));
