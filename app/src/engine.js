@@ -1096,7 +1096,8 @@ function btSiteBlock(st, o = {}){
     if (!inf) return `<li>세트 ${x.setId} · ${esc(x.result || "")}</li>`;
     return `<li class="btset ${inf.left?"":"is-done"}"><button type="button" class="btset-h" data-gset="${x.setId}" title="코디 세트에서 보기"><strong>세트 ${x.setId}</strong><span>${esc([set.genre, set.sub].filter(Boolean).join(" · "))}</span><span>${esc(x.result || "")}</span><span class="btset-c">${inf.left?`${inf.done}/${inf.total} 완료`:"완성"} ›</span></button>
       <ul class="btset-items">${inf.items.map(it => it.c ? `<li><span class="inline-state ${cloDone(it.c)?"is-done":""}">${cloDone(it.c)?"✓":"○"}</span>${esc(cloName(it.c))}</li>` : `<li><span class="inline-state">·</span>${esc(it.name || "#"+it.id)}</li>`).join("")}</ul></li>`; });
-  return `<div class="battle-detail"><div class="detail-layout"><div class="detail-column">${infoSection("조건과 보상", facts)}${comparisons?`<div class="btcompare">${infoSection(rec?"상대 기준과 내 기록":"상대 기준",`<div class="comparison-table ${rec?"":"norec"}"><div class="comparison-label ${rec?"":"norec"}"><span>항목</span><span>상대</span>${rec?"<span>내 기록</span><span>차이</span><span>결과</span>":""}</div>${comparisons}</div>`)}</div>`:""}</div><div class="detail-column">${clothes.length?infoSection(`조건에 맞는 의류 · ${clothes.filter(x=>cloDone(x.c)).length}/${clothes.length} 완료`,`<ul class="info-list">${clothes.map(({c})=>`<li><span class="inline-state ${cloDone(c)?"is-done":""}">${cloDone(c)?"✓":"○"}</span>${esc(cloName(c))}</li>`).join("")}</ul>`):""}${sets.length?infoSection("추천 세트",`<ul class="info-list btsets">${sets.join("")}</ul>`+`<p class="section-note">사이트 추천입니다. 세트 조건 결합은 미확정이에요. 세트를 누르면 코디 세트로 가요.</p>`):""}${my}${st.opponentOutfit?referenceBlock(`opponent-${st.id}`,"상대 코디",`<p>${esc(st.opponentOutfit.replace(/\s*#\d+/g,""))}</p>`):""}</div></div>${noSrc?"":`<p class="source-caption">${st.preview?"화면 검토용 예시 수치":"기준값: KairoHistory 배틀·코디 세트"}</p>`}</div>`;
+  return `<div class="battle-detail"><div class="detail-layout"><div class="detail-column">${infoSection("조건과 보상", facts)}${comparisons?`<div class="btcompare">${infoSection(rec?"상대 기준과 내 기록":"상대 기준",`<div class="comparison-table ${rec?"":"norec"}"><div class="comparison-label ${rec?"":"norec"}"><span>항목</span><span>상대</span>${rec?"<span>내 기록</span><span>차이</span><span>결과</span>":""}</div>${comparisons}</div>`)}</div>`:""}</div><div class="detail-column">${clothes.length?infoSection(`조건에 맞는 의류 · ${clothes.filter(x=>cloDone(x.c)).length}/${clothes.length} 완료`,`<ul class="info-list">${clothes.map(({c})=>`<li><span class="inline-state ${cloDone(c)?"is-done":""}">${cloDone(c)?"✓":"○"}</span>${esc(cloName(c))}</li>`).join("")}</ul>`):""}${(() => { const rq = st.req; if (!rq?.rec?.length) return ""; const {recOk, alt} = recAlt(rq); const li = id => { const x = CLO_BY_ID.get(id), d = x && cloDone(x); return `<li><span class="inline-state ${d?"is-done":""}">${d?"✓":"○"}</span>${esc(x ? cloName(x) : "#" + id)}</li>`; };
+      return recOk ? infoSection("사이트 추천 코디", `<ul class="btset-items">${rq.rec.map(li).join("")}</ul>`) : alt.length ? `<div class="reqmatch-g alt">${infoSection("대체 추천", `<ul class="btset-items">${alt.map(li).join("")}</ul>${recAltNote(rq)}`)}</div>` : ""; })()}${sets.length?infoSection("추천 세트",`<ul class="info-list btsets">${sets.join("")}</ul>`+`<p class="section-note">사이트 추천입니다. 세트 조건 결합은 미확정이에요. 세트를 누르면 코디 세트로 가요.</p>`):""}${my}${st.opponentOutfit?referenceBlock(`opponent-${st.id}`,"상대 코디",`<p>${esc(st.opponentOutfit.replace(/\s*#\d+/g,""))}</p>`):""}</div></div>${noSrc?"":`<p class="source-caption">${st.preview?"화면 검토용 예시 수치":"기준값: KairoHistory 배틀·코디 세트"}</p>`}</div>`;
 }
 function battleCard(i){
   const b = DATA.battles[i], r = bRec(i), cs = bCond(i), noteOpen = !!S.btNote;
@@ -1456,6 +1457,22 @@ function coordJump(n){
 }
 /* 사이트 요청 정보(전체 정보 xlsx, 2026-11-10): 요청 문장·조건은 위에, 맞는 옷은 펼쳐서.
    손님 요청은 제제가 통과한 옷(노트 기록)이 먼저, 그 아래에 사이트에서 조건에 맞는 옷 */
+/* 사이트 추천 코디가 조건에 맞는 옷을 하나도 안 담고 있으면 '사이트 정보 이상'으로 보고 대체 추천(제제 2026-11-10).
+   조건에 다 맞는 옷 중 종류별 한 벌(셋업 또는 상의+하의, 아우터, 액세서리), 만든 옷 → 통과한 옷 → 인기·품질 순 */
+function recAlt(rq, mine = new Set()){
+  const full = (rq?.full || []).filter(id => CLO_BY_ID.get(id));
+  const recOk = !rq?.rec?.length || !full.length || rq.rec.some(id => full.includes(id));
+  const alt = [];
+  if (!recOk){
+    const rank = id => { const x = CLO_BY_ID.get(id); return (cloMade(x) ? 1e7 : 0) + (mine.has(id) ? 1e6 : 0) + mqPop(x); };
+    const bestK = k => full.filter(id => CLO_BY_ID.get(id)?.site?.kind === k).sort((a, b) => rank(b) - rank(a))[0];
+    const su = bestK("셋업"), t = bestK("상의"), b = bestK("하의");
+    if (su != null && (t == null || b == null || rank(su) >= rank(t))) alt.push(su); else { if (t != null) alt.push(t); if (b != null) alt.push(b); }
+    ["아우터", "액세서리"].forEach(k => { const x = bestK(k); if (x != null) alt.push(x); });
+  }
+  return {recOk, alt};
+}
+const recAltNote = rq => `<p class="section-note alt-note">${ICON.warn}사이트 정보 이상: 사이트 추천 코디(${esc(rq.rec.map(id => { const x = CLO_BY_ID.get(id); return x ? cloName(x) : "#" + id; }).join(" + "))})가 조건에 안 맞아서, 조건에 다 맞는 옷으로 대신 골랐어요(만든 옷 → 통과한 옷 → 인기·품질 순).</p>`;
 const RQ_KIND = [["상의","상의"],["셋업","셋업"],["하의","하의"],["아우터","아우터"],["액세서리","액세서리"]];
 function reqMatchBlock(rq, key, c){
   if (!rq || !(rq.full.length || rq.part.length || rq.rec.length)) return "";
@@ -1465,23 +1482,14 @@ function reqMatchBlock(rq, key, c){
   const full = rq.full.filter(id => CLO_BY_ID.get(id));
   const doneN = full.filter(id => cloDone(CLO_BY_ID.get(id))).length;
   const groups = RQ_KIND.map(([k,l]) => [l, full.filter(id => CLO_BY_ID.get(id)?.site?.kind === k)]).filter(([,l]) => l.length);
-  /* 사이트 추천 코디가 조건에 맞는 옷을 하나도 안 담고 있으면 '사이트 정보 이상'으로 보고 대체 추천(제제 2026-11-10) */
-  const recOk = !rq.rec.length || !full.length || rq.rec.some(id => rq.full.includes(id));
-  const alt = [];
-  if (!recOk){
-    const rank = id => { const x = CLO_BY_ID.get(id); return (cloMade(x) ? 1e7 : 0) + (mine.has(id) ? 1e6 : 0) + mqPop(x); };
-    const bestK = k => full.filter(id => CLO_BY_ID.get(id)?.site?.kind === k).sort((a, b) => rank(b) - rank(a))[0];
-    const su = bestK("셋업"), t = bestK("상의"), b = bestK("하의");
-    if (su != null && (t == null || b == null || rank(su) >= rank(t))) alt.push(su); else { if (t != null) alt.push(t); if (b != null) alt.push(b); }
-    ["아우터", "액세서리"].forEach(k => { const x = bestK(k); if (x != null) alt.push(x); });
-  }
+  const {recOk, alt} = recAlt(rq, mine);
   const best = rq.part.length ? Math.max(...rq.part.map(x => x.k)) : 0;
   const part = rq.part.filter(x => x.k === best && CLO_BY_ID.get(x.id)).map(x => x.id);
   return `<div class="reqmatch">
     <button type="button" class="linkbtn reqmatch-btn" data-reqopen="${key}" aria-expanded="${open}">${open ? "추천 옷 접기 ▴" : `추천 옷 ${full.length}벌 · 만든 옷 ${doneN} ▾`}</button>
     ${open ? `<div class="reqmatch-body">
       ${rq.rec.length && recOk ? `<div class="reqmatch-g"><span class="k">사이트 추천 코디</span><ul class="btset-items">${rq.rec.map(item).join("")}</ul></div>` : ""}
-      ${alt.length ? `<div class="reqmatch-g alt"><span class="k">대체 추천</span><ul class="btset-items">${alt.map(item).join("")}</ul><p class="section-note alt-note">${ICON.warn}사이트 정보 이상: 사이트 추천 코디(${esc(rq.rec.map(nm).join(" + "))})가 조건에 안 맞아서, 조건에 다 맞는 옷으로 대신 골랐어요(만든 옷 → 통과한 옷 → 인기·품질 순).</p></div>` : ""}
+      ${alt.length ? `<div class="reqmatch-g alt"><span class="k">대체 추천</span><ul class="btset-items">${alt.map(item).join("")}</ul>${recAltNote(rq)}</div>` : ""}
       ${groups.map(([l, ids]) => { const srt = ids.sort((a,b) => mine.has(b) - mine.has(a) || cloDone(CLO_BY_ID.get(b)) - cloDone(CLO_BY_ID.get(a))), cap = all ? srt : srt.slice(0, 12);
         return `<div class="reqmatch-g"><span class="k">${l} ${ids.length}${ids.length > 12 ? ` · 만든 옷 ${ids.filter(id => cloDone(CLO_BY_ID.get(id))).length}` : ""}</span><ul class="btset-items">${cap.map(item).join("")}</ul></div>`; }).join("")}
       ${!all && groups.some(([, ids]) => ids.length > 12) ? `<button type="button" class="linkbtn" data-reqall="${key}">나머지 ${groups.reduce((n, [, ids]) => n + Math.max(0, ids.length - 12), 0)}벌 더 보기</button>` : ""}

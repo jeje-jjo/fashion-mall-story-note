@@ -110,6 +110,7 @@ export function buildData(t: Tables) {
     id: r.id, name: r.siteName, request: r.request, clothCond: r.clothCond, values: r.values,
     fee: r.fee, appear: r.appear, win: r.win, opponent: r.opponent, opponentOutfit: r.opponentOutfit,
     clothes: t.battle_clothes.filter((x) => x.battleId === r.id).map((x) => ({ id: x.cloId, name: x.cloName, source: x.source, detail: x.detail })),
+    req: reqOf(reqBy.get(`b${r.id}`)),
     sets: t.battle_sets.filter((x) => x.battleId === r.id).sort((a, b) => a.rank - b.rank)
       .map((x) => ({ setId: x.setId, result: x.result, matched: x.matched, unmet: x.unmet })),
   });
