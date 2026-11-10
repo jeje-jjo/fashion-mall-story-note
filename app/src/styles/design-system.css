@@ -151,3 +151,17 @@
   :root:root[data-design="hybrid"] .btx-list { grid-template-columns: 1fr; gap: 8px; }
   :root:root[data-design="hybrid"] .btx { padding: 10px 12px; }
 }
+
+/* ---------- 옵션 알약(필요한 옵션·목록 아래 옵션 표시 등): 칩과 같은 단계 ---------- */
+:root:root[data-design="hybrid"] .pill { font-size: var(--t-body); line-height: 1.3; padding: 0 9px; min-height: calc(var(--h-ctl) - 2px); display: inline-flex; align-items: center; }
+:root:root[data-design="hybrid"] .pill b { font-size: var(--t-meta); margin-left: 4px; }
+:root:root[data-design="hybrid"] .pills { gap: 5px; }
+:root:root[data-design="hybrid"] .needopt .ocrow .ocn { font-size: var(--t-item); }
+:root:root[data-design="hybrid"] .needopt .ocrow .ocs,
+:root:root[data-design="hybrid"] .needopt .ochead .hint { font-size: var(--t-meta); }
+:root:root[data-design="hybrid"] .needopt .ochead b { font-size: var(--t-body); }
+@media (max-width: 739px) {
+  :root:root[data-design="hybrid"] .pill { padding: 0 7px; }
+  :root:root[data-design="hybrid"] .pills { gap: 4px; }
+  :root:root[data-design="hybrid"] .needopt { padding: 12px; }
+}
