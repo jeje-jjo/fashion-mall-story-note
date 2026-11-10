@@ -1,0 +1,29 @@
+{
+  "roundtrip": true,
+  "plans": [
+    {
+      "name": "비교안 1 · 내추럴 정원형 9×9",
+      "imported": true,
+      "objects": 31,
+      "synergy": 155,
+      "expected": 155,
+      "guideDesks": 1
+    },
+    {
+      "name": "비교안 2 · 내추럴 혼합형 9×9",
+      "imported": true,
+      "objects": 31,
+      "synergy": 304,
+      "expected": 304,
+      "guideDesks": 3
+    },
+    {
+      "name": "비교안 3 · 안내소 총 5개 9×9",
+      "imported": true,
+      "objects": 31,
+      "synergy": 248,
+      "expected": 248,
+      "guideDesks": 5
+    }
+  ]
+}
