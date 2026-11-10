@@ -204,3 +204,7 @@
 :root:root[data-design="hybrid"] nav.tabs .line-icon,
 :root:root[data-design="hybrid"] .fab .line-icon,
 :root:root[data-design="hybrid"] .hbtn .line-icon { width: 24px; height: 24px; }
+
+/* ---------- 체크 칸: 초록 대신 메인 색상(빈티지 로즈 등)으로 ---------- */
+:root:root:root .ck.on { background: var(--blue); border-color: var(--blue); box-shadow: none; }
+:root:root .line-icon.on-fill { stroke: var(--card); }

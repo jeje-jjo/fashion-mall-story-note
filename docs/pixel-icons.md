@@ -43,3 +43,8 @@
 - 앱 대표 아이콘·파비콘은 소프트 플랫 부티크 묶음 그대로.
 - 묶음 아이콘으로 되돌리려면 `app/src/ui/pixel-icons.ts`의 `SET`을 `"pack"`으로.
 - 요청서(이름·용도·색상): [icon-brief.md](icon-brief.md), 목록 이미지: [screenshots/icon-list.png](screenshots/icon-list.png)
+
+## 앱 대표 아이콘·파비콘 새로 그림, 체크 칸 색 (2026-11-10)
+- 빈티지 로즈(#905665) 둥근 네모 + 크림색(#FBF4EF) 쇼핑백 + 로즈 체크. 16~32px 파비콘은 선을 굵게 따로 그렸다.
+- 파일: app/public/icons/ (app·favicon·apple-touch·maskable, light/dark 폴더도 같은 그림). 원본 SVG는 app.svg, favicon.svg.
+- 목록 줄 체크 칸(.ck.on)은 초록 대신 메인 색상(--blue, 로즈 팔레트면 로즈)으로. 체크 선은 카드색.
