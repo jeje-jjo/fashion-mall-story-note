@@ -944,7 +944,7 @@ function fcInfoCard(oi){
     <div class="fc-h"><span class="fcnum">${oi+1}</span><b class="fc-n">${esc(checkName(oi))}</b>
       ${hybrid()?`<button class="iconbtn act" data-sheet="fc|${oi}" aria-label="이름·기록 수정">${ICON.pen}</button>`:""}<button class="iconbtn act ${fcDone(oi)?"on":""}" data-fcdone="${oi}" aria-label="패션 체크 ${oi+1} ${fcDone(oi)?"완료 취소":"완료"}" aria-pressed="${fcDone(oi)}">${ICON.ok}</button>${hasNote?`<button class="iconbtn act ${noteOpen?"on":""}" data-act="fcnote" aria-label="주석 보기" aria-expanded="${noteOpen}">${ICON.note}</button>`:""}
       <span class="fc-c">${main.length?`${n} / ${main.length}`:"대상 없음"}</span></div>
-    <div class="check-overview">${factRows([["시설 조건",c.req],["코디 조건",(c.site?.req?.conds||[]).map(x => x.replace(/^[^:]+:\s*/, "")).join(" + ") || (c.site?.req ? "없음" : null)],["코디 점수",c.site?.req?.cv!=null ? nf0(c.site.req.cv) : null],["보상",c.reward]])}</div>
+    <div class="check-overview">${factRows([["시설 조건",c.req],["코디 조건",(c.site?.req?.conds||[]).map(x => x.replace(/^[^:]+:\s*/, "")).join(" + ") || (c.site?.req ? "없음" : null)],["코디 점수",c.site?.req?.cv!=null ? nf0(c.site.req.cv) : null],["시설 점수",c.site?.req?.facN!=null ? nf0(c.site.req.facN) : null],["보상",c.reward]])}</div>
     ${fcSiteLine(c.site)}
     ${reqMatchBlock(c.site?.req, "f"+oi)}
     ${scoreLine(oi) ? `<button type="button" class="linkbtn" data-fcrec="${oi}" aria-expanded="${S.fcRecOpen===oi}">${S.fcRecOpen===oi?"기록 접기":"기록 보기"}</button>${S.fcRecOpen===oi ? scoreLine(oi) : ""}` : ""}
@@ -2729,11 +2729,12 @@ function goalPanel(){
     ${row("품질 합계", mx(B, x => x.v[0]), mx(B, x => x.v[0])?.v[0], x => bShort(x.i))}
     ${row("매력 합계", mx(B, x => x.v[1]), mx(B, x => x.v[1])?.v[1], x => bShort(x.i))}
     ${row("코디 점수", mx(F, x => x.cv), mx(F, x => x.cv)?.cv, x => `패션 체크 ${x.oi+1}`)}
+    ${row("시설 점수", mx(F, x => x.c.site?.req?.facN), mx(F, x => x.c.site?.req?.facN)?.c.site.req.facN, x => `패션 체크 ${x.oi+1}`)}
     ${stats.map(st => { const a = B.filter(x => x.b.stat === st), m = mx(a, x => x.v[2]); return row(st === "-" ? "직원 특기" : `직원 ${st}`, m, m?.v[2], x => bShort(x.i)); }).join("")}</div>`;
   const nb = left(bts)[0], nf = left(fcs)[0];
   const next = `<div class="goal-b"><div class="sublbl" style="margin:0 0 4px">바로 다음</div>
     ${nb ? `<div class="goal-row"><span class="k">${esc(bShort(nb.i))}</span><span class="w">품질 <b>${nf0(nb.v[0])}</b> · 매력 <b>${nf0(nb.v[1])}</b> · ${esc(!nb.b.stat || nb.b.stat === "-" ? "특기 능력" : nb.b.stat)} <b>${nf0(nb.v[2])}</b></span></div>` : ""}
-    ${nf ? `<div class="goal-row"><span class="k">패션 체크 ${nf.oi+1}</span><span class="w">코디 점수 <b>${nf0(nf.cv)}</b>${(nf.c.site?.req?.conds||[]).length ? ` · ${esc(nf.c.site.req.conds.map(x => x.replace(/^[^:]+:\s*/, "")).join(" + "))}` : ""}</span></div>` : ""}
+    ${nf ? `<div class="goal-row"><span class="k">패션 체크 ${nf.oi+1}</span><span class="w">코디 점수 <b>${nf0(nf.cv)}</b>${nf.c.site?.req?.facN != null ? ` · 시설 점수 <b>${nf0(nf.c.site.req.facN)}</b>` : ""}${(nf.c.site?.req?.conds||[]).length ? ` · ${esc(nf.c.site.req.conds.map(x => x.replace(/^[^:]+:\s*/, "")).join(" + "))}` : ""}</span></div>` : ""}
     ${!nb && !nf ? `<div class="hint">챌린지와 패션 체크를 모두 끝냈어요</div>` : ""}</div>`;
   /* 점원별(제제 2026-11-10): 점원 장르의 챌린지 배틀 + 같은 큰 장르 조건의 패션 체크 */
   const staff = DATA.up.staff.map((x, i) => { const m = x.match(/^(.*) \((.*)\)$/); return {i, name: m ? m[1] : x, g: m ? m[2] : ""}; });
@@ -2748,7 +2749,7 @@ function goalPanel(){
           ${row("품질 합계", bt, bt.v[0], () => "입은 옷 합계")}${row("매력 합계", bt, bt.v[1], () => "입은 옷 합계")}${row(`직원 ${sn}`, bt, bt.v[2], () => "출전 직원 한 명")}
           ${bt.b.note ? `<div class="hint" style="margin-top:4px">${esc(bt.b.note)}</div>` : ""}` : `<div class="hint">이 점원 장르의 챌린지가 없어요</div>`}</div>
       <div class="goal-b"><div class="sublbl" style="margin:0 0 4px">${esc(layGName(main) || "같은 장르")} 패션 체크</div>
-        ${fl.length ? fl.map(x => `<div class="goal-row"><span class="k">패션 체크 ${x.oi+1}</span><b>${nf0(x.cv)}</b><span class="w">${esc(x.c.site.req.conds.map(c => c.replace(/^[^:]+:\s*/, "")).join(" + "))}${x.done ? " · 완료 ✓" : ""}</span></div>`).join("") : `<div class="hint">장르 조건이 이 장르인 패션 체크가 없어요</div>`}</div>
+        ${fl.length ? fl.map(x => `<div class="goal-row"><span class="k">패션 체크 ${x.oi+1}</span><b>${nf0(x.cv)}</b><span class="w">${esc(x.c.site.req.conds.map(c => c.replace(/^[^:]+:\s*/, "")).join(" + "))}${x.c.site.req.facN != null ? ` · 시설 점수 ${nf0(x.c.site.req.facN)}` : ""}${x.done ? " · 완료 ✓" : ""}</span></div>`).join("") : `<div class="hint">장르 조건이 이 장르인 패션 체크가 없어요</div>`}</div>
       <div class="hint">품질·매력·코디 점수는 입은 옷 합계 · 출처: KairoHistory 배틀·패션 체크</div></div>`;
   }
   return `<div class="goalpanel"><div class="sublbl" style="margin:0 0 8px">목표치 <span class="hint">챌린지 ${bts.filter(x => x.done).length}/${bts.length} · 패션 체크 ${fcs.filter(x => x.done).length}/${fcs.length} · 합계 기준</span></div>
