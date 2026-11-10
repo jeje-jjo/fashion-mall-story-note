@@ -3360,7 +3360,8 @@ function clickLogCard(){
   async function flush(){
     if (!CLK.buf.length || !db) return;
     const ev = CLK.buf; CLK.buf = [];
-    try{ await db.collection("uilog").doc(`${CLK.sid}-${String(CLK.seq++).padStart(3, "0")}`).set({ sid:CLK.sid, dev, ua:ua.slice(0, 120), round:roundNo(), run:RUN, skin:document.documentElement.dataset.skin || "", t:Date.now(), n:ev.length, ev }); CLK.sent += ev.length; }
+    // Firestore는 값이 undefined인 칸이 있으면 저장 자체를 거부한다(탭 상태 중 없는 값이 많음) → JSON으로 한 번 걸러 빈 칸을 뺀다
+    try{ await db.collection("uilog").doc(`${CLK.sid}-${String(CLK.seq++).padStart(3, "0")}`).set(JSON.parse(JSON.stringify({ sid:CLK.sid, dev, ua:ua.slice(0, 120), round:roundNo(), run:RUN, skin:document.documentElement.dataset.skin || "", t:Date.now(), n:ev.length, ev }))); CLK.sent += ev.length; }
     catch(err){ CLK.buf = ev.concat(CLK.buf).slice(-400); }
   }
   setInterval(flush, 20000);
