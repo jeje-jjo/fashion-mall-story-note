@@ -1465,13 +1465,23 @@ function reqMatchBlock(rq, key, c){
   const full = rq.full.filter(id => CLO_BY_ID.get(id));
   const doneN = full.filter(id => cloDone(CLO_BY_ID.get(id))).length;
   const groups = RQ_KIND.map(([k,l]) => [l, full.filter(id => CLO_BY_ID.get(id)?.site?.kind === k)]).filter(([,l]) => l.length);
+  /* 사이트 추천 코디가 조건에 맞는 옷을 하나도 안 담고 있으면 '사이트 정보 이상'으로 보고 대체 추천(제제 2026-11-10) */
+  const recOk = !rq.rec.length || !full.length || rq.rec.some(id => rq.full.includes(id));
+  const alt = [];
+  if (!recOk){
+    const rank = id => { const x = CLO_BY_ID.get(id); return (cloMade(x) ? 1e7 : 0) + (mine.has(id) ? 1e6 : 0) + mqPop(x); };
+    const bestK = k => full.filter(id => CLO_BY_ID.get(id)?.site?.kind === k).sort((a, b) => rank(b) - rank(a))[0];
+    const su = bestK("셋업"), t = bestK("상의"), b = bestK("하의");
+    if (su != null && (t == null || b == null || rank(su) >= rank(t))) alt.push(su); else { if (t != null) alt.push(t); if (b != null) alt.push(b); }
+    ["아우터", "액세서리"].forEach(k => { const x = bestK(k); if (x != null) alt.push(x); });
+  }
   const best = rq.part.length ? Math.max(...rq.part.map(x => x.k)) : 0;
   const part = rq.part.filter(x => x.k === best && CLO_BY_ID.get(x.id)).map(x => x.id);
   return `<div class="reqmatch">
     <button type="button" class="linkbtn reqmatch-btn" data-reqopen="${key}" aria-expanded="${open}">${open ? "추천 옷 접기 ▴" : `추천 옷 ${full.length}벌 · 만든 옷 ${doneN} ▾`}</button>
     ${open ? `<div class="reqmatch-body">
-      ${rq.text && !c ? `<p class="req-text">“${esc(rq.text.replace(/\s+/g, " "))}”</p>` : ""}
-      ${rq.rec.length ? `<div class="reqmatch-g"><span class="k">사이트 추천 코디</span><ul class="btset-items">${rq.rec.map(item).join("")}</ul></div>` : ""}
+      ${rq.rec.length && recOk ? `<div class="reqmatch-g"><span class="k">사이트 추천 코디</span><ul class="btset-items">${rq.rec.map(item).join("")}</ul></div>` : ""}
+      ${alt.length ? `<div class="reqmatch-g alt"><span class="k">대체 추천</span><ul class="btset-items">${alt.map(item).join("")}</ul><p class="section-note alt-note">${ICON.warn}사이트 정보 이상: 사이트 추천 코디(${esc(rq.rec.map(nm).join(" + "))})가 조건에 안 맞아서, 조건에 다 맞는 옷으로 대신 골랐어요(만든 옷 → 통과한 옷 → 인기·품질 순).</p></div>` : ""}
       ${groups.map(([l, ids]) => { const srt = ids.sort((a,b) => mine.has(b) - mine.has(a) || cloDone(CLO_BY_ID.get(b)) - cloDone(CLO_BY_ID.get(a))), cap = all ? srt : srt.slice(0, 12);
         return `<div class="reqmatch-g"><span class="k">${l} ${ids.length}${ids.length > 12 ? ` · 만든 옷 ${ids.filter(id => cloDone(CLO_BY_ID.get(id))).length}` : ""}</span><ul class="btset-items">${cap.map(item).join("")}</ul></div>`; }).join("")}
       ${!all && groups.some(([, ids]) => ids.length > 12) ? `<button type="button" class="linkbtn" data-reqall="${key}">나머지 ${groups.reduce((n, [, ids]) => n + Math.max(0, ids.length - 12), 0)}벌 더 보기</button>` : ""}

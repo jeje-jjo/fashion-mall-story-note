@@ -598,3 +598,5 @@ nav.tabs { background: var(--card); }
 .goalpanel .goal-st { margin: 0 0 8px; gap: 4px; }
 .goalpanel .goal-st .chip small { margin-left: 4px; font-size: .8em; color: var(--fg3); }
 @media (max-width: 739px) { .goalpanel .goal-st .chip { padding: 4px 8px; font-size: 12px; } .goalpanel .goal-st .chip small { display: none; } }
+.reqmatch-g.alt .alt-note { display: flex; gap: 4px; align-items: flex-start; margin: 4px 0 0; color: var(--fg2); }
+.reqmatch-g.alt .alt-note svg { flex: none; width: 14px; height: 14px; margin-top: 2px; color: #B45309; }
