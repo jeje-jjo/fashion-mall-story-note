@@ -1,12 +1,12 @@
 /* 기존 색·구조·필터 동작을 유지하며 간격과 글자 크기만 조정한다. */
-.ui-icon { display:inline-block; flex:none; vertical-align:middle; shape-rendering:geometricPrecision; }
+.ui-icon { display:inline-block; flex:none; vertical-align:middle; shape-rendering:crispEdges; image-rendering:pixelated; }
 :root:root[data-design="hybrid"] .brandmark .ui-icon { width:24px; height:24px; }
-:root:root[data-design="hybrid"] nav.tabs .ui-icon { width:21px; height:21px; }
-:root:root[data-design="hybrid"] .iconbtn .ui-icon { width:18px; height:18px; }
-:root:root[data-design="hybrid"] .hbtn .ui-icon { width:17px; height:17px; }
-:root:root[data-design="hybrid"] .ck .ui-icon { width:14px; height:14px; stroke-width:2.3; }
-:root:root[data-design="hybrid"] .fab .ui-icon { width:19px; height:19px; }
-:root:root[data-design="hybrid"] .btn .ui-icon { width:15px; height:15px; }
+:root:root[data-design="hybrid"] nav.tabs .ui-icon { width:20px; height:20px; }
+:root:root[data-design="hybrid"] .iconbtn .ui-icon { width:16px; height:16px; }
+:root:root[data-design="hybrid"] .hbtn .ui-icon { width:16px; height:16px; }
+:root:root[data-design="hybrid"] .ck .ui-icon { width:14px; height:14px; }
+:root:root[data-design="hybrid"] .fab .ui-icon { width:20px; height:20px; }
+:root:root[data-design="hybrid"] .btn .ui-icon { width:16px; height:16px; }
 :root:root[data-design="hybrid"] .app { gap:18px; }
 :root:root[data-design="hybrid"] .stack { gap:18px; }
 :root:root[data-design="hybrid"] .card { padding:20px; }
@@ -88,3 +88,5 @@
  :root:root[data-design="hybrid"] .hbtn { width:32px; height:32px; }
  :root:root[data-design="hybrid"] .brandbar .btn { padding-left:8px; padding-right:8px; }
 }
+/* 도트 아이콘은 원래 버튼의 누르는 범위를 유지하고 내부 그림만 정수 격자로 표시한다. */
+:root:root[data-design="hybrid"] .tag .ui-icon { width:12px; height:12px; vertical-align:-2px; }
