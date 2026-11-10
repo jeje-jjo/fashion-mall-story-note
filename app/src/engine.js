@@ -2735,8 +2735,24 @@ function goalPanel(){
     ${nb ? `<div class="goal-row"><span class="k">${esc(bShort(nb.i))}</span><span class="w">품질 <b>${nf0(nb.v[0])}</b> · 매력 <b>${nf0(nb.v[1])}</b> · ${esc(!nb.b.stat || nb.b.stat === "-" ? "특기 능력" : nb.b.stat)} <b>${nf0(nb.v[2])}</b></span></div>` : ""}
     ${nf ? `<div class="goal-row"><span class="k">패션 체크 ${nf.oi+1}</span><span class="w">코디 점수 <b>${nf0(nf.cv)}</b>${(nf.c.site?.req?.conds||[]).length ? ` · ${esc(nf.c.site.req.conds.map(x => x.replace(/^[^:]+:\s*/, "")).join(" + "))}` : ""}</span></div>` : ""}
     ${!nb && !nf ? `<div class="hint">챌린지와 패션 체크를 모두 끝냈어요</div>` : ""}</div>`;
+  /* 점원별(제제 2026-11-10): 점원 장르의 챌린지 배틀 + 같은 큰 장르 조건의 패션 체크 */
+  const staff = DATA.up.staff.map((x, i) => { const m = x.match(/^(.*) \((.*)\)$/); return {i, name: m ? m[1] : x, g: m ? m[2] : ""}; });
+  const chips = `<div class="chips goal-st"><button class="chip sm ${S.goalSt == null ? "on" : ""}" data-goalst="" aria-pressed="${S.goalSt == null}">전체</button>${staff.map(x => `<button class="chip sm ${S.goalSt === x.i ? "on" : ""} ${btDone(x.i) ? "fcdone" : ""}" data-goalst="${x.i}" aria-pressed="${S.goalSt === x.i}">${esc(x.name)}<small>${esc(x.g)}</small></button>`).join("")}</div>`;
+  if (S.goalSt != null && staff[S.goalSt]){
+    const st = staff[S.goalSt], bt = bts.find(x => x.i === st.i), main = SUB_GENRE[st.g.replace(/\s/g, "")] || "";
+    const fl = fcs.filter(x => (x.c.site?.req?.conds || []).some(c => c === `장르: ${main}` || c === `장르: ${layGName(main)}`));
+    const sn = bt && (!bt.b.stat || bt.b.stat === "-" ? "특기 능력" : bt.b.stat);
+    return `<div class="goalpanel"><div class="sublbl" style="margin:0 0 8px">목표치 <span class="hint">점원 장르 기준 · 합계</span></div>${chips}
+      <div class="goal-b"><div class="sublbl" style="margin:0 0 4px">${esc(st.name)} · ${esc(st.g)}${main ? ` <span class="hint">${esc(layGName(main))}</span>` : ""}</div>
+        ${bt ? `<div class="goal-row"><span class="k">${esc(bShort(bt.i))} 챌린지</span><span class="w">${bt.done ? "승리 ✓" : "아직"}</span></div>
+          ${row("품질 합계", bt, bt.v[0], () => "입은 옷 합계")}${row("매력 합계", bt, bt.v[1], () => "입은 옷 합계")}${row(`직원 ${sn}`, bt, bt.v[2], () => "출전 직원 한 명")}
+          ${bt.b.note ? `<div class="hint" style="margin-top:4px">${esc(bt.b.note)}</div>` : ""}` : `<div class="hint">이 점원 장르의 챌린지가 없어요</div>`}</div>
+      <div class="goal-b"><div class="sublbl" style="margin:0 0 4px">${esc(layGName(main) || "같은 장르")} 패션 체크</div>
+        ${fl.length ? fl.map(x => `<div class="goal-row"><span class="k">패션 체크 ${x.oi+1}</span><b>${nf0(x.cv)}</b><span class="w">${esc(x.c.site.req.conds.map(c => c.replace(/^[^:]+:\s*/, "")).join(" + "))}${x.done ? " · 완료 ✓" : ""}</span></div>`).join("") : `<div class="hint">장르 조건이 이 장르인 패션 체크가 없어요</div>`}</div>
+      <div class="hint">품질·매력·코디 점수는 입은 옷 합계 · 출처: KairoHistory 배틀·패션 체크</div></div>`;
+  }
   return `<div class="goalpanel"><div class="sublbl" style="margin:0 0 8px">목표치 <span class="hint">챌린지 ${bts.filter(x => x.done).length}/${bts.length} · 패션 체크 ${fcs.filter(x => x.done).length}/${fcs.length} · 합계 기준</span></div>
-    ${next}${block("남은 것 전부 깨려면(최대값)", left(bts), left(fcs))}${bts.some(x => x.done) || fcs.some(x => x.done) ? block("전체 기준(끝낸 것 포함)", bts, fcs) : ""}
+    ${chips}${next}${block("남은 것 전부 깨려면(최대값)", left(bts), left(fcs))}${bts.some(x => x.done) || fcs.some(x => x.done) ? block("전체 기준(끝낸 것 포함)", bts, fcs) : ""}
     <div class="hint">품질·매력·코디 점수는 입은 옷 합계, 직원 능력은 출전 직원 한 명 기준 · 출처: KairoHistory 배틀·패션 체크</div></div>`;
 }
 /* 스크롤 위치 기억(제제 2026-11-10): 폰에서 게임과 오가면 페이지가 다시 열려 맨 위로 가던 문제.
@@ -2831,6 +2847,7 @@ document.addEventListener("click", e => {
   if (d.fcdone !== undefined){ toggleFcDone(+d.fcdone); return; }
   if (d.mqg2){ S.mqG = d.mqg2; remember(); render(); return; }
   if (d.mqbuilt){ const [g, k] = d.mqbuilt.split("|").map(Number); mqToggleBuilt(g, k); return; }
+  if (d.goalst !== undefined){ S.goalSt = d.goalst === "" ? null : +d.goalst; render(); return; }
   if (d.reqx){ S.reqX = {...(S.reqX||{}), [d.reqx]: !S.reqX?.[d.reqx]}; remember(); render(); return; }
   if (d.reqall){ S.reqAll = {...(S.reqAll||{}), [d.reqall]: true}; render(); return; }
   if (d.reqopen){ S.reqOpen = {...(S.reqOpen||{}), [d.reqopen]: !S.reqOpen?.[d.reqopen]}; render(); return; }

@@ -595,3 +595,6 @@ nav.tabs { background: var(--card); }
 .goalpanel .goal-row .w { color: var(--fg3); font-size: 12px; }
 .goalpanel .goal-row .w b { color: var(--fg); }
 .goalpanel .goal-b:first-of-type .goal-row { grid-template-columns: 88px 1fr; }
+.goalpanel .goal-st { margin: 0 0 8px; gap: 4px; }
+.goalpanel .goal-st .chip small { margin-left: 4px; font-size: .8em; color: var(--fg3); }
+@media (max-width: 739px) { .goalpanel .goal-st .chip { padding: 4px 8px; font-size: 12px; } .goalpanel .goal-st .chip small { display: none; } }
