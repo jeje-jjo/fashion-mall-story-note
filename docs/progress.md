@@ -106,4 +106,4 @@ npm run build:preview && PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/ch
   못 만드는 장르와 만들 수 있는 개수는 '오늘 할 일'에 나옴. 예전 1벌짜리 마네킹 m1~m5 문서는 읽기만 남김.
 - 2026-11-10 req_site(요청별 조건·맞는 옷)·sales_avg(계절별 판매 점수 평균) 표: tools/sheets/build_req_site.py. 코디 손님 요청·패션 체크에 '추천 옷' 펼치기.
 
-- 2026-11-10 제제 확인: 씨앗 계승은 **누적 획득량 기준**(보유량 아님) → 씨앗은 아끼지 말고 바로 써도 됨. 가이드(ref/guide g39·g45)의 '미확인' 항목은 이 값으로 정리할 것.
+- 2026-11-10 제제 확인: 씨앗 계승은 **누적 획득량 기준**(보유량 아님) → 씨앗은 아끼지 말고 바로 써도 됨. 가이드(ref/guide g39·g45)도 이 값으로 고쳐 Firestore에 반영함.
