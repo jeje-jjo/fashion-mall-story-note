@@ -973,7 +973,7 @@ function viewFac(){
      미완료·일부완료·완료를 고르면 그 상태에서 상성 좋음인 시설을 전부 보여 줌(넣고 완료한 시설이 완료 탭에서 사라지던 문제, 2026-11-09) */
   const it = S.itemPick, idx = ITEMS.indexOf(it), rel = S.itemAlt || "좋음";
   const notPut = f => !facDone(f) && !putOf(f).includes(it);
-  if (idx >= 0) rows = rows.filter(f => rel==="좋음" ? (f.m[idx]==="◎" && (facSts().length || notPut(f))) : rel==="보통" ? f.m[idx]==="◯" : f.m[idx]==="×");
+  if (idx >= 0) rows = rows.filter(f => rel==="좋음" ? f.m[idx]==="◎" : rel==="보통" ? f.m[idx]==="◯" : f.m[idx]==="×");
   const q = S.facQ.trim();
   if (q) rows = rows.filter(f => facName(f).includes(q) || f.name.includes(q) || needOf(f).some(i => i.includes(q)));
   const TYPES = Object.keys(TYPE_COLOR);
@@ -982,12 +982,15 @@ function viewFac(){
     "이름순": (a,b) => facName(a).localeCompare(facName(b), "ko"),
     "장르순": (a,b) => TYPES.indexOf(a.type) - TYPES.indexOf(b.type) || a.id - b.id,
     "좋음 적은순": (a,b) => needOf(a).length - needOf(b).length,
-    "패션 체크순": (a,b) => (FC_OF[b.id]?.length||0) - (FC_OF[a.id]?.length||0) || (FC_OF[a.id]?.[0]||99) - (FC_OF[b.id]?.[0]||99),
+    /* 높은 패션 체크 번호(레벨)부터, 걸린 체크가 없는 시설은 뒤(제제 2026-11-10) */
+    "패션 체크순": (a,b) => Math.max(0, ...(FC_OF[b.id]||[])) - Math.max(0, ...(FC_OF[a.id]||[])) || (FC_OF[b.id]?.length||0) - (FC_OF[a.id]?.length||0),
   }[S.facSort];
   const noStore = missingShopSet();
   /* 아직 안 연 매장이 맨 아래. 패션 체크 완료 시설은 '패션 체크순'일 때만, 안 연 매장보다는 위로 내림(제제 2026-11-09) */
   const fcSink = S.facSort==="패션 체크순" ? facFcAllDone : () => false;
-  rows = [...rows].sort((a,b) => (noStore(a)?1:0) - (noStore(b)?1:0) || (fcSink(a)?1:0) - (fcSink(b)?1:0) || (first ? first(a,b) : 0) || baseSort(a,b));
+  /* 아이템 모드(좋음): 그 아이템을 넣은 시설(완료 포함)은 아래로, 안 연 매장보다는 위(제제 2026-11-10) */
+  const putSink = idx >= 0 && rel==="좋음" ? f => !notPut(f) : () => false;
+  rows = [...rows].sort((a,b) => (noStore(a)?1:0) - (noStore(b)?1:0) || (putSink(a)?1:0) - (putSink(b)?1:0) || (fcSink(a)?1:0) - (fcSink(b)?1:0) || (first ? first(a,b) : 0) || baseSort(a,b));
   const pc = rows.filter(facPartial).length;
   const fcOne = S.facFcSel.length===1 && S.facFcSel[0] <= FC_MAX ? S.facFcSel[0]-1 : null;
   const canPut = idx >= 0 && rel==="좋음";
