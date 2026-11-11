@@ -2429,6 +2429,7 @@ function ihCalc(){
 }
 const ihVal = (r, k, buyKey) => r.pct(buyKey) ? `+${nf0(r.out[k])}` : "미선택";
 function ihRefresh(){
+  IHN.forEach(it => { const el = document.getElementById("ihn-" + it[0]); if (el){ const [a, b] = ihnText(it); el.innerHTML = `<b>${a || "—"}</b><small>${b}</small>`; } });
   const r = ihCalc(), keys = {money:"money", pts:"pts", q:"clo", c:"clo", sa:"staff"};
   Object.entries(keys).forEach(([k,b]) => { const el = document.getElementById("ihv-"+k); if (el){ el.textContent = ihVal(r, k, b); el.classList.toggle("off", !r.pct(b)); } });
   DATA.up.staff.forEach((_,i) => IH_ST.forEach(([k]) => { const el = document.getElementById(`ihv-s${i}${k}`); if (el){ el.textContent = r.pct("staff") ? `→ +${nf0(r.out[`s${i}${k}`])}` : ""; } }));
@@ -2699,7 +2700,36 @@ function viewTool(){
   return `<section class="card subnav"><div class="seg wide">${TOOL_SUBS.map(([k,l]) => `<button class="${cur===k?"on":""}" data-rsub="${k}" aria-pressed="${cur===k}">${l}</button>`).join("")}</div></section>
   ${({contest:viewContest, calc:viewCalc, ref:viewRef, log:viewLog, set:viewSet, more:viewMore})[cur]()}`;
 }
-function viewCalc(){ return homeClear() + homeCarry(); }
+function viewCalc(){ return homeClear() + homeCarry() + homeCarryNow(); }
+/* 현재 인계 데이터(제제 2026-11-11): 이번에 이어받는 양을 넣으면, 다음 회차에 그보다 많이 받으려면 최소 얼마가 있어야 하는지.
+   돈·포인트는 '가장 많이 가졌던 값'의 20%, 랜덤 옵션은 모은 옵션 수의 5%, 씨앗은 한 회차에 얻은 수의 33%. 이어지는 값은 소수점 아래 버림.
+   그래서 '지금보다 1 많이' 받으려면 (지금+1) ÷ 비율을 올림한 값이 기준. 돈·포인트 말고는 쓴 것도 센다. */
+const IHN = [
+  ["nmoney", "돈 20%", "G", 0.2, "가장 많이 가졌던 소지금", "최고 소지금"],
+  ["npts", "포인트 20%", "P", 0.2, "가장 많이 가졌던 포인트", "최고 포인트"],
+  ["nrnd", "랜덤 옵션 수", "개", 0.05, "모은 장식 옵션 수의 5%", "모은 옵션"],
+  ["nfac", "인기 UP 씨앗 수", "개", 0.33, "한 회차에 얻은 수의 33%", "얻은 씨앗"],
+  ["nclo", "매력 UP 씨앗 수", "개", 0.33, "한 회차에 얻은 수의 33%", "얻은 씨앗"],
+];
+const ihnNeed = (v, rate) => ({ more: Math.ceil((v + 1) / rate - 1e-9), same: Math.ceil(v / rate - 1e-9) });
+const ihnText = ([k, , unit, rate, , what]) => { const v = ihNum(k); if (!v) return ["", ""]; const n = ihnNeed(v, rate);
+  return [`${what} ${nf0(n.more)}${unit} 이상`, `같은 양만: ${nf0(n.same)}${unit}${rate === 0.33 ? ` · 1/3이면 ${nf0((v + 1) * 3)}${unit}` : ""}`]; };
+function homeCarryNow(){
+  const o = S.homeIhn !== false, filled = IHN.filter(([k]) => ihNum(k)).length;
+  const row = it => { const [k, l, unit, , hint] = it, [a, b] = ihnText(it);
+    return `<div class="cprow ihrow ihn"><label for="ih-${k}"><b>${l}</b><span>${hint}</span></label><input class="field" id="ih-${k}" inputmode="numeric" autocomplete="off" value="${esc(S.ih?.[k] ?? "")}" placeholder="이번에 받는 ${unit}"><span class="ihn-v" id="ihn-${k}"><b>${a || "—"}</b><small>${b}</small></span></div>`; };
+  return `<section class="card fold-card ${o?"open":""}">
+    <button class="fold-h" data-act="hihn" aria-expanded="${o}">
+      <span class="fold-ic">${ICON.carry}</span>
+      <span class="fold-t"><b>현재 인계 데이터</b><span>${filled ? `${filled}칸 입력 · 다음 회차 기준값` : "이번에 이어받는 양을 넣으면 다음 회차 기준값을 알려 줘요"}</span></span>${ICON.chev}
+    </button>
+    ${o ? `<div class="fold-b">
+      <div class="hint" style="margin-bottom:10px">인계 화면의 숫자를 넣으면, 다음 회차에 <b>지금보다 많이</b> 받으려면 최소 얼마가 있어야 하는지 보여 줘요.</div>
+      <div class="cpgrid">${IHN.map(row).join("")}</div>
+      <div class="hint" style="margin-top:10px">돈·포인트는 그 회차에 가장 많이 가졌던 값이 기준이에요. 옵션·씨앗은 써도 얻은 수로 세요. 이어지는 값은 소수점 아래를 버린다고 보고 계산했어요.</div>
+    </div>` : ""}
+  </section>`;
+}
 function viewSet(){
   const row = (label, inner) => `<div class="setrow"><span class="setk">${label}</span>${inner}</div>`;
   const segB = (attr, list) => `<div class="seg">${list.map(([v,l]) => `<button type="button" data-${attr}="${v}">${l}</button>`).join("")}</div>`;
@@ -2887,6 +2917,7 @@ document.addEventListener("click", e => {
   if (d.btdone !== undefined){ toggleBtDone(/^\d+$/.test(d.btdone) ? +d.btdone : d.btdone); return; }
   if (d.fcrec){ S.fcRecOpen = S.fcRecOpen===+d.fcrec ? null : +d.fcrec; render(); return; }
   if (d.act==="btextra"){ S.btExtra = !S.btExtra; render(); return; }
+  if (d.act==="hihn"){ S.homeIhn = S.homeIhn === false; render(); return; }
   if (d.btsets != null){ S.btSetOpen = {...(S.btSetOpen||{}), [d.btsets]: !S.btSetOpen?.[d.btsets]}; render(); return; }
   if (d.btrec){ S.btRecOpen = {...(S.btRecOpen||{}), [d.btrec]: !S.btRecOpen?.[d.btrec]}; render(); return; }
   if (d.clorec){ S.cloRecOpen = S.cloRecOpen===+d.clorec ? null : +d.clorec; render(); return; }

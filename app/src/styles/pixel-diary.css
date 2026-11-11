@@ -38,7 +38,7 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 button, a { touch-action: manipulation; }
 button:not(:disabled):hover { filter: brightness(.98); }
 :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
-.skip-link { position: fixed; top: -100px; left: 16px; z-index: 200; padding: 12px; background: var(--card); color: var(--fg); }
+.skip-link { position: fixed; top: -300px; left: 16px; z-index: 200; padding: 12px; background: var(--card); color: var(--fg); }
 .skip-link:focus { top: 12px; }
 .pixel-icon { flex: none; vertical-align: middle; }
 .brandbar { display: flex; align-items: center; gap: 12px; padding: 0 0 20px; border-bottom: 1px solid var(--line); }

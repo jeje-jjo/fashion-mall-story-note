@@ -293,3 +293,15 @@ button, input, select, textarea { letter-spacing: inherit; }
 :root:root[data-design="hybrid"] #view .card label.btn { font-size: var(--t-ctl) !important; }
 :root:root[data-design="hybrid"] #view .card p:not(.hint) { font-size: var(--t-body) !important; }
 :root:root[data-design="hybrid"] #view .card p.hint { font-size: var(--t-meta) !important; }
+
+/* 현재 인계 데이터: 입력칸 옆 기준값 */
+:root:root[data-design="hybrid"] .ihn .ihn-v { display: flex; flex-direction: column; align-items: flex-end; text-align: right; min-width: 0; }
+:root:root[data-design="hybrid"] .ihn .ihn-v b { font-size: var(--t-body); font-weight: 700; color: var(--blue-ink); white-space: nowrap; }
+:root:root[data-design="hybrid"] .ihn .ihn-v small { font-size: var(--t-meta); color: var(--fg3); white-space: nowrap; }
+:root:root:root[data-design="hybrid"] .cprow.ihn { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); grid-template-areas: "l l" "i v"; gap: 6px 12px; align-items: center; }
+:root:root:root[data-design="hybrid"] .cprow.ihn > label { grid-area: l; }
+:root:root:root[data-design="hybrid"] .cprow.ihn > input { grid-area: i; width: 100%; min-width: 0; font-size: var(--t-item); text-align: right; }
+:root:root:root[data-design="hybrid"] .cprow.ihn > .ihn-v { grid-area: v; }
+@media (min-width: 740px) {
+  :root:root:root[data-design="hybrid"] .cprow.ihn { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr) minmax(0, 1.3fr); grid-template-areas: "l i v"; }
+}
