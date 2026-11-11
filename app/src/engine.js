@@ -990,7 +990,9 @@ function viewFac(){
   const fcSink = S.facSort==="패션 체크순" ? facFcAllDone : () => false;
   /* 아이템 모드(좋음): 그 아이템을 넣은 시설(완료 포함)은 아래로, 안 연 매장보다는 위(제제 2026-11-10) */
   const putSink = idx >= 0 && rel==="좋음" ? f => !notPut(f) : () => false;
-  rows = [...rows].sort((a,b) => (noStore(a)?1:0) - (noStore(b)?1:0) || (putSink(a)?1:0) - (putSink(b)?1:0) || (fcSink(a)?1:0) - (fcSink(b)?1:0) || (first ? first(a,b) : 0) || baseSort(a,b));
+  /* 우선개량 보기: 40P 체크한 시설은 아래로, 안 연 매장보다는 위(제제 2026-11-11) */
+  const p40Sink = S.facType==="우선개량" ? f => p40Done(f) : () => false;
+  rows = [...rows].sort((a,b) => (noStore(a)?1:0) - (noStore(b)?1:0) || (p40Sink(a)?1:0) - (p40Sink(b)?1:0) || (putSink(a)?1:0) - (putSink(b)?1:0) || (fcSink(a)?1:0) - (fcSink(b)?1:0) || (first ? first(a,b) : 0) || baseSort(a,b));
   const pc = rows.filter(facPartial).length;
   const fcOne = S.facFcSel.length===1 && S.facFcSel[0] <= FC_MAX ? S.facFcSel[0]-1 : null;
   const canPut = idx >= 0 && rel==="좋음";
