@@ -212,3 +212,13 @@
 /* ---------- 초록(완료·성공·동기화) 전부 메인 색상으로 통일 ----------
    --green을 쓰는 곳(동기화 점, 성공 태그, 필요 알약, 마네킹 만듦 등)이 스킨·팔레트의 메인 색을 따라간다 */
 :root:root:root { --green: var(--blue); --green-soft: var(--blue-soft); }
+
+/* ---------- 글씨체: 전부 Noto Sans KR (2026-11-11 제제) ----------
+   머리줄 제목의 도트 글씨(Galmuri)와 번호·작은 표기의 고정폭 글씨까지 모두 바꾼다. 숫자는 폭을 맞춰 줄이 흔들리지 않게 */
+:root { --font: "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif; }
+html, body, button, input, select, textarea, :root :where(*) { font-family: var(--font) !important; }
+:root :where(code, kbd, samp, pre) { font-family: var(--font) !important; }
+/* Noto Sans KR은 한글 폭이 넓어 휴대폰에서 버튼 줄이 넘친다 → 자간을 살짝 좁힌다(본문 가독성은 그대로) */
+body { letter-spacing: -0.02em; }
+button, input, select, textarea { letter-spacing: inherit; }
+@media (max-width: 739px) { :root:root[data-design="hybrid"] .cloview .pillseg button { padding-left: 7px; padding-right: 7px; } }
