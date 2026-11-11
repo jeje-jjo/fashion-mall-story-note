@@ -20,6 +20,8 @@ export function mockDb() {
     limit: () => col(p),
     doc: (id: string) => doc(`${p}/${id}`),
     add: async (d: any) => { const id = `m${++seq}`; docs.set(`${p}/${id}`, d); notify(); return { id }; },
+    getLocal: async () => ({ docs: children(p).map(snap) }),
+    getServer: async () => ({ docs: children(p).map(snap) }),
     onSnapshot(next: (s: { docs: Snap[] }) => void) { const f = () => next({ docs: children(p).map(snap) }); subs.add(f); setTimeout(f, 0); return () => subs.delete(f); },
   });
   return { doc, collection: col, _docs: docs };

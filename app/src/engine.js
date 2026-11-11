@@ -332,7 +332,11 @@ async function saveAll(){
   Object.entries(S.cbattle).forEach(([id,v]) => put(`cbattle/c${id}`, v));
   Object.entries(S.cfix).forEach(([id,v]) => put(`coordfix/k${id}`, v));
   put(`${RUN}/misc/coord`, {list:S.coordDone}); put("names/all", S.names);
+  /* 기기에는 바로 저장되고(Firestore 기기 캐시), 서버 확인은 네트워크에 따라 늦을 수 있다 → 6초 넘으면 안내하고 버튼을 풀어 준다 */
+  let slow = setTimeout(() => { slow = null; btn.disabled = false; btn.textContent = "지금 저장"; toast("이 기기에는 저장됐어요. 서버로 보내는 중이라 조금 걸려요(연결되면 자동으로 올라가요)"); }, 6000);
   const r = await Promise.allSettled(w); const bad = r.filter(x => x.status==="rejected").length;
+  if (!slow){ if (bad) showNotice(`${bad}건을 서버에 저장하지 못했어요. 도구 > 관리 > 진행 데이터 백업으로 파일을 받아 두세요.`); else toast(`${w.length}건 모두 서버에 올렸어요`); return; }
+  clearTimeout(slow);
   btn.disabled = false; btn.textContent = "지금 저장";
   if (bad) showNotice(`${bad}건을 저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.`); else toast(`${w.length}건 모두 저장했어요`);
 }
@@ -2222,10 +2226,59 @@ async function importGo(){
   }catch(e){ m.busy = false; m.err = `저장하다 멈췄어요(${m.prog}/${list.length}). 다시 누르면 처음부터 다시 써요.`; }
   render();
 }
+/* 진행 데이터 백업(제제 2026-11-11): 체크·기록 전부를 JSON 파일로 받기 / 파일로 되돌리기.
+   이 기기 캐시에서 읽어 아직 서버에 못 올라간 변경까지 담는다. 클릭 기록(uilog)은 빼고, 경로 그대로 저장 */
+const BK_COLS = () => ["checks","chkscore","battles","cbattle","clofix","coordfix","cyear","contest","layslots","log","ui","names","meta","memo","calc",
+  `${RUN}/clo`,`${RUN}/fac`,`${RUN}/mannequins`,`${RUN}/ui`,`${RUN}/misc`];
+async function backupDownload(){
+  if (!db){ toast("로그인한 상태에서 받을 수 있어요"); return; }
+  S.bk = { busy:"받는 중…" }; render();
+  try{
+    const out = {};
+    for (const c of BK_COLS()){ const col = db.collection(c); const s = col.getLocal ? await col.getLocal() : { docs:[] }; s.docs.forEach(d => { if (d.exists !== false) out[`${c}/${d.id}`] = d.data(); }); }
+    const n = Object.keys(out).length; if (!n) throw new Error("empty");
+    const ts = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 16).replace(/[-:T]/g, "").replace(/^(\d{8})/, "$1-");
+    const blob = new Blob([JSON.stringify({ kind:"fms-progress", v:1, exported:new Date().toISOString(), run:RUN, round:roundNo(), count:n, docs:out })], { type:"application/json" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `fms-progress-${ts}.json`;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    S.bk = { msg:`${n}건을 파일로 받았어요 (${roundNo()}회차)` };
+  }catch(e){ S.bk = { msg:"백업 파일을 만들지 못했어요. 잠시 뒤 다시 해 주세요" }; }
+  render();
+}
+function backupPick(file){
+  const rd = new FileReader();
+  rd.onload = () => { try{ const j = JSON.parse(rd.result); if (j.kind !== "fms-progress" || !j.docs) throw 0;
+      S.bk = { pending:j, msg:`${new Date(j.exported).toLocaleString("ko-KR")}에 받은 ${j.round || "?"}회차 백업 · ${j.count}건` }; }
+    catch(e){ S.bk = { msg:"진행 데이터 백업 파일이 아니에요" }; } render(); };
+  rd.readAsText(file);
+}
+async function backupRestore(){
+  const j = S.bk?.pending; if (!j || !db) return;
+  S.bk = { busy:"되돌리는 중…" }; render();
+  const w = Object.entries(j.docs).filter(([p]) => !/^uilog\//.test(p)).map(([p, d]) => writeSerial(p, d));
+  let slow = setTimeout(() => { slow = null; S.bk = { msg:`${w.length}건을 이 기기에 되돌렸어요. 서버로 보내는 중이에요` }; render(); }, 6000);
+  const r = await Promise.allSettled(w), bad = r.filter(x => x.status === "rejected").length;
+  if (slow) clearTimeout(slow);
+  S.bk = { msg: bad ? `${bad}건을 되돌리지 못했어요` : `${w.length}건을 되돌렸어요` }; render();
+}
+function backupCard(){
+  const b = S.bk || {};
+  return `<section class="card">
+    <div class="sec-h"><h2>진행 데이터 백업</h2><span>체크·기록 전부</span></div>
+    <p class="hint" style="margin:0">서버 저장이 불안할 때 쓰는 비상용이에요. <b>파일로 받기</b>는 이 기기에 있는 최신 상태(아직 서버에 못 올라간 것 포함)를 JSON으로 받아요. <b>파일로 되돌리기</b>는 그 파일 내용으로 덮어써요.</p>
+    <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <button type="button" class="btn ghost sm" data-act="bkdown" ${b.busy?"disabled":""}>파일로 받기</button>
+      <label class="btn ghost sm">파일로 되돌리기<input type="file" id="bkFile" accept="application/json,.json" hidden></label>
+    </div>
+    ${b.busy ? `<p class="hint" style="margin:8px 0 0">${b.busy}</p>` : ""}
+    ${b.msg ? `<p class="hint" style="margin:8px 0 0">${esc(b.msg)}</p>` : ""}
+    ${b.pending ? `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn ghost sm" data-act="bkno">취소</button><button type="button" class="btn sm danger" data-act="bkok">이 파일로 덮어쓰기</button></div><p class="hint" style="margin:6px 0 0">지금 체크 상태가 파일 내용으로 바뀌어요. 덮어쓰기 전에 지금 상태도 '파일로 받기'로 받아 두면 안전해요.</p>` : ""}
+  </section>`;
+}
 function viewLog(){
   const pend = pendingList();
   const hist = S.logs.slice(0, S.logAll ? 500 : 30);
-  return `${importCard()}${renameCard()}${resetCard()}<section class="card">
+  return `${backupCard()}${importCard()}${renameCard()}${resetCard()}<section class="card">
     <div class="sec-h"><h2>시트에 반영할 변경</h2><span>${pend.length}건</span></div>
     <p style="margin:0;color:var(--fg2);font-size:14px">여기 쌓인 변경은 아직 구글 시트에 들어가지 않았어요. 대화에서 "시트에 반영해줘"라고 하면 이 목록대로 넣어 드려요.</p>
     ${pend.length ? `<div class="flushlist" style="margin-top:12px">${pend.map(p => `<div class="log"><span class="ic">${ICON.up}</span><div class="body"><div class="t">${esc(p.kind==="rename"||p.kind==="person"||p.kind==="cloname"?p.from:p.name)}</div><div class="s">${kindLabel[p.kind]} · ${esc(valLabel(p,p.from))} → <b style="color:var(--fg)">${esc(valLabel(p,p.to))}</b></div></div><span class="s" style="font-size:12px;color:var(--fg3)">${fmtT(p.t)}</span></div>`).join("")}</div>
@@ -2960,6 +3013,9 @@ document.addEventListener("click", e => {
   if (d.act==="clkon" || d.act==="clkoff"){ try{ localStorage.setItem(CLK_KEY, d.act==="clkoff" ? "1" : "0"); }catch(e){} render(); return; }
   if (d.act==="clkdown"){ clickLogDownload(); return; }
   if (d.act==="clklast"){ clickLogLast(); return; }
+  if (d.act==="bkdown"){ backupDownload(); return; }
+  if (d.act==="bkno"){ S.bk = null; render(); return; }
+  if (d.act==="bkok"){ backupRestore(); return; }
   if (d.act==="clkclear"){ S.clkClear = true; render(); return; }
   if (d.act==="clkclear0"){ S.clkClear = false; render(); return; }
   if (d.act==="clkclear1"){ try{ localStorage.removeItem(CLK_LOCAL); }catch(e){} CLK.buf = []; CLK.sent = 0; S.clkClear = false; S.clkLast = null; toast("이 기기 클릭 기록을 비웠어요"); render(); return; }
@@ -3180,6 +3236,7 @@ document.addEventListener("input", e => {
   S[id] = e.target.value; if (id==="homeQ") S.homeOpen = ""; clearTimeout(qT); qT = setTimeout(render, 150);
 });
 document.addEventListener("change", e => {
+  if (e.target.id==="bkFile"){ const f = e.target.files?.[0]; if (f) backupPick(f); e.target.value = ""; return; }
   if (e.target.id==="impFile"){ const f = e.target.files?.[0]; if (f) importRead(f); e.target.value = ""; return; }
   if (/^bq-\d+$/.test(e.target.id)){ e.target.dispatchEvent(new Event("input",{bubbles:true})); return; } if (/^fa-(main|alt)-\d+$/.test(e.target.id)) return; if (e.target.tagName==="SELECT" && (["rnOld"].includes(e.target.id) || /^(ok|cf|cfp|bq)-\d+$/.test(e.target.id) || /^fa-(main|alt)-\d+$/.test(e.target.id)) && e.target.value !== ({rnOld:S.rnOld})[e.target.id] && !/^(ok|cf|cfp|bq|fa)-/.test(e.target.id)) e.target.dispatchEvent(new Event("input",{bubbles:true})); });
 document.addEventListener("submit", e => {
