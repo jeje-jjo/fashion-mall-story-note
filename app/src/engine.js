@@ -2226,6 +2226,15 @@ async function importGo(){
   }catch(e){ m.busy = false; m.err = `저장하다 멈췄어요(${m.prog}/${list.length}). 다시 누르면 처음부터 다시 써요.`; }
   render();
 }
+/* 파일 내보내기(제제 2026-11-11): 공유 창(아이폰·아이패드·맥)으로 Google Drive 등에 바로 보내거나, 기기에 내려받기.
+   공유 창은 버튼을 누른 그 순간에만 열 수 있어서(사파리 규칙) 파일을 먼저 만들고 → 두 번째 버튼으로 보낸다 */
+const OUT = { file:null };
+const outCanShare = f => { try{ return !!(navigator.canShare && navigator.share && navigator.canShare({ files:[f] })); }catch(e){ return false; } };
+const outMake = (text, name) => { OUT.file = new File([text], name, { type:"application/json" }); return OUT.file; };
+function outSave(){ const f = OUT.file; if (!f) return; const a = document.createElement("a"); a.href = URL.createObjectURL(f); a.download = f.name;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); toast("기기에 내려받았어요"); }
+function outShare(){ const f = OUT.file; if (!f) return; navigator.share({ files:[f], title:f.name }).then(() => toast("보냈어요")).catch(e => { if (e?.name !== "AbortError") { toast("공유 창을 열지 못해 내려받기로 저장할게요"); outSave(); } }); }
+const outButtons = (f, tag) => `<div class="outbtns" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">${outCanShare(f) ? `<button type="button" class="btn sm" data-act="outshare">공유로 보내기 (Google Drive 등)</button>` : ""}<button type="button" class="btn ghost sm" data-act="outsave">기기에 내려받기</button><button type="button" class="btn ghost sm" data-act="outclose" data-tag="${tag}">닫기</button></div><p class="hint" style="margin:6px 0 0">${esc(f.name)}${outCanShare(f) ? " · 공유 창에서 Drive를 고르면 바로 올라가요" : ""}</p>`;
 /* 진행 데이터 백업(제제 2026-11-11): 체크·기록 전부를 JSON 파일로 받기 / 파일로 되돌리기.
    이 기기 캐시에서 읽어 아직 서버에 못 올라간 변경까지 담는다. 클릭 기록(uilog)은 빼고, 경로 그대로 저장 */
 const BK_COLS = () => ["checks","chkscore","battles","cbattle","clofix","coordfix","cyear","contest","layslots","log","ui","names","meta","memo","calc",
@@ -2238,10 +2247,8 @@ async function backupDownload(){
     for (const c of BK_COLS()){ const col = db.collection(c); const s = col.getLocal ? await col.getLocal() : { docs:[] }; s.docs.forEach(d => { if (d.exists !== false) out[`${c}/${d.id}`] = d.data(); }); }
     const n = Object.keys(out).length; if (!n) throw new Error("empty");
     const ts = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 16).replace(/[-:T]/g, "").replace(/^(\d{8})/, "$1-");
-    const blob = new Blob([JSON.stringify({ kind:"fms-progress", v:1, exported:new Date().toISOString(), run:RUN, round:roundNo(), count:n, docs:out })], { type:"application/json" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `fms-progress-${ts}.json`;
-    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-    S.bk = { msg:`${n}건을 파일로 받았어요 (${roundNo()}회차)` };
+    outMake(JSON.stringify({ kind:"fms-progress", v:1, exported:new Date().toISOString(), run:RUN, round:roundNo(), count:n, docs:out }), `fms-progress-${ts}.json`);
+    S.clkOut = false; S.bk = { ready:true, msg:`${n}건 파일을 만들었어요 (${roundNo()}회차). 아래에서 보내거나 내려받으세요` };
   }catch(e){ S.bk = { msg:"백업 파일을 만들지 못했어요. 잠시 뒤 다시 해 주세요" }; }
   render();
 }
@@ -2265,13 +2272,14 @@ function backupCard(){
   const b = S.bk || {};
   return `<section class="card">
     <div class="sec-h"><h2>진행 데이터 백업</h2><span>체크·기록 전부</span></div>
-    <p class="hint" style="margin:0">서버 저장이 불안할 때 쓰는 비상용이에요. <b>파일로 받기</b>는 이 기기에 있는 최신 상태(아직 서버에 못 올라간 것 포함)를 JSON으로 받아요. <b>파일로 되돌리기</b>는 그 파일 내용으로 덮어써요.</p>
+    <p class="hint" style="margin:0">서버 저장이 불안할 때 쓰는 비상용이에요. <b>파일로 받기</b>는 이 기기에 있는 최신 상태(아직 서버에 못 올라간 것 포함)를 JSON으로 받아요. <b>파일로 되돌리기</b>는 그 파일 내용으로 덮어써요. 파일 고르는 창에서 Google Drive에 둔 백업도 고를 수 있어요.</p>
     <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
       <button type="button" class="btn ghost sm" data-act="bkdown" ${b.busy?"disabled":""}>파일로 받기</button>
       <label class="btn ghost sm">파일로 되돌리기<input type="file" id="bkFile" accept="application/json,.json" hidden></label>
     </div>
     ${b.busy ? `<p class="hint" style="margin:8px 0 0">${b.busy}</p>` : ""}
     ${b.msg ? `<p class="hint" style="margin:8px 0 0">${esc(b.msg)}</p>` : ""}
+    ${b.ready && OUT.file ? outButtons(OUT.file, "bk") : ""}
     ${b.pending ? `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn ghost sm" data-act="bkno">취소</button><button type="button" class="btn sm danger" data-act="bkok">이 파일로 덮어쓰기</button></div><p class="hint" style="margin:6px 0 0">지금 체크 상태가 파일 내용으로 바뀌어요. 덮어쓰기 전에 지금 상태도 '파일로 받기'로 받아 두면 안전해요.</p>` : ""}
   </section>`;
 }
@@ -3014,6 +3022,9 @@ document.addEventListener("click", e => {
   if (d.act==="clkdown"){ clickLogDownload(); return; }
   if (d.act==="clklast"){ clickLogLast(); return; }
   if (d.act==="bkdown"){ backupDownload(); return; }
+  if (d.act==="outshare"){ outShare(); return; }
+  if (d.act==="outsave"){ outSave(); return; }
+  if (d.act==="outclose"){ OUT.file = null; if (d.tag==="bk") S.bk = null; else S.clkOut = false; render(); return; }
   if (d.act==="bkno"){ S.bk = null; render(); return; }
   if (d.act==="bkok"){ backupRestore(); return; }
   if (d.act==="clkclear"){ S.clkClear = true; render(); return; }
@@ -3444,6 +3455,7 @@ function clickLogCard(){
     <div class="setrow"><span class="setk">이 기기</span><div class="seg"><button type="button" class="${off?"":"on"}" data-act="clkon" aria-pressed="${!off}">켜기</button><button type="button" class="${off?"on":""}" data-act="clkoff" aria-pressed="${off}">끄기</button></div></div>
     <p class="hint" style="margin:8px 0 0">누른 버튼과 화면 상태만 <b>이 기기에</b> 모아요(서버에는 안 보내요, 입력한 글자는 저장 안 함). 다른 기기로 넘어갈 때 파일로 받아 Claude에게 주세요.</p>
     <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn ghost sm" data-act="clklast">마지막 기록 확인</button><button type="button" class="btn ghost sm" data-act="clkdown">이 기기 기록 파일로 받기</button>${cl ? `<button type="button" class="btn ghost sm" data-act="clkclear0">취소</button><button type="button" class="btn ghost sm danger" data-act="clkclear1">정말 비우기</button>` : `<button type="button" class="btn ghost sm" data-act="clkclear">받은 기록 비우기</button>`}</div>
+    ${S.clkOut && OUT.file ? outButtons(OUT.file, "clk") : ""}
     ${cl ? `<p class="hint" style="margin:6px 0 0">파일을 받아 Claude에게 준 다음에 비워 주세요. 비우면 되돌릴 수 없어요.</p>` : ""}
     ${clickLastView()}
   </section>`;
@@ -3510,10 +3522,8 @@ async function clickLogDownload(){
   try{ await window.__fmsClickFlush?.(); }catch(e){}
   const docs = clkLoad(); if (!docs.length){ toast("이 기기에 모인 기록이 없어요"); return; }
   const dev = docs[docs.length - 1].dev || "device", ts = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 16).replace(/[-:T]/g, "").replace(/^(\d{8})/, "$1-");
-  const blob = new Blob([JSON.stringify({ exported:new Date().toISOString(), source:"local", dev, docs }, null, 0)], { type:"application/json" });
-  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `fms-clicklog-${dev}-${ts}.json`;
-  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-  toast(`이 기기 클릭 기록 ${docs.reduce((n, d) => n + (d.ev?.length || 0), 0)}건을 파일로 받았어요`);
+  outMake(JSON.stringify({ exported:new Date().toISOString(), source:"local", dev, docs }), `fms-clicklog-${dev}-${ts}.json`);
+  S.clkOut = true; if (S.bk) S.bk.ready = false; render();
 }
 
 // Vite가 이 파일을 모듈로 묶어 엔진도 버전별 해시 자산으로 배포한다.
