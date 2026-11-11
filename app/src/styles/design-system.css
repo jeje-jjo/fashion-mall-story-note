@@ -314,3 +314,11 @@ button, input, select, textarea { letter-spacing: inherit; }
   :root:root:root[data-design="hybrid"] .cprow.ihn.has-add { grid-template-areas: "l i v c"; }
   :root:root:root[data-design="hybrid"] .cprow.ihn > .ihn-add { align-self: center; }
 }
+/* 데스크톱: 줄마다 칸 너비가 달라 들쭉날쭉하던 것 → 모든 줄 같은 고정 칸(제목 | 입력 | 기준값 | 씨앗 칩) */
+@media (min-width: 740px) {
+  :root:root:root[data-design="hybrid"] .cprow.ihn,
+  :root:root:root[data-design="hybrid"] .cprow.ihn.has-add { grid-template-columns: minmax(0, 1fr) 140px minmax(0, 1.2fr) 104px; grid-template-areas: "l i v c"; column-gap: 14px; }
+  :root:root:root[data-design="hybrid"] .ihn .ihn-v { align-items: flex-start; text-align: left; }
+  :root:root:root[data-design="hybrid"] .cprow.ihn > .ihn-add { justify-self: stretch; justify-content: center; }
+}
+:root:root:root[data-design="hybrid"] .ihn .ihn-v b.none { color: var(--fg3); font-weight: 400; }

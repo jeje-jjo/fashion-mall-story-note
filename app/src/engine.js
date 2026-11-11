@@ -2431,7 +2431,7 @@ function ihCalc(){
 }
 const ihVal = (r, k, buyKey) => r.pct(buyKey) ? `+${nf0(r.out[k])}` : "미선택";
 function ihRefresh(){
-  IHN.forEach(it => { const el = document.getElementById("ihn-" + it[0]); if (el){ const [a, b] = ihnText(it); el.innerHTML = `<b>${a || "—"}</b><small>${b}</small>`; } });
+  IHN.forEach(it => { const el = document.getElementById("ihn-" + it[0]); if (el){ const [a, b] = ihnText(it); el.innerHTML = `<b${a ? "" : ' class="none"'}>${a || "—"}</b><small>${b}</small>`; } });
   const r = ihCalc(), keys = {money:"money", pts:"pts", q:"clo", c:"clo", sa:"staff"};
   Object.entries(keys).forEach(([k,b]) => { const el = document.getElementById("ihv-"+k); if (el){ el.textContent = ihVal(r, k, b); el.classList.toggle("off", !r.pct(b)); } });
   DATA.up.staff.forEach((_,i) => IH_ST.forEach(([k]) => { const el = document.getElementById(`ihv-s${i}${k}`); if (el){ el.textContent = r.pct("staff") ? `→ +${nf0(r.out[`s${i}${k}`])}` : ""; } }));
@@ -2723,7 +2723,7 @@ function homeCarryNow(){
     /* 씨앗은 1개당 포인트(인기 30P, 매력 10P): +10 → +30 → +50 → +10 … 눌러서 바꾸며 필요한 포인트를 본다(제제 2026-11-11) */
     const per = IHN_SEED_P[k], step = S.ihnStep?.[k] || 10;
     const chip = per ? `<button type="button" class="chip sm ihn-add" data-ihnstep="${k}" aria-label="씨앗 ${step}개 추가에 필요한 포인트, 눌러서 개수 바꾸기">+${step}개 <b>${nf0(step * per)}P</b></button>` : "";
-    return `<div class="cprow ihrow ihn ${per ? "has-add" : ""}"><label for="ih-${k}"><b>${l}</b><span>${hint}${per ? `<span class="ph-x"> · 1개 ${per}P</span>` : ""}</span></label>${chip}<input class="field" id="ih-${k}" inputmode="numeric" autocomplete="off" value="${esc(S.ih?.[k] ?? "")}" placeholder="이번에 받는 ${unit}"><span class="ihn-v" id="ihn-${k}"><b>${a || "—"}</b><small>${b}</small></span></div>`; };
+    return `<div class="cprow ihrow ihn ${per ? "has-add" : ""}"><label for="ih-${k}"><b>${l}</b><span>${hint}${per ? `<span class="ph-x"> · 1개 ${per}P</span>` : ""}</span></label>${chip}<input class="field" id="ih-${k}" inputmode="numeric" autocomplete="off" value="${esc(S.ih?.[k] ?? "")}" placeholder="이번에 받는 ${unit}"><span class="ihn-v" id="ihn-${k}"><b${a ? "" : ' class="none"'}>${a || "—"}</b><small>${b}</small></span></div>`; };
   return `<section class="card fold-card ${o?"open":""}">
     <button class="fold-h" data-act="hihn" aria-expanded="${o}">
       <span class="fold-ic">${ICON.carry}</span>
