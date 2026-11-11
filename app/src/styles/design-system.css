@@ -305,3 +305,12 @@ button, input, select, textarea { letter-spacing: inherit; }
 @media (min-width: 740px) {
   :root:root:root[data-design="hybrid"] .cprow.ihn { grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr) minmax(0, 1.3fr); grid-template-areas: "l i v"; }
 }
+/* 씨앗 줄: 제목 줄 오른쪽에 '+10개 300P' 칩(줄 수는 그대로) */
+:root:root:root[data-design="hybrid"] .cprow.ihn.has-add { grid-template-areas: "l c" "i v"; }
+:root:root:root[data-design="hybrid"] .cprow.ihn > .ihn-add { grid-area: c; justify-self: end; align-self: start; white-space: nowrap; font-variant-numeric: tabular-nums; }
+:root:root:root[data-design="hybrid"] .cprow.ihn > .ihn-add b { font-weight: 700; color: var(--blue-ink); margin-left: 3px; }
+@media (min-width: 740px) {
+  :root:root:root[data-design="hybrid"] .cprow.ihn { grid-template-columns: minmax(0, 1.1fr) minmax(0, .7fr) minmax(0, 1.3fr) max-content; grid-template-areas: "l i v c"; }
+  :root:root:root[data-design="hybrid"] .cprow.ihn.has-add { grid-template-areas: "l i v c"; }
+  :root:root:root[data-design="hybrid"] .cprow.ihn > .ihn-add { align-self: center; }
+}

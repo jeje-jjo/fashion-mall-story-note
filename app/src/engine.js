@@ -2711,13 +2711,17 @@ const IHN = [
   ["nfac", "인기 UP 씨앗 수", "개", 0.33, "한 회차에 얻은 수의 33%", "얻은 씨앗"],
   ["nclo", "매력 UP 씨앗 수", "개", 0.33, "한 회차에 얻은 수의 33%", "얻은 씨앗"],
 ];
+const IHN_SEED_P = { nfac: 30, nclo: 10 };
 const ihnNeed = (v, rate) => ({ more: Math.ceil((v + 1) / rate - 1e-9), same: Math.ceil(v / rate - 1e-9) });
 const ihnText = ([k, , unit, rate, , what]) => { const v = ihNum(k); if (!v) return ["", ""]; const n = ihnNeed(v, rate);
   return [`${what} ${nf0(n.more)}${unit} 이상`, `같은 양만: ${nf0(n.same)}${unit}${rate === 0.33 ? ` · 1/3이면 ${nf0((v + 1) * 3)}${unit}` : ""}`]; };
 function homeCarryNow(){
   const o = S.homeIhn !== false, filled = IHN.filter(([k]) => ihNum(k)).length;
   const row = it => { const [k, l, unit, , hint] = it, [a, b] = ihnText(it);
-    return `<div class="cprow ihrow ihn"><label for="ih-${k}"><b>${l}</b><span>${hint}</span></label><input class="field" id="ih-${k}" inputmode="numeric" autocomplete="off" value="${esc(S.ih?.[k] ?? "")}" placeholder="이번에 받는 ${unit}"><span class="ihn-v" id="ihn-${k}"><b>${a || "—"}</b><small>${b}</small></span></div>`; };
+    /* 씨앗은 1개당 포인트(인기 30P, 매력 10P): +10 → +30 → +50 → +10 … 눌러서 바꾸며 필요한 포인트를 본다(제제 2026-11-11) */
+    const per = IHN_SEED_P[k], step = S.ihnStep?.[k] || 10;
+    const chip = per ? `<button type="button" class="chip sm ihn-add" data-ihnstep="${k}" aria-label="씨앗 ${step}개 추가에 필요한 포인트, 눌러서 개수 바꾸기">+${step}개 <b>${nf0(step * per)}P</b></button>` : "";
+    return `<div class="cprow ihrow ihn ${per ? "has-add" : ""}"><label for="ih-${k}"><b>${l}</b><span>${hint}${per ? `<span class="ph-x"> · 1개 ${per}P</span>` : ""}</span></label>${chip}<input class="field" id="ih-${k}" inputmode="numeric" autocomplete="off" value="${esc(S.ih?.[k] ?? "")}" placeholder="이번에 받는 ${unit}"><span class="ihn-v" id="ihn-${k}"><b>${a || "—"}</b><small>${b}</small></span></div>`; };
   return `<section class="card fold-card ${o?"open":""}">
     <button class="fold-h" data-act="hihn" aria-expanded="${o}">
       <span class="fold-ic">${ICON.carry}</span>
@@ -2917,6 +2921,7 @@ document.addEventListener("click", e => {
   if (d.btdone !== undefined){ toggleBtDone(/^\d+$/.test(d.btdone) ? +d.btdone : d.btdone); return; }
   if (d.fcrec){ S.fcRecOpen = S.fcRecOpen===+d.fcrec ? null : +d.fcrec; render(); return; }
   if (d.act==="btextra"){ S.btExtra = !S.btExtra; render(); return; }
+  if (d.ihnstep){ const k = d.ihnstep, cur = S.ihnStep?.[k] || 10; S.ihnStep = {...(S.ihnStep||{}), [k]: cur === 10 ? 30 : cur === 30 ? 50 : 10}; render(); return; }
   if (d.act==="hihn"){ S.homeIhn = S.homeIhn === false; render(); return; }
   if (d.btsets != null){ S.btSetOpen = {...(S.btSetOpen||{}), [d.btsets]: !S.btSetOpen?.[d.btsets]}; render(); return; }
   if (d.btrec){ S.btRecOpen = {...(S.btRecOpen||{}), [d.btrec]: !S.btRecOpen?.[d.btrec]}; render(); return; }
