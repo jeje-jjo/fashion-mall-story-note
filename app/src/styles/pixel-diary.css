@@ -525,13 +525,14 @@ nav.tabs { background: var(--card); }
 
 /* 휴대폰 제목 한 단계 작게(제제 2026-11-09): 헤더 16 > 카드 제목 16 > 구역 이름 14 > 목록 이름 14 */
 @media (max-width: 739px) {
-  :root:root .sec-h h2, :root:root .card > h2, :root:root .card .sec-h h2, :root:root .catalog-head h2 { font-size: 16px; }
+  :root:root .sec-h h2, :root:root .card > h2, :root:root .card .sec-h h2, :root:root .catalog-head h2 { font-size: var(--t-sec); }
   :root:root .catalog-head h2 span { font-size: 12px; }
   :root:root .catalog-kicker { font-size: 9px; }
   :root:root .sec-h .page-eyebrow, :root:root .card .page-eyebrow { font-size: 9px; margin-bottom: 3px !important; }
-  :root:root .fhead.rowhead .sublbl { font-size: 14px; }
-  :root:root #view .n { font-size: 14px; }
-  :root:root #view .t { font-size: 14px; }
+  /* 2026-11-11: 글자 단계표(design-system.css 토큰)를 따른다 — 안쪽이 바깥보다 크지 않게 */
+  :root:root .fhead.rowhead .sublbl { font-size: var(--t-sec); }
+  :root:root #view .n { font-size: var(--t-item); }
+  :root:root #view .t { font-size: var(--t-item); }
   :root:root .sheet .sh-t h3 { font-size: 16px; }
 }
 

@@ -222,3 +222,74 @@ html, body, button, input, select, textarea, :root :where(*) { font-family: var(
 body { letter-spacing: -0.02em; }
 button, input, select, textarea { letter-spacing: inherit; }
 @media (max-width: 739px) { :root:root[data-design="hybrid"] .cloview .pillseg button { padding-left: 7px; padding-right: 7px; } }
+
+/* ---------- 글자 단계: 안쪽은 바깥보다 작거나 같게 (제제 2026-11-11) ----------
+   1 묶음 이름(.sublbl, 카드 머리 h2) = --t-sec
+   2 그 안 카드 제목(전투·패션 체크 카드 이름, 목록 줄 이름) = --t-item (≤ 1)
+   3 카드 안 소제목(조건과 보상, 추천 세트, 내 코디 …) = --t-body 굵게 (≤ 2)
+   4 내용(값, 옷 이름, 표 숫자) = --t-body
+   5 보조(항목 이름, 설명, 출처, 건수) = --t-meta */
+:root:root[data-design="hybrid"] .fccard .fc-n { font-size: var(--t-item); font-weight: 700; }
+:root:root[data-design="hybrid"] .fccard .fc-c { font-size: var(--t-meta); }
+:root:root[data-design="hybrid"] .info-section h3,
+:root:root[data-design="hybrid"] .info-section h4,
+:root:root[data-design="hybrid"] .pair-group h4,
+:root:root[data-design="hybrid"] .reqmatch-g .k { font-size: var(--t-body); font-weight: 700; line-height: 1.5; }
+:root:root[data-design="hybrid"] .info-section dd,
+:root:root[data-design="hybrid"] .info-section li,
+:root:root[data-design="hybrid"] .info-section p,
+:root:root[data-design="hybrid"] .info-section summary,
+:root:root[data-design="hybrid"] .comparison-row span,
+:root:root[data-design="hybrid"] .comparison-row strong,
+:root:root[data-design="hybrid"] .btset-h strong { font-size: var(--t-body); }
+:root:root[data-design="hybrid"] .info-section dt,
+:root:root[data-design="hybrid"] .comparison-label span,
+:root:root[data-design="hybrid"] .info-section .section-note,
+:root:root[data-design="hybrid"] .source-caption,
+:root:root[data-design="hybrid"] .inline-state,
+:root:root[data-design="hybrid"] .btset-h span,
+:root:root[data-design="hybrid"] .btset-c { font-size: var(--t-meta); }
+:root:root[data-design="hybrid"] .info-section .btn.sm,
+:root:root[data-design="hybrid"] .info-section .linkbtn,
+:root:root[data-design="hybrid"] .comparison-row .rs { font-size: var(--t-ctl); }
+/* 접는 소제목(추천 세트): 제목 줄 전체가 버튼 */
+:root:root[data-design="hybrid"] .foldh { all: unset; box-sizing: border-box; display: flex; align-items: baseline; gap: 6px; width: 100%; cursor: pointer; padding: 2px 0; }
+:root:root[data-design="hybrid"] .foldh h3 { margin: 0; }
+:root:root[data-design="hybrid"] .foldh .foldh-n { font-size: var(--t-meta); color: var(--fg3); }
+:root:root[data-design="hybrid"] .foldh .foldh-a { margin-left: auto; font-size: var(--t-meta); color: var(--fg3); }
+:root:root[data-design="hybrid"] .foldh:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 4px; }
+:root:root[data-design="hybrid"] .battle-detail .btn.sm,
+:root:root[data-design="hybrid"] .battle-detail .linkbtn { font-size: var(--t-ctl); }
+:root:root[data-design="hybrid"] .battle-detail summary,
+:root:root[data-design="hybrid"] .battle-detail details p { font-size: var(--t-body); }
+:root:root:root[data-design="hybrid"] .info-section .usage-row h4,
+:root:root:root[data-design="hybrid"] .info-section .pair-group h4 { font-size: var(--t-body); font-weight: 700; }
+:root:root:root[data-design="hybrid"] .style-scores strong { font-size: var(--t-body); }
+/* 도구 카드: 카드 제목(h2)이 1단계, 그 안 묶음 제목(h3)·숫자 칸은 그보다 작거나 같게 */
+:root:root:root[data-design="hybrid"] .card .sec-h h2 { font-size: var(--t-sec); }
+:root:root:root[data-design="hybrid"] .appearance-heading h3 { font-size: var(--t-body); font-weight: 700; }
+:root:root:root[data-design="hybrid"] .tiles .tile .tv { font-size: var(--t-sec); font-weight: 700; }
+:root:root:root[data-design="hybrid"] .appearance-heading h3 { font-size: var(--t-item); }
+:root:root:root[data-design="hybrid"] .card .body .t { font-size: var(--t-item); }
+:root:root:root[data-design="hybrid"] .request-title { font-size: var(--t-item); }
+:root:root:root[data-design="hybrid"] .mq-pc { font-size: var(--t-body); }
+:root:root:root[data-design="hybrid"] .cyname { font-size: var(--t-body); }
+/* 카드 안 일반 글·버튼: 카드 제목(--t-sec)보다 크지 않게. 휴대폰에서 특히 제목보다 본문이 커지던 곳 정리 */
+:root:root:root[data-design="hybrid"] .card p:not(.hint),
+:root:root:root[data-design="hybrid"] .card .setk,
+:root:root:root[data-design="hybrid"] .card .empty { font-size: var(--t-body); }
+:root:root:root[data-design="hybrid"] .card .btn:not(.big),
+:root:root:root[data-design="hybrid"] .card label.btn,
+:root:root:root[data-design="hybrid"] .card .opt,
+:root:root:root[data-design="hybrid"] .card .seg button,
+:root:root:root[data-design="hybrid"] .card .pals .pal { font-size: var(--t-ctl); }
+:root:root[data-design="hybrid"] #view .card p.hint { font-size: var(--t-meta); }
+:root:root[data-design="hybrid"] #view .card p:not(.hint) { font-size: var(--t-body); }
+:root:root[data-design="hybrid"] #view .card .btn:not(.big),
+:root:root[data-design="hybrid"] #view .card label.btn { font-size: var(--t-ctl); }
+:root:root[data-design="hybrid"] #view .rankpick .sublbl { font-size: var(--t-body); }
+/* 예전 규칙 중 !important·인라인 크기(14px)가 남아 있어 카드 안에서만 단계표로 덮는다 */
+:root:root[data-design="hybrid"] #view .card .btn:not(.big),
+:root:root[data-design="hybrid"] #view .card label.btn { font-size: var(--t-ctl) !important; }
+:root:root[data-design="hybrid"] #view .card p:not(.hint) { font-size: var(--t-body) !important; }
+:root:root[data-design="hybrid"] #view .card p.hint { font-size: var(--t-meta) !important; }
