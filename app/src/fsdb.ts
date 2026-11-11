@@ -2,7 +2,7 @@
    화면 엔진(src/engine.js)은 window.claude.use("db")로 이 객체를 받아 그대로 쓴다.
    모든 경로 앞에 ROOT를 붙여 기준 데이터(ref/*)·백업(backup/*)과 섞이지 않게 한다. */
 import {
-  addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, limit, query, setDoc, updateDoc,
+  addDoc, collection, deleteDoc, doc, getDocsFromServer, onSnapshot, orderBy, limit, query, setDoc, updateDoc,
   type Firestore, type Query, type QueryConstraint,
 } from "firebase/firestore";
 
@@ -34,6 +34,12 @@ export function makeDb(fs: Firestore) {
       limit: (n: number) => colRef(p, [...cons, limit(n)]),
       add: async (data: Record<string, unknown>) => ({ id: (await addDoc(collection(fs, full(p)), data)).id }),
       doc: (id: string) => docRef(`${p}/${id}`),
+      /* 서버에서 한 번만 읽기: onSnapshot 첫 응답은 기기 캐시라 다른 기기 기록이 빠질 수 있다(클릭 기록 파일 받기) */
+      async getServer(): Promise<{ docs: Snap[] }> {
+        const q: Query = cons.length ? query(collection(fs, full(p)), ...cons) : collection(fs, full(p));
+        const s = await getDocsFromServer(q);
+        return { docs: s.docs.map((d) => docSnap(d as any)) };
+      },
       onSnapshot(next: (s: { docs: Snap[] }) => void, err?: (e: unknown) => void): Unsub {
         const q: Query = cons.length ? query(collection(fs, full(p)), ...cons) : collection(fs, full(p));
         return onSnapshot(q, (s) => next({ docs: s.docs.map((d) => docSnap(d as any)) }), (e) => err?.(e));

@@ -3435,27 +3435,30 @@ async function clickLogLast(){
   if (!db){ toast("로그인한 상태에서 확인할 수 있어요"); return; }
   S.clkLast = { loading:true }; render();
   try{ await window.__fmsClickFlush?.(); }catch(e){}
+  const show = s => { const last = s.docs.map(d => d.data()).filter(Boolean).sort((a, b) => (b.t || 0) - (a.t || 0))[0];
+    S.clkLast = last ? { t:last.t, dev:last.dev, round:last.round, n:last.n || (last.ev || []).length, ev:last.ev || [] } : { err:"저장된 클릭 기록이 아직 없어요" }; render(); };
+  const fail = () => { S.clkLast = { err:"기록을 불러오지 못했어요" }; render(); };
+  const q = db.collection("uilog").orderBy("t", "desc").limit(1);
+  /* 서버 기준 마지막 기록(다른 기기 것 포함). 캐시만 보면 이 기기 기록만 보였다 */
+  if (q.getServer){ q.getServer().then(show).catch(fail); return; }
   let done = false;
-  const un = db.collection("uilog").orderBy("t", "desc").limit(1).onSnapshot(s => {
-    if (done) return; done = true; setTimeout(() => un?.(), 0);
-    const last = s.docs.map(d => d.data()).filter(Boolean).sort((a, b) => (b.t || 0) - (a.t || 0))[0];
-    S.clkLast = last ? { t:last.t, dev:last.dev, round:last.round, n:last.n || (last.ev || []).length, ev:last.ev || [] } : { err:"저장된 클릭 기록이 아직 없어요" };
-    render();
-  }, () => { S.clkLast = { err:"기록을 불러오지 못했어요" }; render(); });
+  const un = q.onSnapshot(s => { if (done) return; done = true; setTimeout(() => un?.(), 0); show(s); }, fail);
 }
 /* 모은 기록을 한 파일(JSON)로 받기: Claude에게 넘기거나 드라이브 claude 폴더에 올릴 때 */
 function clickLogDownload(){
   if (!db){ toast("로그인한 상태에서 받을 수 있어요"); return; }
   window.__fmsClickFlush?.();
-  let done = false;
-  const un = db.collection("uilog").onSnapshot(s => {
-    if (done) return; done = true; setTimeout(() => un?.(), 0);
-    const docs = s.docs.map(d => ({ id:d.id, ...d.data() }));
+  const save = docs => {
     const blob = new Blob([JSON.stringify({ exported:new Date().toISOString(), docs }, null, 0)], { type:"application/json" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `fms-clicklog-${new Date().toISOString().slice(0,10)}.json`;
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
     toast(`클릭 기록 ${docs.length}묶음을 파일로 받았어요`);
-  }, () => toast("기록을 불러오지 못했어요"));
+  };
+  const col = db.collection("uilog");
+  /* 서버에서 전부 읽는다(모든 기기·회차). 예전엔 첫 응답이 이 기기 캐시라 다른 기기 기록이 빠졌다(2026-11-11) */
+  if (col.getServer){ col.getServer().then(s => save(s.docs.map(d => ({ id:d.id, ...d.data() })))).catch(() => toast("서버에서 기록을 불러오지 못했어요. 잠시 뒤 다시 해 주세요")); return; }
+  let done = false;
+  const un = col.onSnapshot(s => { if (done) return; done = true; setTimeout(() => un?.(), 0); save(s.docs.map(d => ({ id:d.id, ...d.data() }))); }, () => toast("기록을 불러오지 못했어요"));
 }
 
 // Vite가 이 파일을 모듈로 묶어 엔진도 버전별 해시 자산으로 배포한다.
