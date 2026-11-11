@@ -179,6 +179,13 @@ let db = null;
 /* 클릭 기록 상태(아래 "클릭 기록" 참고). 시작할 때 도구 > 화면을 바로 그릴 수 있어서 맨 위에 둠 */
 const CLK_KEY = "fms-clicklog-off";
 const clkOff = () => { try{ return localStorage.getItem(CLK_KEY) === "1"; }catch(e){ return false; } };
+/* 클릭 기록은 서버에 보내지 않고 이 기기에만 모은다(제제 2026-11-11: 기기를 바꿀 때 파일로 받아 Claude에게 전달).
+   체크 같은 진행 데이터는 지금처럼 서버에 저장. 기기 저장 공간을 생각해 최근 6,000건까지만 둔다 */
+const CLK_LOCAL = "fms-clicklog-local-v1", CLK_CAP = 6000;
+const clkLoad = () => { try{ return JSON.parse(localStorage.getItem(CLK_LOCAL) || "[]"); }catch(e){ return []; } };
+const clkStore = docs => { let n = docs.reduce((a, d) => a + (d.ev?.length || 0), 0); while (n > CLK_CAP && docs.length > 1){ n -= docs.shift().ev?.length || 0; }
+  try{ localStorage.setItem(CLK_LOCAL, JSON.stringify(docs)); return true; }catch(e){ return false; } };
+const clkCount = () => clkLoad().reduce((a, d) => a + (d.ev?.length || 0), 0);
 const CLK = { sid: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), seq: 0, buf: [], sent: 0 };
 const queue = {};
 function writeSerial(path, data){
@@ -2953,6 +2960,9 @@ document.addEventListener("click", e => {
   if (d.act==="clkon" || d.act==="clkoff"){ try{ localStorage.setItem(CLK_KEY, d.act==="clkoff" ? "1" : "0"); }catch(e){} render(); return; }
   if (d.act==="clkdown"){ clickLogDownload(); return; }
   if (d.act==="clklast"){ clickLogLast(); return; }
+  if (d.act==="clkclear"){ S.clkClear = true; render(); return; }
+  if (d.act==="clkclear0"){ S.clkClear = false; render(); return; }
+  if (d.act==="clkclear1"){ try{ localStorage.removeItem(CLK_LOCAL); }catch(e){} CLK.buf = []; CLK.sent = 0; S.clkClear = false; S.clkLast = null; toast("이 기기 클릭 기록을 비웠어요"); render(); return; }
   if (d.msub){ S.moreSub = d.msub; remember(); render(); return; }
   if (d.act==="recent"){ S.recentOpen = !S.recentOpen; render(); return; }
   if (d.hgo){ homeGo(d.hgo); return; }
@@ -3371,12 +3381,13 @@ function selSaveCard(){
   </section>`;
 }
 function clickLogCard(){
-  const off = clkOff();
+  const off = clkOff(), n = clkCount() + CLK.buf.length, cl = !!S.clkClear;
   return `<section class="card prefs-card">
-    <div class="sec-h"><h2>클릭 기록</h2><span>${off ? "이 기기에서 꺼짐" : `기록 중 · 이번에 ${CLK.sent + CLK.buf.length}건`}</span></div>
+    <div class="sec-h"><h2>클릭 기록</h2><span>${off ? "이 기기에서 꺼짐" : `기록 중 · 이 기기에 ${nf0(n)}건`}</span></div>
     <div class="setrow"><span class="setk">이 기기</span><div class="seg"><button type="button" class="${off?"":"on"}" data-act="clkon" aria-pressed="${!off}">켜기</button><button type="button" class="${off?"on":""}" data-act="clkoff" aria-pressed="${off}">끄기</button></div></div>
-    <p class="hint" style="margin:8px 0 0">화면 개편 참고용으로 누른 버튼과 화면 상태만 모아요(입력한 글자는 저장 안 함). 마지막 회차가 끝나면 Claude에게 말해 주세요.</p>
-    <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn ghost sm" data-act="clklast">마지막 기록 확인</button><button type="button" class="btn ghost sm" data-act="clkdown">모은 기록 파일로 받기</button></div>
+    <p class="hint" style="margin:8px 0 0">누른 버튼과 화면 상태만 <b>이 기기에</b> 모아요(서버에는 안 보내요, 입력한 글자는 저장 안 함). 다른 기기로 넘어갈 때 파일로 받아 Claude에게 주세요.</p>
+    <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap"><button type="button" class="btn ghost sm" data-act="clklast">마지막 기록 확인</button><button type="button" class="btn ghost sm" data-act="clkdown">이 기기 기록 파일로 받기</button>${cl ? `<button type="button" class="btn ghost sm" data-act="clkclear0">취소</button><button type="button" class="btn ghost sm danger" data-act="clkclear1">정말 비우기</button>` : `<button type="button" class="btn ghost sm" data-act="clkclear">받은 기록 비우기</button>`}</div>
+    ${cl ? `<p class="hint" style="margin:6px 0 0">파일을 받아 Claude에게 준 다음에 비워 주세요. 비우면 되돌릴 수 없어요.</p>` : ""}
     ${clickLastView()}
   </section>`;
 }
@@ -3404,11 +3415,11 @@ function clickLogCard(){
   document.addEventListener("toggle", e => { const el = e.target; if (el && el.tagName === "DETAILS") push({ k:"tg", el:"details", d:{...(el.dataset||{})}, open:el.open, s1:st() }); }, true);
   addEventListener("scroll", () => { const now = Date.now(); if (now - lastScrollT < 2500) return; lastScrollT = now; const y = Math.round(scrollY); if (Math.abs(y - lastY) < 400) return; lastY = y; push({ k:"s", h:document.documentElement.scrollHeight, s1:{ tab:S.tab, rec:S.recSub, co:S.coordSub } }); }, { passive:true });
   async function flush(){
-    if (!CLK.buf.length || !db) return;
+    if (!CLK.buf.length) return;
     const ev = CLK.buf; CLK.buf = [];
-    // Firestore는 값이 undefined인 칸이 있으면 저장 자체를 거부한다(탭 상태 중 없는 값이 많음) → JSON으로 한 번 걸러 빈 칸을 뺀다
-    try{ await db.collection("uilog").doc(`${CLK.sid}-${String(CLK.seq++).padStart(3, "0")}`).set(JSON.parse(JSON.stringify({ sid:CLK.sid, dev, ua:ua.slice(0, 120), round:roundNo(), run:RUN, skin:document.documentElement.dataset.skin || "", t:Date.now(), n:ev.length, ev }))); CLK.sent += ev.length; }
-    catch(err){ CLK.buf = ev.concat(CLK.buf).slice(-400); }
+    const docs = clkLoad();
+    docs.push(JSON.parse(JSON.stringify({ id:`${CLK.sid}-${String(CLK.seq++).padStart(3, "0")}`, sid:CLK.sid, dev, ua:ua.slice(0, 120), round:roundNo(), run:RUN, skin:document.documentElement.dataset.skin || "", t:Date.now(), n:ev.length, ev })));
+    if (clkStore(docs)) CLK.sent += ev.length; else CLK.buf = ev.concat(CLK.buf).slice(-400);
   }
   setInterval(flush, 20000);
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flush(); });
@@ -3426,39 +3437,26 @@ function clickLastView(){
   if (L.err) return `<p class="hint" style="margin:10px 0 0">${esc(L.err)}</p>`;
   const ev = (L.ev || []).slice(-8).reverse();
   return `<div class="clklast" style="margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-ctl,8px);background:var(--soft)">
-    <div style="font-size:var(--t-body);font-weight:700">마지막 저장 ${fmtT(L.t)} <span class="hint" style="font-weight:400">· ${CLK_DEV[L.dev] || esc(L.dev || "")} · ${L.round ? `${L.round}회차 · ` : ""}${L.n}건</span></div>
+    <div style="font-size:var(--t-body);font-weight:700">마지막 기록 ${fmtT(L.t)} <span class="hint" style="font-weight:400">· ${CLK_DEV[L.dev] || esc(L.dev || "")} · ${L.round ? `${L.round}회차 · ` : ""}${L.n}건</span></div>
     ${ev.length ? `<ul style="margin:6px 0 0;padding:0;list-style:none;font-size:var(--t-meta);color:var(--fg2);line-height:1.7">${ev.map(e => `<li>${fmtT(e.t).split(" ")[1]} · ${CLK_KIND[e.k] || esc(e.k || "")}${e.x ? ` · ${esc(e.x)}` : e.el && e.k !== "s" && e.k !== "open" ? ` · ${esc(e.el)}` : ""}${e.s1?.tab ? ` <span class="hint">(${esc(CLK_TAB[e.s1.tab] || e.s1.tab)} 탭)</span>` : ""}</li>`).join("")}</ul>` : ""}
-    <div class="hint" style="margin-top:6px">이 기기에서 아직 안 보낸 것 ${CLK.buf.length}건 · 지금까지 보낸 것 ${CLK.sent}건</div>
+    <div class="hint" style="margin-top:6px">이 기기에 모인 기록 ${nf0(clkCount())}건 · 아직 묶지 않은 것 ${CLK.buf.length}건</div>
   </div>`;
 }
 async function clickLogLast(){
-  if (!db){ toast("로그인한 상태에서 확인할 수 있어요"); return; }
-  S.clkLast = { loading:true }; render();
   try{ await window.__fmsClickFlush?.(); }catch(e){}
-  const show = s => { const last = s.docs.map(d => d.data()).filter(Boolean).sort((a, b) => (b.t || 0) - (a.t || 0))[0];
-    S.clkLast = last ? { t:last.t, dev:last.dev, round:last.round, n:last.n || (last.ev || []).length, ev:last.ev || [] } : { err:"저장된 클릭 기록이 아직 없어요" }; render(); };
-  const fail = () => { S.clkLast = { err:"기록을 불러오지 못했어요" }; render(); };
-  const q = db.collection("uilog").orderBy("t", "desc").limit(1);
-  /* 서버 기준 마지막 기록(다른 기기 것 포함). 캐시만 보면 이 기기 기록만 보였다 */
-  if (q.getServer){ q.getServer().then(show).catch(fail); return; }
-  let done = false;
-  const un = q.onSnapshot(s => { if (done) return; done = true; setTimeout(() => un?.(), 0); show(s); }, fail);
+  const last = clkLoad().sort((a, b) => (b.t || 0) - (a.t || 0))[0];
+  S.clkLast = last ? { t:last.t, dev:last.dev, round:last.round, n:last.n || (last.ev || []).length, ev:last.ev || [] } : { err:"이 기기에 모인 클릭 기록이 아직 없어요" };
+  render();
 }
-/* 모은 기록을 한 파일(JSON)로 받기: Claude에게 넘기거나 드라이브 claude 폴더에 올릴 때 */
-function clickLogDownload(){
-  if (!db){ toast("로그인한 상태에서 받을 수 있어요"); return; }
-  window.__fmsClickFlush?.();
-  const save = docs => {
-    const blob = new Blob([JSON.stringify({ exported:new Date().toISOString(), docs }, null, 0)], { type:"application/json" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `fms-clicklog-${new Date().toISOString().slice(0,10)}.json`;
-    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-    toast(`클릭 기록 ${docs.length}묶음을 파일로 받았어요`);
-  };
-  const col = db.collection("uilog");
-  /* 서버에서 전부 읽는다(모든 기기·회차). 예전엔 첫 응답이 이 기기 캐시라 다른 기기 기록이 빠졌다(2026-11-11) */
-  if (col.getServer){ col.getServer().then(s => save(s.docs.map(d => ({ id:d.id, ...d.data() })))).catch(() => toast("서버에서 기록을 불러오지 못했어요. 잠시 뒤 다시 해 주세요")); return; }
-  let done = false;
-  const un = col.onSnapshot(s => { if (done) return; done = true; setTimeout(() => un?.(), 0); save(s.docs.map(d => ({ id:d.id, ...d.data() }))); }, () => toast("기록을 불러오지 못했어요"));
+/* 이 기기에 모은 기록을 한 파일(JSON)로 받기: Claude에게 넘길 때 */
+async function clickLogDownload(){
+  try{ await window.__fmsClickFlush?.(); }catch(e){}
+  const docs = clkLoad(); if (!docs.length){ toast("이 기기에 모인 기록이 없어요"); return; }
+  const dev = docs[docs.length - 1].dev || "device", ts = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 16).replace(/[-:T]/g, "").replace(/^(\d{8})/, "$1-");
+  const blob = new Blob([JSON.stringify({ exported:new Date().toISOString(), source:"local", dev, docs }, null, 0)], { type:"application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `fms-clicklog-${dev}-${ts}.json`;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast(`이 기기 클릭 기록 ${docs.reduce((n, d) => n + (d.ev?.length || 0), 0)}건을 파일로 받았어요`);
 }
 
 // Vite가 이 파일을 모듈로 묶어 엔진도 버전별 해시 자산으로 배포한다.
