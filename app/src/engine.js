@@ -1336,16 +1336,8 @@ function viewClo(){
     rows = DATA.clo.filter(c => (bGenreIdx(c)===bi || battleOf(c)===bi) && (!q || [c.n,cloName(c),c.p,c.m,c.o,c.tg,c.col,c.s].some(v => String(v||"").includes(q))))
       .sort((a,b) => (battleOf(b)===bi) - (battleOf(a)===bi) || hits(b) - hits(a) || a.id - b.id); }
   const shown = rows.slice(0, 200);
-  /* 추가옵션 미완료일 때: 지금 조건의 미완료 옷에 필요한 옵션과 개수 */
-  let needOpt = "";
-  if (S.cloSt==="미완료"){
-    const oc = {}; rows.forEach(c => { const k = optName(c); oc[k] = (oc[k]||0) + 1; });
-    const list = Object.entries(oc).filter(([k]) => k!=="없음").sort((a,b) => b[1]-a[1]);
-    const no = !!S.needOptOpen;
-    needOpt = `<div class="needopt ${no?"":"closed"}"><div class="fhead" style="margin:0"><span class="fh-l"><span class="sublbl" style="margin:0">필요한 옵션</span><span class="hint">미완료 ${rows.length}벌 기준</span></span><button class="chip sm fold" data-act="needopt" aria-expanded="${no}">${no?"접기 ▴":"펼치기 ▾"}</button></div>
-      ${no ? (list.length ? `<div class="pills sm" style="margin-top:10px">${list.map(([k,v],i) => `<button class="pill ${i<3?"need":"must"}" data-copt="${esc(k)}">${esc(k)}<b>${v}</b></button>`).join("")}${oc["없음"]?`<span class="pill off">옵션 없음<b>${oc["없음"]}</b></span>`:""}</div>` : `<div class="hint" style="margin-top:8px">옵션이 필요한 옷이 없어요</div>`) : ""}
-    </div>`;
-  }
+  /* 전투 아래 '필요한 옵션'(미완료 옷 기준 옵션 개수)은 목록에서 바로 보이니 없앰(제제 2026-11-12). 위쪽 필요한 옵션 상자만 둔다 */
+
   /* 모든 보기에서 항상: 옵션 줄에서 고른 옵션마다 필요한 개수를 직접 세는 칸(ui/optcnt에 저장) */
   let cntBox = "";
   {
@@ -1403,7 +1395,6 @@ function viewClo(){
     ${S.verifyOpen ? verifyBox() : ""}
     ${S.cloBt != null && DATA.battles[S.cloBt] ? battleCard(S.cloBt) : ""}
 
-    ${needOpt}
     ${LEGEND}
     <div class="list" id="clothesList" tabindex="-1">${shown.length ? shown.map(c => {
       const tr = tracked(c), d = tr && cloDone(c), opened = S.cloOpen===c.id;
@@ -3096,7 +3087,6 @@ document.addEventListener("click", e => {
   if (d.act==="spall"){ const sp = S.spAvail || []; const all = sp.every(k => S.cloOpt.includes(k));
     S.cloOpt = all ? S.cloOpt.filter(k => !sp.includes(k)) : [...S.cloOpt, ...sp.filter(k => !S.cloOpt.includes(k))];
     if (S.cloOpt.length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, opt:true}; remember(); render(); return; }
-  if (d.act==="needopt"){ S.needOptOpen = !S.needOptOpen; render(); return; }
   if (d.planmode){ S.planMode = d.planmode; render(); return; }
   if (d.act==="ocplan"){ S.ocPlan = !S.ocPlan; render(); return; }
   if (d.cntmode){ S.cntMode = d.cntmode; remember(); render(); return; }
