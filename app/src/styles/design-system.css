@@ -329,3 +329,7 @@ button, input, select, textarea { letter-spacing: inherit; }
 :root:root[data-design="hybrid"] .sppath li { display: grid; grid-template-columns: 6.5em minmax(0, 1fr); gap: 8px; font-size: var(--t-body); line-height: 1.5; }
 :root:root[data-design="hybrid"] .sppath li b { font-weight: 700; }
 :root:root[data-design="hybrid"] .sppath li span { color: var(--fg2); }
+
+/* 다음 랭크 칩(제제 2026-11-12: 고른 칩과 헷갈림) → 채움 없이 점선 테두리만 + 앞에 '다음' 표시. 고른 칩(옅은 로즈 채움+실선)과 확실히 다르게 */
+:root:root:root[data-design="hybrid"] .cfoldchips .chip[data-next] { background: transparent !important; box-shadow: none !important; outline: 0 !important; border: 1.5px dashed color-mix(in srgb, var(--blue) 70%, var(--line)) !important; color: var(--fg) !important; font-weight: 400; }
+:root:root:root[data-design="hybrid"] .cfoldchips .chip[data-next]::before { content: "다음"; font-size: var(--t-meta); font-weight: 700; color: var(--blue-ink); margin-right: 5px; letter-spacing: 0; }

@@ -1402,7 +1402,7 @@ function viewClo(){
     <div class="filter-row">${rowHead("재료","mat","cmat",S.cloMat)}${foldChips(matChips, S.cloMat, "cmat", "mat")}</div>
     <div class="filter-row">${rowHead("옵션","opt","copt",S.cloOpt)}${foldChips(optChips, S.cloOpt, "copt", "opt")}</div>
     </div>
-    ${rankStep ? `<div class="ranknext"><span class="rn-k">${curRank()!=null?`현재 ${curRank()} · `:""}다음 랭크 ${gRank(rankStep.rank)}</span><span class="rn-v">배틀 ${esc(rankStep.battle)} → ${esc(rankStep.char)} → <b>${esc(rankStep.genre)}</b>${rankStep.base?` · 옷본 <b>${esc(rankStep.base)}</b>`:""}${rankStep.study?` · 스터디 ${esc(rankStep.study)}${rankStep.studyItems?.length?`(<b>${rankStep.studyItems.map(esc).join("·")}</b>)`:""}`:""}</span><span class="rn-h">점선 칩이 다음에 열리는 것 · 모두 고르면 다음 단계</span></div>` : ""}
+    ${rankStep ? `<div class="ranknext"><span class="rn-k">${curRank()!=null?`현재 ${curRank()} · `:""}다음 랭크 ${gRank(rankStep.rank)}</span><span class="rn-v">배틀 ${esc(rankStep.battle)} → ${esc(rankStep.char)} → <b>${esc(rankStep.genre)}</b>${rankStep.base?` · 옷본 <b>${esc(rankStep.base)}</b>`:""}${rankStep.study?` · 스터디 ${esc(rankStep.study)}${rankStep.studyItems?.length?`(<b>${rankStep.studyItems.map(esc).join("·")}</b>)`:""}`:""}</span><span class="rn-h">'다음' 점선 칩이 다음에 열리는 것 · 모두 고르면 다음 단계</span></div>` : ""}
     ${cntBox}
     <div class="frowgap">${battleRow()}</div>
     ${S.verifyOpen ? verifyBox() : ""}
