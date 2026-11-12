@@ -1227,12 +1227,15 @@ function optSources(o){
   const ref = key => ((DATA.refTables||[]).find(t => t.key===key)?.rows || []);
   ref("site_exams").forEach(r => { if (has(r.c3)) out.push(`자격시험 ${r.c1||""}`.trim()); });
   ref("site_studies").forEach(r => { if (has(r.c2)) out.push(`스터디 ${r.c0||""}`.trim()); });
+  /* 사이트에 없는 경로(제제가 게임에서 확인, 2026-11-12) */
+  const MANUAL = { "찐빵": ["모든 옷을 다 만들면 이벤트로 1개"] };
+  (MANUAL[o] || []).forEach(x => out.push(x));
   return (_optSrc[o] = [...new Set(out)]);
 }
 /* 특수옵션 경로(제제 2026-11-12): 특수옵션마다 얻는 곳(전투·패션 체크·콘테스트·자격시험 등)을 글로만 */
 function spPathBox(){
   const rows = SP_OPTS.map(o => { const src = optSources(o); return `<li><b>${esc(o)}</b><span>${src.length ? src.map(esc).join(" · ") : "확인된 경로 없음"}</span></li>`; }).join("");
-  return `<div class="sppath"><div class="fhead" style="margin:0"><span class="sublbl" style="margin:0">특수옵션 얻는 곳</span><button class="chip sm fold" data-act="sppath" aria-expanded="true">접기 ▴</button></div><ul>${rows}</ul><p class="hint" style="margin:6px 0 0">출처: KairoHistory(전투·패션 체크·콘테스트·자격시험·스터디 보상)</p></div>`;
+  return `<div class="sppath"><div class="fhead" style="margin:0"><span class="sublbl" style="margin:0">특수옵션 얻는 곳</span><button class="chip sm fold" data-act="sppath" aria-expanded="true">접기 ▴</button></div><ul>${rows}</ul><p class="hint" style="margin:6px 0 0">출처: KairoHistory(전투·패션 체크·콘테스트·자격시험·스터디 보상) · 찐빵은 게임에서 직접 확인</p></div>`;
 }
 function cloNeedBlock(c){
   const names = new Set([c.n, cloName(c)]);
