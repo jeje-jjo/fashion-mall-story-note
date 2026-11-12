@@ -100,7 +100,7 @@ function autoSaveSel(){
   selTimer = setTimeout(() => { const all = curSel(); S.cloSlot = {...S.cloSlot, all, ...all};
     writeSerial("ui/slots", {slot:S.cloSlot}).catch(() => showNotice("선택을 저장하지 못했어요. 도구 > 화면에서 수동 저장해 주세요.")).finally(() => { selPending = false; }); }, 400);
 }
-const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
+const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
 if (S.facType!=="전체" && S.facType!=="우선개량" && !(S.facType in TYPE_COLOR)) S.facType = "전체";
 if (!Array.isArray(S.cloCat)) S.cloCat = S.cloCat && S.cloCat!=="전체" ? [S.cloCat] : [];
 if (!Array.isArray(S.cloPat)) S.cloPat = S.cloPat && S.cloPat!=="전체" ? [S.cloPat] : [];
@@ -2967,6 +2967,11 @@ document.addEventListener("click", e => {
 }, true);
 /* ---------- events ---------- */
 document.addEventListener("click", e => {
+  /* 목록 줄의 빈 곳(버튼 사이 여백, 항목 알약 옆 빈칸)을 눌러도 상세가 열리게(제제 2026-11-12 클릭 기록: 맥에서 빈 곳 클릭 4%) */
+  if (!e.target.closest("button,a,input,select,textarea,label,summary,[role=button],.pill,.tag,.detail")){
+    const wrap = e.target.closest("#view .list > div"), ob = wrap?.querySelector(":scope > .row [data-ofac], :scope > .row [data-oclo]");
+    if (ob && !window.getSelection()?.toString()){ ob.click(); return; }
+  }
   const pk = e.target.closest("[data-p40ck]"); if (pk){ e.preventDefault(); toggleP40(+pk.dataset.p40ck); return; }
   const b = e.target.closest("button"); if (!b) return;
   if (b.id==="saveAll"){ saveAll(); return; }
@@ -2987,7 +2992,7 @@ document.addEventListener("click", e => {
   if (d.fcdone !== undefined){ toggleFcDone(+d.fcdone); return; }
   if (d.mqg2){ S.mqG = d.mqg2; remember(); render(); return; }
   if (d.mqbuilt){ const [g, k] = d.mqbuilt.split("|").map(Number); mqToggleBuilt(g, k); return; }
-  if (d.goalst !== undefined){ S.goalSt = d.goalst === "" ? null : +d.goalst; render(); return; }
+  if (d.goalst !== undefined){ S.goalSt = d.goalst === "" ? null : +d.goalst; remember(); render(); return; }
   if (d.refg){ S.refG = d.refg; S.refKey = null; S.refQ = ""; S.refAll = false; render(); return; }
   if (d.reqx){ S.reqX = {...(S.reqX||{}), [d.reqx]: !S.reqX?.[d.reqx]}; remember(); render(); return; }
   if (d.reqall){ S.reqAll = {...(S.reqAll||{}), [d.reqall]: true}; render(); return; }
