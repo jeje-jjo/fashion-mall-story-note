@@ -1220,10 +1220,19 @@ function optSources(o){
   (DATA.checks||[]).forEach((k, i) => { if (has(k.site?.option)) out.push(`패션 체크 ${i+1}`); });
   (DATA.checksExtra||[]).forEach(k => { if (has(k.site?.option)) out.push(`모델 체크 ${k.site.id}`); });
   (DATA.contests||[]).forEach(k => { if (has(k.option)) out.push(String(k.name||"콘테스트").replace(/\s+/g," ")); });
+  /* 전투 보상(제제 2026-11-12): 보상 문구에 옵션 이름이 있으면 그 전투 승리로 얻음 */
+  const winHas = w => String(w||"").split(/[\/,:·]/).map(x => x.replace(/^(새\s*)?옵션\s*/,"").trim()).includes(o);
+  (DATA.battles||[]).forEach((b, i) => { if (winHas(b.site?.win)) out.push(`${bShort(i)} 챌린지 승리`); });
+  (DATA.battlesExtra||[]).forEach(b => { if (winHas(b.site?.win)) out.push(`다른 가게 ${b.name} 승리`); });
   const ref = key => ((DATA.refTables||[]).find(t => t.key===key)?.rows || []);
   ref("site_exams").forEach(r => { if (has(r.c3)) out.push(`자격시험 ${r.c1||""}`.trim()); });
   ref("site_studies").forEach(r => { if (has(r.c2)) out.push(`스터디 ${r.c0||""}`.trim()); });
   return (_optSrc[o] = [...new Set(out)]);
+}
+/* 특수옵션 경로(제제 2026-11-12): 특수옵션마다 얻는 곳(전투·패션 체크·콘테스트·자격시험 등)을 글로만 */
+function spPathBox(){
+  const rows = SP_OPTS.map(o => { const src = optSources(o); return `<li><b>${esc(o)}</b><span>${src.length ? src.map(esc).join(" · ") : "확인된 경로 없음"}</span></li>`; }).join("");
+  return `<div class="sppath"><div class="fhead" style="margin:0"><span class="sublbl" style="margin:0">특수옵션 얻는 곳</span><button class="chip sm fold" data-act="sppath" aria-expanded="true">접기 ▴</button></div><ul>${rows}</ul><p class="hint" style="margin:6px 0 0">출처: KairoHistory(전투·패션 체크·콘테스트·자격시험·스터디 보상)</p></div>`;
 }
 function cloNeedBlock(c){
   const names = new Set([c.n, cloName(c)]);
@@ -1362,7 +1371,7 @@ function viewClo(){
         const pend = c => pm==="all" ? !(tracked(c) && cloDone(c)) : (tracked(c) && !cloDone(c));
         const need = {}; DATA.clo.forEach(c => { if (c.c !== nextG || !pend(c)) return; const k = c.o || "없음"; if (k==="없음" || SP_OPTS.includes(k)) return; need[k] = (need[k]||0) + 1; });
         const list = Object.entries(need).sort((a,b) => (sel.includes(b[0]) - sel.includes(a[0])) || b[1]-a[1] || optRank(a[0]) - optRank(b[0]));
-        planBox = `<div class="ocplan"><div class="ochead"><b>다음 장르 ${esc(nextG)}</b><span class="seg mini cntseg" role="group" aria-label="필요예정 기준">${[["opt","옵션기준"],["all","전체기준"]].map(([v,l]) => `<button type="button" class="${pm===v?"on":""}" data-planmode="${v}" aria-pressed="${pm===v}">${l}</button>`).join("")}</span><span class="hint">옵션 ${list.length}종 ${list.reduce((t,[,v]) => t+v, 0)}벌 · 누르면 옵션 줄에서 선택</span></div>
+        planBox = `<div class="ocplan"><div class="ochead"><b>다음 장르 ${esc(nextG)}</b><span class="seg mini cntseg" role="group" aria-label="필요예정 기준">${[["opt","옵션<span class=\"ph-x\">기준</span>"],["all","전체<span class=\"ph-x\">기준</span>"]].map(([v,l]) => `<button type="button" class="${pm===v?"on":""}" data-planmode="${v}" aria-pressed="${pm===v}">${l}</button>`).join("")}</span><span class="hint">옵션 ${list.length}종 ${list.reduce((t,[,v]) => t+v, 0)}벌 · 누르면 옵션 줄에서 선택</span></div>
           ${list.length ? `<div class="pills sm">${list.map(([k,v]) => `<button type="button" class="pill ${sel.includes(k)?"need":"must"}" data-copt="${esc(k)}" aria-pressed="${sel.includes(k)}">${esc(k)}<b>${v}</b></button>`).join("")}</div>` : `<div class="hint">필요한 일반 옵션이 없어요</div>`}</div>`;
       }
     }
@@ -1382,7 +1391,8 @@ function viewClo(){
   const spAll = SP.length, spDoneN = SP.filter(cloDone).length;
   return `<section class="card wardrobe-card">
     <div class="tools ctools toolsgap"><div class="cloview"><div class="pillseg" role="group" aria-label="보기"><button type="button" class="${!kinds.length && S.cloSt==="전체"?"on":""}" data-cst="전체 옷">전체 옷</button>${["추가옵션","전투 추천","코디 추천"].map(k => `<button type="button" class="${kinds.includes(k)?"on":""}" data-ckind="${k}" aria-pressed="${kinds.includes(k)}">${k}</button>`).join("")}</div><div class="pillseg" role="group" aria-label="완료 상태">${["미완료","완료"].map(k => `<button type="button" class="${S.cloSt===k?"on":""}" data-cst="${k}" aria-pressed="${S.cloSt===k}">${k}</button>`).join("")}</div></div><input class="search" id="cloQ" placeholder="옷 이름, 옵션, 인물 검색" value="${esc(S.cloQ)}" aria-label="옷 검색"></div>
-    <div class="filter-toolbar fhead"><span class="fh-l">${(() => { const allExp = ["cat","pat","mat","opt"].every(k => S.cloExp[k]); return `<button class="chip sm" data-act="${allExp?"foldall":"openall"}" aria-expanded="${allExp}">${allExp?"전체 접기":"전체 펼치기"}</button>`; })()}<button class="chip sm ${S.cloMulti?"on":""}" data-act="cmulti" aria-pressed="${S.cloMulti}">전체 다중선택</button><span class="seg mini cntseg" role="group" aria-label="숫자 기준">${[["opt","옵션기준"],["all","전체기준"]].map(([v,l]) => `<button type="button" class="${cntMode===v?"on":""}" data-cntmode="${v}" aria-pressed="${cntMode===v}">${l}</button>`).join("")}</span></span><span class="fh-act"><a href="#clothesList" class="catalog-jump"><span class="cj-w">목록</span> <b>${rows.length}벌</b> ↓</a></span></div>
+    <div class="filter-toolbar fhead"><span class="fh-l">${(() => { const allExp = ["cat","pat","mat","opt"].every(k => S.cloExp[k]); return `<button class="chip sm" data-act="${allExp?"foldall":"openall"}" aria-expanded="${allExp}">${allExp?"전체 접기":"전체 펼치기"}</button>`; })()}<button class="chip sm ${S.cloMulti?"on":""}" data-act="cmulti" aria-pressed="${S.cloMulti}">전체 다중선택</button><span class="seg mini cntseg" role="group" aria-label="숫자 기준">${[["opt","옵션<span class=\"ph-x\">기준</span>"],["all","전체<span class=\"ph-x\">기준</span>"]].map(([v,l]) => `<button type="button" class="${cntMode===v?"on":""}" data-cntmode="${v}" aria-pressed="${cntMode===v}">${l}</button>`).join("")}</span></span><span class="fh-act"><button type="button" class="chip sm ${S.spPath?"on":""}" data-act="sppath" aria-expanded="${!!S.spPath}"><span class="ph-x">특수옵션 </span>경로</button><a href="#clothesList" class="catalog-jump"><span class="cj-w">목록</span> <b>${rows.length}벌</b> ↓</a></span></div>
+    ${S.spPath ? spPathBox() : ""}
     <div class="filter-grid">
     <div class="filter-row">${rowHead("장르","cat","ccat",S.cloCat)}${foldChips(catChips, S.cloCat, "ccat", "cat")}</div>
     <div class="filter-row">${rowHead("옷본","pat","cpat",S.cloPat,rows.length)}${foldChips(patChips, S.cloPat, "cpat", "pat")}</div>
@@ -3013,6 +3023,7 @@ document.addEventListener("click", e => {
   if (d.act==="clkdown"){ clickLogDownload(); return; }
   if (d.act==="clklast"){ clickLogLast(); return; }
   if (d.act==="bkdown"){ backupDownload(); return; }
+  if (d.act==="sppath"){ S.spPath = !S.spPath; render(); return; }
   if (d.act==="outshare"){ outShare(); return; }
   if (d.act==="outsave"){ outSave(); return; }
   if (d.act==="outclose"){ OUT.file = null; if (d.tag==="bk") S.bk = null; else S.clkOut = false; render(); return; }
