@@ -345,3 +345,19 @@ button, input, select, textarea { letter-spacing: inherit; }
 :root:root[data-design="hybrid"] .seg.mini button::after,
 :root:root[data-design="hybrid"] .fhead .seg button::after,
 :root:root[data-design="hybrid"] .iconbtn::after { content: ""; position: absolute; inset: -4px 0; }
+
+/* 손님 카드(2026-11-16 제제: 체크 누르려다 다른 게 눌림)
+   - 펼친 요청의 연필이 ▾ 자리에 끼어들던 것 → ▴▾는 펼침 버튼 안으로, 수정은 펼친 내용 아래 '요청 수정' 글 버튼으로
+   - 머리: 이름·건수·[✓ 최종 완료] 칩 … 간격 … 연필·닫기 (완료 칩과 연필을 떨어뜨림) */
+:root:root[data-design="hybrid"] .cocard .fc-h .codone { display: inline-flex; align-items: center; gap: 4px; }
+:root:root[data-design="hybrid"] .cocard .fc-h .codone .ui-icon { width: 14px; height: 14px; }
+:root:root[data-design="hybrid"] .cocard .fc-h .fc-gap { flex: 1 1 auto; min-width: 12px; }
+:root:root[data-design="hybrid"] .cocard .fc-h .fc-n { flex: 0 1 auto; }
+:root:root[data-design="hybrid"] .request-heading .reqrow { position: relative; width: 100%; box-sizing: border-box; padding-right: 28px; }
+:root:root[data-design="hybrid"] .request-heading .reqrow .reqrow-c { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: var(--fg3); }
+:root:root[data-design="hybrid"] .req-act { display: flex; justify-content: flex-end; margin-top: 8px; }
+:root:root[data-design="hybrid"] .req-act .text-action { display: inline-flex; align-items: center; gap: 4px; font-size: var(--t-ctl); }
+:root:root[data-design="hybrid"] .req-act .text-action .ui-icon { width: 14px; height: 14px; }
+/* 위치가 static으로 덮인 버튼은 투명 영역이 카드 전체로 번진다(2026-11-16: 손님 카드 어디를 눌러도 '수정'이 열림) → 그런 버튼은 넓히지 않음 */
+:root:root[data-design="hybrid"] .coedit::after,
+:root:root[data-design="hybrid"] .request-heading .iconbtn::after { content: none !important; }
