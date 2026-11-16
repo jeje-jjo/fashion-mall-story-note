@@ -333,3 +333,15 @@ button, input, select, textarea { letter-spacing: inherit; }
 /* 다음 랭크 칩(제제 2026-11-12: 고른 칩과 헷갈림) → 채움 없이 점선 테두리만 + 앞에 '다음' 표시. 고른 칩(옅은 로즈 채움+실선)과 확실히 다르게 */
 :root:root:root[data-design="hybrid"] .cfoldchips .chip[data-next] { background: transparent !important; box-shadow: none !important; outline: 0 !important; border: 1.5px dashed color-mix(in srgb, var(--blue) 70%, var(--line)) !important; color: var(--fg) !important; font-weight: 400; }
 :root:root:root[data-design="hybrid"] .cfoldchips .chip[data-next]::before { content: "다음"; font-size: var(--t-meta); font-weight: 700; color: var(--blue-ink); margin-right: 5px; letter-spacing: 0; }
+
+/* 작은 버튼 눌리는 범위 넓히기(2026-11-16 클릭 기록: 펼치기·칩 근처 빗나간 터치 103번). 보이는 크기는 그대로, 위아래 4px 투명 영역(좌우로 넓히면 화면 옆 넘침이 생겨 위아래만) */
+:root:root[data-design="hybrid"] .chip.sm,
+:root:root[data-design="hybrid"] .chip.fold,
+:root:root[data-design="hybrid"] .seg.mini button,
+:root:root[data-design="hybrid"] .fhead .seg button,
+:root:root[data-design="hybrid"] .iconbtn { position: relative; }
+:root:root[data-design="hybrid"] .chip.sm::after,
+:root:root[data-design="hybrid"] .chip.fold::after,
+:root:root[data-design="hybrid"] .seg.mini button::after,
+:root:root[data-design="hybrid"] .fhead .seg button::after,
+:root:root[data-design="hybrid"] .iconbtn::after { content: ""; position: absolute; inset: -4px 0; }

@@ -15,9 +15,10 @@ const DATA = window.__FMS_DATA__;
    예전 r2*, r3* 컬렉션은 보관용으로 남겨 둠 */
 const R = "r3";
 /* 회차 진행 저장 위치. meta/round {n, run}에 적힌 run을 씀(없으면 runs/r3). 새 회차 시작 = 새 run 경로 */
-let RUN = `runs/${R}`;
+/* 회차 정보를 늦게 받으면 예전 회차 칸에 저장되던 문제(2026-11-16 클릭 기록) → 마지막으로 확인한 회차 경로를 기기에 기억해 기본값으로 쓴다 */
+let RUN = (() => { try{ return localStorage.getItem("fms-run") || `runs/${R}`; }catch(e){ return `runs/${R}`; } })();
 /* 화면에 보이는 회차 번호. 저장소 경로(R)와 별개로 meta/round {n}에 저장, "새 회차 시작" 때 1 올림 */
-const roundNo = () => S.roundNo || +R.replace(/^r/, "");
+const roundNo = () => S.roundNo || (() => { try{ return +localStorage.getItem("fms-roundn") || 0; }catch(e){ return 0; } })() || +R.replace(/^r/, "");
 const roundLabel = () => roundNo() + "회차";
 const ITEMS = DATA.items;
 /* 예전 이름 → 사이트 이름(buildData의 DATA.alias). 저장된 진행 데이터가 예전 이름을 키로 쓰는 곳은 읽을 때 바꾼다 */
@@ -218,12 +219,18 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   const fail = () => setSync(false, "연결 끊김");
   /* 회차 정보를 먼저 받고(첫 응답) 그 run 경로로 나머지를 구독. 이후 다른 기기에서 run이 바뀌면 새로고침 */
   let runReady = false;
+  let gotMeta = false;
+  const keepRun = md => { try{ if (md?.run) localStorage.setItem("fms-run", md.run); if (md?.n) localStorage.setItem("fms-roundn", String(md.n)); }catch(e){} };
   await new Promise(res => { let first = true; const fin = () => { if (first){ first = false; res(); } };
     db.doc("meta/round").onSnapshot(s => { const md = s.exists ? s.data() : null;
-      if (first){ if (md?.run) RUN = md.run; if (md?.n) S.roundNo = +md.n; runReady = true; fin(); render(); return; }
+      if (!gotMeta){ gotMeta = true; keepRun(md);
+        /* 5초 안에 못 받아 기억한 경로로 먼저 열었는데 실제 회차가 다르면, 바로 새로 고쳐 맞는 회차로 */
+        if (!first && md?.run && md.run !== RUN){ location.reload(); return; }
+        if (md?.run) RUN = md.run; if (md?.n) S.roundNo = +md.n; runReady = true; fin(); render(); return; }
+      keepRun(md);
       if (runReady && md?.run && md.run !== RUN){ location.reload(); return; }
       if (md?.n){ S.roundNo = +md.n; render(); } }, () => fin());
-    setTimeout(fin, 5000); });
+    setTimeout(() => { if (!gotMeta) runReady = true; fin(); }, 5000); });
   db.collection(`${RUN}/fac`).onSnapshot(s => { S.fac = Object.fromEntries(s.docs.map(d => { const v = {...d.data()}; if (v.put) v.put = alArr("item", v.put); return [+d.id.slice(1), v]; })); render(); }, fail);
   db.collection(`${RUN}/clo`).onSnapshot(s => { S.clo = Object.fromEntries(s.docs.map(d => { const v = {...d.data()};
     if (v.opt){ const o = {...v.opt}; if (o.guest) o.guest = o.guest.replace(/^(.*?)(\s*\(.*\))?$/, (m, a, b) => al("person", a) + (b || "")); if (o.likeDetail) o.likeDetail = alSlash("fac", o.likeDetail); v.opt = o; }
@@ -2237,7 +2244,7 @@ const outCanShare = f => { try{ return !!(navigator.canShare && navigator.share 
 const outMake = (text, name) => { OUT.file = new File([text], name, { type:"application/json" }); return OUT.file; };
 function outSave(){ const f = OUT.file; if (!f) return; const a = document.createElement("a"); a.href = URL.createObjectURL(f); a.download = f.name;
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); toast("기기에 내려받았어요"); }
-function outShare(){ const f = OUT.file; if (!f) return; navigator.share({ files:[f], title:f.name }).then(() => toast("보냈어요")).catch(e => { if (e?.name !== "AbortError") { toast("공유 창을 열지 못해 내려받기로 저장할게요"); outSave(); } }); }
+function outShare(){ const f = OUT.file; if (!f) return; navigator.share({ files:[f] }).then(() => toast("보냈어요")).catch(e => { if (e?.name !== "AbortError") { toast("공유 창을 열지 못해 내려받기로 저장할게요"); outSave(); } }); }
 const outButtons = (f, tag) => `<div class="outbtns" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">${outCanShare(f) ? `<button type="button" class="btn sm" data-act="outshare">공유로 보내기 (Google Drive 등)</button>` : ""}<button type="button" class="btn ghost sm" data-act="outsave">기기에 내려받기</button><button type="button" class="btn ghost sm" data-act="outclose" data-tag="${tag}">닫기</button></div><p class="hint" style="margin:6px 0 0">${esc(f.name)}${outCanShare(f) ? " · 공유 창에서 Drive를 고르면 바로 올라가요" : ""}</p>`;
 /* 진행 데이터 백업(제제 2026-11-11): 체크·기록 전부를 JSON 파일로 받기 / 파일로 되돌리기.
    이 기기 캐시에서 읽어 아직 서버에 못 올라간 변경까지 담는다. 클릭 기록(uilog)은 빼고, 경로 그대로 저장 */
@@ -3485,7 +3492,9 @@ function clickLogCard(){
   document.addEventListener("click", e => {
     if (clkOff()) return;
     const el = e.target.closest("button,a,input,select,textarea,label,summary,[role=button],[role=checkbox],[data-tab]");
-    const ev = { k:"c", ...(el ? pick(el) : { el:"(빈 곳)" }), s0:st() };
+    /* 빈 곳 터치는 위치도 남긴다(화면 비율 0~1000, 눌린 요소 이름) → 다음 분석 때 어디를 빗나갔는지 */
+    const miss = el ? null : { px:Math.round(e.clientX / innerWidth * 1000), py:Math.round(e.clientY / innerHeight * 1000), tg:(e.target.tagName || "").toLowerCase() + "." + String(e.target.className || "").split(/\s+/).slice(0, 2).join("."), nb:(() => { const n = document.elementsFromPoint(e.clientX, e.clientY).map(x => x.closest?.("button,a,label")).find(Boolean) || [...document.querySelectorAll("button,a")].find(b => { const r = b.getBoundingClientRect(); return r.width && Math.abs((r.left + r.right) / 2 - e.clientX) < r.width / 2 + 14 && Math.abs((r.top + r.bottom) / 2 - e.clientY) < r.height / 2 + 14; }); return n ? (n.innerText || n.getAttribute("aria-label") || "").trim().replace(/\s+/g, " ").slice(0, 20) : ""; })() };
+    const ev = { k:"c", ...(el ? pick(el) : { el:"(빈 곳)", ...miss }), s0:st() };
     setTimeout(() => { ev.s1 = st(); push(ev); }, 0);
   }, true);
   document.addEventListener("change", e => { const el = e.target; if (el && (el.tagName === "SELECT" || el.type === "checkbox" || el.type === "radio")) push({ k:"ch", ...pick(el), s1:st() }); }, true);
