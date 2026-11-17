@@ -2743,7 +2743,21 @@ const TERM_RE = Object.keys(DATA.terms||{}).length ? new RegExp(Object.keys(DATA
 const moneyG = v => { let t = String(v ?? "").replace(/¥\s?([\d,]+)/g, "$1G"); if (TERM_RE) t = t.replace(TERM_RE, m => DATA.terms[m]); return t; };
 /* 자료 묶음(2026-11-10): 표가 29개라 휴대폰에서 칩이 화면을 다 덮어서 묶음 → 표 두 줄로 */
 const REF_GROUPS = [["옷", ["x_clothes","x_recipes","x_sales_avg","x_sales_guests","site_grades","site_formulas"]], ["코디·요청", ["x_outfit_sets","x_coord_requests","x_fashion_checks","x_battles","x_codes"]],
-  ["진행", ["site_exams","site_studies","site_skills","x_trophies","x_missions","site_clear_points","site_carryover_choices","site_fever","x_faq"]], ["가게·사람", ["x_chars","site_celebrities","site_uniforms","site_investments","site_sales_trips","site_items","site_goods","site_comment_replies","site_activities"]]];
+  ["진행", ["x_unlock","site_exams","site_studies","site_skills","x_trophies","x_missions","site_clear_points","site_carryover_choices","site_fever","x_faq"]], ["가게·사람", ["x_chars","site_celebrities","site_uniforms","site_investments","site_sales_trips","site_items","site_goods","site_comment_replies","site_activities"]]];
+/* 시설 해금 흐름(제제 2026-11-17): 장르별 섹션 정할 때 보는 요약. 비율 = 크기(가로×세로) 지분, 소파·의자·인테리어 제외 */
+function unlockFlowCard(F){
+  const dot = g => `<i class="ufl-dot" style="background:${TYPE_COLOR[g] || "var(--fg3)"}"></i>`;
+  const open = !!S.unlockRaw;
+  return `<section class="card ufl">
+    <div class="sec-h"><h2>해금 흐름</h2><span>9회차 기록 · ${F.count}곳 ${F.total}칸</span></div>
+    <p class="hint" style="margin:0 0 8px">옷을 만들면 손님이 여는 시설 순서예요. 비율은 크기 지분(1×1 = 1칸, 2×1 = 2칸, 2×2 = 4칸)이고, 소파·의자·인테리어는 뺐어요. 흐름은 5%씩 묶어 가장 많이 열린 장르로 이었어요.</p>
+    <div class="ufl-flow">${F.flow.map(([g, p], i) => `${i ? `<span class="ufl-arr">→</span>` : ""}<span class="ufl-step">${dot(g)}${esc(g)} <b>${p}%</b></span>`).join("")}</div>
+    <div class="sublbl" style="margin:12px 0 6px">10% 구간별 장르 비중</div>
+    <div class="ufl-dec">${F.deciles.map((d, k) => `<div class="ufl-row"><span class="ufl-k">${k * 10}~${k * 10 + 10}%</span><span class="ufl-bar">${d.map(([g, p]) => `<span style="flex:${p};background:${TYPE_COLOR[g] || "var(--fg3)"}" title="${esc(g)} ${p}%"></span>`).join("")}</span><span class="ufl-v">${d.map(([g, p]) => `${esc(g)} ${p}%`).join(" · ")}</span></div>`).join("")}</div>
+    <button type="button" class="linkbtn" data-act="unlockraw" style="margin-top:10px" aria-expanded="${open}">${open ? "자세한 순서 접기" : "자세한 순서(묶지 않은 그대로) 보기"}</button>
+    ${open ? `<div class="ufl-flow ufl-raw">${F.raw.map(([g, p], i) => `${i ? `<span class="ufl-arr">→</span>` : ""}<span class="ufl-step">${esc(g)} ${p}%</span>`).join("")}</div>` : ""}
+  </section>`;
+}
 function viewRef(){
   const all = DATA.refTables || [];
   const grpOf = k => (REF_GROUPS.find(([, ks]) => ks.includes(k)) || ["기타"])[0];
@@ -2762,6 +2776,7 @@ function viewRef(){
     <div class="tools toolsgap"><input class="search" id="refQ" placeholder="${esc(cur.label)} 안에서 검색" value="${esc(q)}" aria-label="자료 검색"></div>
     <div class="hint" style="margin-top:8px">출처: KairoHistory(개인 참고용, 카이로소프트 공식 아님)</div>
   </section>
+  ${cur.key === "x_unlock" && DATA.unlockFlow ? unlockFlowCard(DATA.unlockFlow) : ""}
   <section class="card"><div class="list">${shown.map(r => `<div class="refrow"><div class="rh">${esc(moneyG(r[cols[0]]))}</div>${factRows(cols.slice(1).filter(k => r[k]!=null && r[k]!=="").map(k => [lab[k] || k, moneyG(r[k])]))}</div>`).join("") || `<div class="empty">검색 결과가 없어요</div>`}</div>
     ${rows.length > shown.length ? `<button class="linkbtn" data-act="refall">${rows.length - shown.length}개 더 보기</button>` : ""}</section>`;
 }
@@ -3039,6 +3054,7 @@ document.addEventListener("click", e => {
   if (d.act==="clkdown"){ clickLogDownload(); return; }
   if (d.act==="clklast"){ clickLogLast(); return; }
   if (d.act==="bkdown"){ backupDownload(); return; }
+  if (d.act==="unlockraw"){ S.unlockRaw = !S.unlockRaw; render(); return; }
   if (d.act==="sppath"){ S.spPath = !S.spPath; render(); return; }
   if (d.act==="outshare"){ outShare(); return; }
   if (d.act==="outsave"){ outSave(); return; }

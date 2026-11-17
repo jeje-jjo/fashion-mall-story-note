@@ -18,6 +18,8 @@ export const TABLES = [
   "site_comment_replies", "site_activities", "site_items", "site_goods",
   // 전체 정보 xlsx에서 묶은 표(2026-11-10): 요청별 조건·맞는 옷, 계절별 판매 점수 평균
   "req_site", "sales_avg",
+  // 시설 해금 순서(제제 9회차 기록, 2026-11-17)
+  "unlock_order",
   // 자료 탭에 보여 줄 전체 정보 xlsx 표(2026-11-10 제제: 묵히지 말고 자료에 다)
   "full_clothes", "full_outfit_sets", "full_coord_requests", "full_fashion_checks", "full_battles", "full_sales_guests", "full_codes", "full_faq",
 ] as const;
@@ -334,6 +336,25 @@ export function buildData(t: Tables) {
   asRef("x_chars", "캐릭터", [...t.characters].sort((a, b) => (a.siteId ?? 0) - (b.siteId ?? 0)), [["name", "이름"], ["type", "구분"], ["profile", "나이·마을·성향"], ["likes", "좋아함"], ["info", "발견·해금"]]);
   asRef("x_codes", "분류 사전", byRow("full_codes"), [["c2", "표기"], ["c0", "분류"], ["c1", "코드"]]);
   asRef("x_faq", "설명·FAQ", byRow("full_faq"), [["c1", "질문·항목", (v, r) => `${r.c0} · ${v}`], ["c2", "설명"]]);
+  /* 시설 해금 순서(2026-11-17 제제): 표 + 위에 보여 줄 흐름. 소파·의자·인테리어는 흐름에서 빼고, 비율은 크기(가로×세로) 기준 */
+  const un = ((t as any).unlock_order || []).slice().sort((a: Row, b: Row) => (a.row ?? 0) - (b.row ?? 0));
+  if (un.length){
+    asRef("x_unlock", "시설 해금 순서", un, [["name", "시설", (v, r) => `${r.row}. ${v}`], ["genre", "장르"], ["w", "크기", (v, r) => `${v}×${r.h}`], ["group", "구분"], ["clothes", "여는 옷"], ["guest", "손님"], ["skip", "흐름", (v) => v ? "제외(소파·의자·인테리어)" : ""]]);
+    const inc = un.filter((r: Row) => !r.skip), ar = (r: Row) => (r.w || 1) * (r.h || 1), T = inc.reduce((a: number, r: Row) => a + ar(r), 0) || 1;
+    const chunk = (w: number) => { const out: Record<string, number>[] = []; let cur: Record<string, number> = {}, acc = 0;
+      inc.forEach((r: Row) => { cur[r.genre] = (cur[r.genre] || 0) + ar(r); acc += ar(r); if (acc >= T * w / 100 * (out.length + 1) - 1e-9){ out.push(cur); cur = {}; } });
+      if (Object.keys(cur).length) out.push(cur); return out; };
+    const runs: [string, number][] = [];
+    chunk(5).forEach(c => { const g = Object.entries(c).sort((a, b) => b[1] - a[1])[0][0], a = Object.values(c).reduce((x, y) => x + y, 0);
+      if (runs.length && runs[runs.length - 1][0] === g) runs[runs.length - 1][1] += a; else runs.push([g, a]); });
+    const raw: [string, number][] = [];
+    inc.forEach((r: Row) => { if (raw.length && raw[raw.length - 1][0] === r.genre) raw[raw.length - 1][1] += ar(r); else raw.push([r.genre, ar(r)]); });
+    const pc = (a: number) => Math.round(a / T * 1000) / 10;
+    L.unlockFlow = { total: T, count: inc.length,
+      flow: runs.map(([g, a]) => [g, Math.round(a / T * 100)]),
+      deciles: chunk(10).map(c => { const s = Object.values(c).reduce((x, y) => x + y, 0); return Object.entries(c).sort((a, b) => b[1] - a[1]).map(([g, a]) => [g, Math.round(a / s * 100)]); }),
+      raw: raw.map(([g, a]) => [g, pc(a)]) };
+  }
   L.refTables = L.refTables.filter((x: any) => x.rows.length);
   L.alias = alias;
   // 자료 표 열 이름(ref 표의 columns, 2026-11-06 기준)
