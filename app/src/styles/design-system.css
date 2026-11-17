@@ -375,3 +375,22 @@ button, input, select, textarea { letter-spacing: inherit; }
 :root:root[data-design="hybrid"] .ufl-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--soft); }
 :root:root[data-design="hybrid"] .ufl-v { color: var(--fg2); }
 @media (max-width: 739px) { :root:root[data-design="hybrid"] .ufl-row { grid-template-columns: 4.6em minmax(0, 1fr); } :root:root[data-design="hybrid"] .ufl-v { grid-column: 2; } }
+
+/* 필요한 옵션: 접혔을 때 다른 줄 머리와 같은 높이로(제제 2026-11-17: 너무 커 보임) — 채운 상자 대신 얇은 테두리, 위아래 여백 줄임 */
+:root:root:root[data-design="hybrid"] .needopt.optcnt.is-closed { background: transparent; box-shadow: none; border: 1px solid var(--line); padding: 6px 12px; }
+:root:root:root[data-design="hybrid"] .needopt.optcnt.is-closed .fhead { margin-bottom: 0; min-height: 0; }
+:root:root:root[data-design="hybrid"] .needopt.optcnt.is-closed .sublbl { font-size: var(--t-sec); }
+:root:root[data-design="hybrid"] .btx-auto { display: inline-flex; align-items: center; gap: 3px; font-size: var(--t-meta); font-weight: 700; color: var(--blue-ink); flex: none; }
+:root:root[data-design="hybrid"] .btx-auto .ui-icon { width: 13px; height: 13px; }
+/* 특수옵션 경로 체크 칩 */
+:root:root[data-design="hybrid"] .sppath li { align-items: start; }
+:root:root[data-design="hybrid"] .sppath li b { display: inline-flex; align-items: center; gap: 3px; padding-top: 3px; }
+:root:root[data-design="hybrid"] .sppath li.got b { color: var(--blue-ink); }
+:root:root[data-design="hybrid"] .sppath li b .ui-icon, :root:root[data-design="hybrid"] .spsrc .ui-icon { width: 13px; height: 13px; }
+:root:root[data-design="hybrid"] .sppath .spsrcs { display: flex; flex-wrap: wrap; gap: 5px; color: inherit; }
+:root:root[data-design="hybrid"] .sppath .spsrc { display: inline-flex; align-items: center; gap: 3px; font-size: var(--t-meta); }
+:root:root[data-design="hybrid"] .sppath .spsrc.auto { cursor: default; border-style: dashed; }
+:root:root[data-design="hybrid"] .sppath .spsrc.auto.on { border-style: solid; }
+:root:root:root[data-design="hybrid"] .sppath .spsrc { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 2px 8px; min-height: 0; height: auto; line-height: 1.5; }
+:root:root:root[data-design="hybrid"] .sppath .spsrc.auto { border-style: dashed; color: var(--fg3); }
+:root:root:root[data-design="hybrid"] .sppath .spsrc.on { background: var(--blue-soft); border-color: color-mix(in srgb, var(--blue) 45%, var(--line)); border-style: solid; color: var(--blue-ink); }

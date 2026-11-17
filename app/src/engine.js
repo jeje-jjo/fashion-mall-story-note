@@ -269,6 +269,7 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   db.doc(`${RUN}/ui/goals`).onSnapshot(s => { S.goals = (s.exists && s.data()) || null; render(); }, () => {});
   db.doc(`${RUN}/ui/now`).onSnapshot(s => { S.now = (s.exists && s.data()) || null; render(); }, () => {});
   db.doc(`${RUN}/ui/mqcfg`).onSnapshot(s => { S.mqCfg = (s.exists && s.data()) || null; render(); }, () => {});
+  db.doc(`${RUN}/ui/sppath`).onSnapshot(s => { S.spDone = ((s.exists && s.data()) || {}).done || []; render(); }, () => {});
   db.doc(`${RUN}/misc/coord`).onSnapshot(s => { S.coordDone = (s.exists && s.data().list) || []; render(); }, fail);
   db.collection("coordfix").onSnapshot(s => { S.cfix = Object.fromEntries(s.docs.map(d => { const v = {...d.data()}; ["pt","pb","po","pa"].forEach(k => { if (v[k]) v[k] = alSlash("clo", v[k]); }); return [+d.id.slice(1), v]; })); render(); }, fail);
   db.collection("chkscore").onSnapshot(s => { S.chkscore = Object.fromEntries(s.docs.map(d => [+d.id.slice(1), d.data()])); render(); }, fail);
@@ -530,13 +531,30 @@ const bShort = i => DATA.battles[i].name.replace(/\s*챌린지.*$/,"");
 const bRec = i => S.battleRec[i] || {};
 /* 전투 완료(제제 2026-11-10): battles/b{번호}.doneRun = 그 회차 run. 다른 가게 직원은 사이트 번호로 battles/bx{id}. 회차가 바뀌면 저절로 미완료 */
 const btKeyX = b => `x${b.site?.id}`;
-const btDone = k => bRec(k).doneRun === RUN;
+/* 다른 가게 직원은 항상 이기니(제제 2026-11-17) 그 직원이 여는 장르를 의류 장르 줄에서 고르면 승리로 본다(랭크 진행 표: 배틀 → 캐릭터 → 장르) */
+const btAuto = k => { if (typeof k !== "string") return false; const b = (DATA.battlesExtra || []).find(x => btKeyX(x) === k); if (!b) return false;
+  const nk = x => String(x || "").replace(/\s/g, ""); return (DATA.rankPlan || []).some(p => nk(p.battle) === nk(b.name) && (S.cloCat || []).includes(p.genre)); };
+const btDone = k => bRec(k).doneRun === RUN || btAuto(k);
+/* 챌린지 승리 보상의 특수옵션(제제 2026-11-17: 패션 체크처럼 승리하면 의류 옵션 줄에 자동 선택) */
+function btRewardOpt(k){
+  const b = typeof k === "number" ? DATA.battles[k] : (DATA.battlesExtra || []).find(x => btKeyX(x) === k); if (!b) return "";
+  const toks = String(b.site?.win || "").split(/[\/,:·]/).map(x => x.replace(/^(새\s*)?옵션\s*/, "").trim());
+  return SP_OPTS.find(o => toks.includes(o)) || "";
+}
+function applyBtReward(k, on){
+  const o = btRewardOpt(k); if (!o) return "";
+  const cur = S.cloOpt || [];
+  if (on){ if (cur.includes(o)) return o; S.cloOpt = isMulti("opt") ? [...cur, o] : [o]; }
+  else { if (!cur.includes(o)) return ""; S.cloOpt = cur.filter(x => x !== o); }
+  remember(); return o;
+}
 async function toggleBtDone(k){
   const on = !btDone(k), rec = {...bRec(k)};
   if (on) rec.doneRun = RUN; else delete rec.doneRun;
+  const rw = applyBtReward(k, on);
   S.battleRec = {...S.battleRec, [k]:rec}; render();
   const nm = typeof k === "number" ? DATA.battles[k]?.name : (DATA.battlesExtra||[]).find(b => btKeyX(b)===k)?.name;
-  toast(on ? `${nm || "전투"} 승리로 체크` : `${nm || "전투"} 체크 취소`);
+  toast(on ? `${nm || "전투"} 승리로 체크${rw ? ` · 의류 필터에 ★ ${rw} 선택` : ""}` : `${nm || "전투"} 체크 취소${rw ? ` · ★ ${rw} 선택 해제` : ""}`);
   if (db) try{ await writeSerial(`battles/b${k}`, {...rec, t:Date.now(), by:"app"}); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
 const btDoneBtn = (k, label) => `<button class="iconbtn act ${btDone(k)?"on":""}" data-btdone="${k}" aria-label="${esc(label)} ${btDone(k)?"승리 체크 취소":"승리 체크"}" aria-pressed="${btDone(k)}">${ICON.ok}</button>`;
@@ -1075,8 +1093,8 @@ function btExtraList(){
   /* 작은 카드로: 이름 · 참가비 · ✓, 아래에 보상·등장(·의류 조건) 두 줄(제제 2026-11-10: 제목이 크고 오른쪽이 비어 정렬이 이상함) */
   const btxCard = b => { const st = b.site || {}, cond = (st.clothCond || "").split(";").map(x => x.trim().replace(/^[^:]+:\s*/, "")).filter(Boolean).join(" · ");
     const rows = [["보상", fmtWin(st.win)], ["등장", btAppear(st.appear)], ...(cond ? [["의류 조건", cond]] : [])].filter(([, v]) => v);
-    return `<div class="btx ${btDone(btKeyX(b))?"btdone":""}"><div class="btx-h"><b class="btx-n">${esc(b.name)}</b>${st.fee!=null?`<span class="btx-fee">${nf0(st.fee)}G</span>`:""}${btDoneBtn(btKeyX(b), b.name)}</div><dl class="btx-dl">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>`; };
-  return `<div class="btextra"><div class="btx-list">${(DATA.battlesExtra||[]).map(btxCard).join("")}</div><div class="hint">다른 가게 직원 배틀은 사이트에만 있어 기록 칸은 없고, ✓로 승리만 체크해요 · 출처: KairoHistory 배틀</div></div>`;
+    return `<div class="btx ${btDone(btKeyX(b))?"btdone":""}"><div class="btx-h"><b class="btx-n">${esc(b.name)}</b>${st.fee!=null?`<span class="btx-fee">${nf0(st.fee)}G</span>`:""}${btAuto(btKeyX(b)) ? `<span class="btx-auto">${ICON.ok}승리</span>` : btDoneBtn(btKeyX(b), b.name)}</div><dl class="btx-dl">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl></div>`; };
+  return `<div class="btextra"><div class="btx-list">${(DATA.battlesExtra||[]).map(btxCard).join("")}</div><div class="hint">다른 가게 직원은 항상 이기니, 그 직원이 여는 장르를 의류 장르 줄에서 고르면 자동으로 승리 처리돼요(장르를 아직 안 골랐으면 ✓로 직접) · 출처: KairoHistory 배틀</div></div>`;
 }
 function battleRow(){
   const sel = S.cloBt, o = S.btOpen !== false, on = !!S.cloBtView;
@@ -1240,9 +1258,22 @@ function optSources(o){
   return (_optSrc[o] = [...new Set(out)]);
 }
 /* 특수옵션 경로(제제 2026-11-12): 특수옵션마다 얻는 곳(전투·패션 체크·콘테스트·자격시험 등)을 글로만 */
+/* 경로 칩 상태: 패션 체크·챌린지·다른 가게 직원은 완료/승리를 따라 자동, 콘테스트·찐빵 등은 직접 체크(${RUN}/ui/sppath) */
+function spSrcAuto(src){
+  let m = src.match(/^패션 체크 (\d+)$/); if (m) return fcDone(+m[1] - 1);
+  m = src.match(/^(.+) 챌린지 승리$/); if (m){ const i = DATA.battles.findIndex((_, j) => bShort(j) === m[1]); return i >= 0 ? btDone(i) : null; }
+  m = src.match(/^다른 가게 (.+) 승리$/); if (m){ const b = (DATA.battlesExtra || []).find(x => x.name === m[1]); return b ? btDone(btKeyX(b)) : null; }
+  return null;
+}
+const spKey = (o, src) => `${o}|${src}`;
+const spSrcDone = (o, src) => { const a = spSrcAuto(src); return a === null ? (S.spDone || []).includes(spKey(o, src)) : a; };
 function spPathBox(){
-  const rows = SP_OPTS.map(o => { const src = optSources(o); return `<li><b>${esc(o)}</b><span>${src.length ? src.map(esc).join(" · ") : "확인된 경로 없음"}</span></li>`; }).join("");
-  return `<div class="sppath"><div class="fhead" style="margin:0"><span class="sublbl" style="margin:0">특수옵션 얻는 곳</span><button class="chip sm fold" data-act="sppath" aria-expanded="true">접기 ▴</button></div><ul>${rows}</ul><p class="hint" style="margin:6px 0 0">출처: KairoHistory(전투·패션 체크·콘테스트·자격시험·스터디 보상) · 찐빵은 게임에서 직접 확인</p></div>`;
+  const rows = SP_OPTS.map(o => { const src = optSources(o), got = src.some(x => spSrcDone(o, x));
+    const chips = src.length ? src.map(x => { const a = spSrcAuto(x), d = spSrcDone(o, x);
+      return a === null ? `<button type="button" class="chip sm spsrc ${d?"on":""}" data-spsrc="${esc(spKey(o, x))}" aria-pressed="${d}">${d?ICON.ok:""}${esc(x)}</button>`
+                        : `<span class="chip sm spsrc auto ${d?"on":""}" title="완료·승리를 따라 자동">${d?ICON.ok:""}${esc(x)}</span>`; }).join("") : `<span class="hint">확인된 경로 없음</span>`;
+    return `<li class="${got?"got":""}"><b>${got?ICON.ok:""}${esc(o)}</b><span class="spsrcs">${chips}</span></li>`; }).join("");
+  return `<div class="sppath"><div class="fhead" style="margin:0"><span class="sublbl" style="margin:0">특수옵션 얻는 곳</span><button class="chip sm fold" data-act="sppath" aria-expanded="true">접기 ▴</button></div><ul>${rows}</ul><p class="hint" style="margin:6px 0 0">패션 체크·챌린지는 완료·승리하면 자동으로 체크돼요. 콘테스트·찐빵 등은 눌러서 직접 체크해요. 출처: KairoHistory(전투·패션 체크·콘테스트·자격시험·스터디 보상) · 찐빵은 게임에서 직접 확인</p></div>`;
 }
 function cloNeedBlock(c){
   const names = new Set([c.n, cloName(c)]);
@@ -1389,7 +1420,7 @@ function viewClo(){
     const ocSpec = c => esc([c.c, c.p, c.m, c.o ? (SP_OPTS.includes(c.o) ? "★ " : "") + c.o : ""].filter(Boolean).join(" · "));
     const pickRow = c => `<button type="button" class="ocrow" data-ocadd="${c.id}"><span class="ocb"><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${ocSpec(c)}</span></span><span class="ocplus" aria-hidden="true">＋</span></button>`;
     const doneRow = c => `<button type="button" class="ocrow got" data-ocdone="${c.id}" title="누르면 만든 걸로 보고 목록에서 빼요"><span class="ock" aria-hidden="true"></span><span class="ocb"><span class="ocn">${esc(cloName(c))}</span><span class="ocs">${ocSpec(c)}</span></span></button>`;
-    cntBox = `<div class="needopt optcnt"><div class="fhead" style="margin:0;flex-wrap:wrap;gap:6px"><span class="fh-l"><span class="sublbl" style="margin:0">필요한 옵션</span>${picks.length?`<span class="hint">고른 옷 ${picks.length}벌</span>`:""}</span><span class="fh-act" style="gap:6px;flex-wrap:wrap">${o ? `${modeSeg}<button class="chip sm" data-act="ocsel" title="옵션 줄에서 고른 옵션만 0으로">선택 초기화</button><button class="chip sm" data-act="ocall">전체 초기화</button>` : ""}<button class="chip sm fold" data-act="optcnt" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span></div>
+    cntBox = `<div class="needopt optcnt ${o ? "is-open" : "is-closed"}"><div class="fhead" style="margin:0;flex-wrap:wrap;gap:6px"><span class="fh-l"><span class="sublbl" style="margin:0">필요한 옵션</span>${picks.length?`<span class="hint">고른 옷 ${picks.length}벌</span>`:""}</span><span class="fh-act" style="gap:6px;flex-wrap:wrap">${o ? `${modeSeg}<button class="chip sm" data-act="ocsel" title="옵션 줄에서 고른 옵션만 0으로">선택 초기화</button><button class="chip sm" data-act="ocall">전체 초기화</button>` : ""}<button class="chip sm fold" data-act="optcnt" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span></div>
       ${o ? (keys.length ? `<div class="pills sm" style="margin-top:10px">${keys.map(k => `<button class="pill ${pk===k?"need":(cnt[k]||0)>0?"need":"must"} ${pk===k?"picking":""}" data-occ="${esc(k)}" aria-pressed="${pk===k}">${SP_OPTS.includes(k)?"★ ":""}${esc(k)}<b>${cnt[k]||0}</b></button>`).join("")}</div>` : `<div class="hint" style="margin-top:8px">옵션 줄에서 옵션을 고르면 여기에 나와요</div>`) : ""}
       ${o && mode==="pick" && !pk && keys.length ? `<div class="hint" style="margin-top:6px">옵션을 누르면 그 옵션이 붙은 일반 옷(추가옵션·전투 추천·코디 추천 제외)이 나와요. 장르·옷본·재료에서 고른 조건도 같이 걸려요.</div>` : ""}
       ${o && pk ? `<div class="ocpick"><div class="ochead"><b>${SP_OPTS.includes(pk)?"★ ":""}${esc(pk)}</b><span class="hint">일반 옷 ${cand.length}벌${S.cloCat.length||S.cloPat.length||S.cloMat.length?" · 위 조건 적용":""} · 누르면 아래 목록에 들어가요</span><button type="button" class="chip sm fold" data-ocpick="">닫기</button></div>
@@ -2178,11 +2209,13 @@ async function resetAll(){
   const selInit = {cat:["캐주얼","스트리트"], pat:["없음","컷앤소","팬츠"], mat:["없음","라운드넥","스트레이트"], opt:["없음"]};
   Object.entries(ROWF).forEach(([k,f]) => { S[f] = [...selInit[k]]; if (S[f].length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, [k]:true}; });
   selSig = JSON.stringify(curSel()); S.cloSlot = {...S.cloSlot, all:selInit, ...selInit}; remember();
-  if (!db){ S.fac = {}; S.clo = Object.fromEntries(carry); S.coordDone = []; S.battleRec = {...S.battleRec, ...btNew}; S.roundNo = nextRound; render(); toast("새 회차를 시작했어요"); return; }
+  if (!db){ S.now = {rank:0, t:Date.now()}; S.fac = {}; S.clo = Object.fromEntries(carry); S.coordDone = []; S.battleRec = {...S.battleRec, ...btNew}; S.roundNo = nextRound; render(); toast("새 회차를 시작했어요"); return; }
   try{
     for (const [id, v] of carry) await writeSerial(`${newRun}/clo/c${id}`, v);
     for (const [i, v] of Object.entries(btNew)) await writeSerial(`battles/b${i}`, v);
     await writeSerial("ui/slots", {slot:S.cloSlot});
+    /* 새 회차는 0랭크부터(제제 2026-11-17) */
+    await writeSerial(`${newRun}/ui/now`, {rank:0, t:Date.now()});
     await db.collection("log").add({kind:"reset", id:"all", name:"회차 초기화", from:`${roundNo()}회차 (${RUN})`, to:`${nextRound}회차 (${newRun})`, t:Date.now(), synced:false, by:"app"});
     await writeSerial("meta/round", {n: nextRound, run: newRun, prevRun: RUN, t: Date.now(), by: "app"});
     toast("새 회차를 시작했어요"); setTimeout(() => location.reload(), 600);
@@ -3054,6 +3087,8 @@ document.addEventListener("click", e => {
   if (d.act==="clkdown"){ clickLogDownload(); return; }
   if (d.act==="clklast"){ clickLogLast(); return; }
   if (d.act==="bkdown"){ backupDownload(); return; }
+  if (d.spsrc){ const k = d.spsrc, cur = S.spDone || []; S.spDone = cur.includes(k) ? cur.filter(x => x !== k) : [...cur, k]; render();
+    if (db) writeSerial(`${RUN}/ui/sppath`, {done:S.spDone, t:Date.now()}).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); return; }
   if (d.act==="unlockraw"){ S.unlockRaw = !S.unlockRaw; render(); return; }
   if (d.act==="sppath"){ S.spPath = !S.spPath; render(); return; }
   if (d.act==="outshare"){ outShare(); return; }
@@ -3147,7 +3182,13 @@ document.addEventListener("click", e => {
   if (d.act==="hlegend"){ S.homeLegend = !S.homeLegend; render(); return; }
   if (d.act==="huptbl"){ S.homeUpTbl = !S.homeUpTbl; render(); return; }
   if (d.act==="hcp"){ S.homeCp = !S.homeCp; render(); return; }
-  if (d.rankset !== undefined){ const n = +d.rankset; mqNowSave({rank: n}); S.quick = null; toast(`현재 랭크 ${n}`); render(); return; }
+  if (d.rankset !== undefined){ const n = +d.rankset; mqNowSave({rank: n}); S.quick = null;
+    /* 랭크를 올리면 그 랭크까지 열리는 옷본을 의류 옷본 선택에 바로 넣는다(제제 2026-11-17). 장르·재료는 그대로 */
+    const nk2 = x => String(x || "").replace(/\s/g, ""), avail = S.rowAvail?.pat || [];
+    const bases = (DATA.rankPlan || []).filter(p => p.rank != null && p.base && gRank(p.rank) <= n).map(p => avail.find(k => nk2(k) === nk2(al("recipe", p.base))) || al("recipe", p.base)).filter(Boolean);
+    const add = bases.filter(b => !(S.cloPat || []).includes(b));
+    if (add.length){ S.cloPat = [...(S.cloPat || []), ...add]; if (S.cloPat.length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, pat:true}; remember(); }
+    toast(`현재 랭크 ${n}${add.length ? ` · 옷본 ${add.join("·")} 선택` : ""}`); render(); return; }
   if (d.rankclr){ mqNowSave({rank: null}); toast("랭크를 지웠어요"); render(); return; }
   if (d.act==="quick"){ S.quick = S.quick===d.q ? null : d.q; render(); return; }
   if (d.act==="memoedit"){ S.memoEdit = !S.memoEdit; render(); return; }
