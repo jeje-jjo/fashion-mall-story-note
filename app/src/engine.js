@@ -2782,12 +2782,25 @@ const REF_GROUPS = [["옷", ["x_clothes","x_recipes","x_sales_avg","x_sales_gues
 function unlockFlowCard(F){
   const dot = g => `<i class="ufl-dot" style="background:${TYPE_COLOR[g] || "var(--fg3)"}"></i>`;
   const open = !!S.unlockRaw;
+  /* 지금 어디까지 열렸는지(제제 2026-11-17): 이번 회차에 그 시설을 여는 옷을 하나라도 만들었으면 '열림'(시설 탭의 '아직 없는 매장'과 같은 기준) */
+  const ns = missingShopSet(), FBI = new Map(DATA.fac.map(f => [f.id, f]));
+  const isOpen = id => { const f = FBI.get(id); return !!f && !ns(f); };
+  const items = F.items || [], gotA = items.filter(([id]) => isOpen(id)).reduce((a, [, ar]) => a + ar, 0), gotN = items.filter(([id]) => isOpen(id)).length;
+  const myPct = Math.round(gotA / (F.total || 1) * 100);
+  const decDone = F.deciles.map(d => { const all = d.flatMap(([, , n]) => n || []); return [all.filter(([, id]) => isOpen(id)).length, all.length]; });
+  /* 지금 구간 = 열린 크기 비율이 들어가는 10% 칸. 그보다 앞 구간에 아직 안 열린 시설은 따로 알려 줌 */
+  const curDec = myPct >= 100 ? -1 : Math.min(9, Math.floor(myPct / 10));
+  const behind = decDone.slice(0, curDec < 0 ? 10 : curDec).reduce((a, [x, y]) => a + (y - x), 0);
+  const byG = {}; items.forEach(([id, ar, g]) => { const x = (byG[g] ||= [0, 0]); x[1] += ar; if (isOpen(id)) x[0] += ar; });
   return `<section class="card ufl">
     <div class="sec-h"><h2>해금 흐름</h2><span>9회차 기록 · ${F.count}곳 ${F.total}칸</span></div>
     <p class="hint" style="margin:0 0 8px">옷을 만들면 손님이 여는 시설 순서예요. 비율은 크기 지분(1×1 = 1칸, 2×1 = 2칸, 2×2 = 4칸)이고, 소파·의자·인테리어는 뺐어요. 흐름은 5%씩 묶어 가장 많이 열린 장르로 이었어요.</p>
+    <div class="ufl-me"><div class="ufl-me-h"><b>지금 ${myPct}%</b><span class="hint">이번 회차 열린 시설 ${gotN}/${F.count}곳 · 크기 기준${curDec >= 0 ? ` · 지금 ${curDec * 10}~${curDec * 10 + 10}% 구간` : " · 다 열림"}${behind ? ` · 앞 구간에 아직 안 열린 시설 ${behind}곳` : ""}</span></div>
+      <div class="ufl-me-bar"><span style="width:${myPct}%"></span></div>
+      <div class="ufl-me-g">${Object.keys(TYPE_COLOR).filter(g => byG[g]).map(g => `<span>${dot(g)}${esc(g)} ${Math.round(byG[g][0] / byG[g][1] * 100)}%</span>`).join("")}</div></div>
     <div class="ufl-flow">${F.flow.map(([g, p], i) => `${i ? `<span class="ufl-arr">→</span>` : ""}<span class="ufl-step">${dot(g)}${esc(g)} <b>${p}%</b></span>`).join("")}</div>
     <div class="sublbl" style="margin:12px 0 6px">10% 구간별 장르 비중</div>
-    <div class="ufl-dec">${F.deciles.map((d, k) => `<div class="ufl-row"><span class="ufl-k">${k * 10}~${k * 10 + 10}%</span><span class="ufl-bar">${d.map(([g, p]) => `<span style="flex:${p};background:${TYPE_COLOR[g] || "var(--fg3)"}" title="${esc(g)} ${p}%"></span>`).join("")}</span><span class="ufl-v">${d.map(([g, p]) => { const key = `${k}|${g}`, on = S.uflOpen === key; return `<button type="button" class="ufl-g ${on?"on":""}" data-ufl="${esc(key)}" aria-expanded="${on}">${esc(g)} ${p}% <span class="ufl-tri" aria-hidden="true">${on ? "▴" : "▾"}</span></button>`; }).join("")}</span>${(() => { const hit = d.find(([g]) => S.uflOpen === `${k}|${g}`); return hit ? `<div class="ufl-names">${dot(hit[0])}${(hit[2] || []).map(esc).join(" · ")}</div>` : ""; })()}</div>`).join("")}</div>
+    <div class="ufl-dec">${F.deciles.map((d, k) => `<div class="ufl-row ${k === curDec ? "cur" : ""} ${decDone[k][0] === decDone[k][1] ? "done" : ""}"><span class="ufl-k">${k * 10}~${k * 10 + 10}%<small>${decDone[k][0]}/${decDone[k][1]}</small></span><span class="ufl-bar">${d.map(([g, p]) => `<span style="flex:${p};background:${TYPE_COLOR[g] || "var(--fg3)"}" title="${esc(g)} ${p}%"></span>`).join("")}</span><span class="ufl-v">${d.map(([g, p]) => { const key = `${k}|${g}`, on = S.uflOpen === key; return `<button type="button" class="ufl-g ${on?"on":""}" data-ufl="${esc(key)}" aria-expanded="${on}">${esc(g)} ${p}% <span class="ufl-tri" aria-hidden="true">${on ? "▴" : "▾"}</span></button>`; }).join("")}</span>${(() => { const hit = d.find(([g]) => S.uflOpen === `${k}|${g}`); return hit ? `<div class="ufl-names">${dot(hit[0])}${(hit[2] || []).map(([n, id]) => `<span class="${isOpen(id) ? "op" : ""}">${isOpen(id) ? ICON.ok : ""}${esc(n)}</span>`).join("")}</div>` : ""; })()}</div>`).join("")}</div>
     <button type="button" class="linkbtn" data-act="unlockraw" style="margin-top:10px" aria-expanded="${open}">${open ? "자세한 순서 접기" : "자세한 순서(묶지 않은 그대로) 보기"}</button>
     ${open ? `<div class="ufl-flow ufl-raw">${F.raw.map(([g, p], i) => `${i ? `<span class="ufl-arr">→</span>` : ""}<span class="ufl-step">${esc(g)} ${p}%</span>`).join("")}</div>` : ""}
   </section>`;

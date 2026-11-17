@@ -403,3 +403,19 @@ button, input, select, textarea { letter-spacing: inherit; }
 :root:root[data-design="hybrid"] .ufl-g:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 3px; }
 :root:root[data-design="hybrid"] .ufl-tri { font-size: .85em; color: var(--fg3); }
 :root:root[data-design="hybrid"] .ufl-names { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 2px 0 4px; padding: 6px 10px; border-radius: var(--r-ctl); background: var(--soft); font-size: var(--t-meta); color: var(--fg); line-height: 1.6; }
+/* 해금 흐름: 지금 위치 */
+:root:root[data-design="hybrid"] .ufl-me { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-ctl); }
+:root:root[data-design="hybrid"] .ufl-me-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+:root:root[data-design="hybrid"] .ufl-me-h b { font-size: var(--t-item); color: var(--blue-ink); }
+:root:root[data-design="hybrid"] .ufl-me-bar { height: 8px; margin: 8px 0 6px; border-radius: 4px; background: var(--soft); overflow: hidden; }
+:root:root[data-design="hybrid"] .ufl-me-bar span { display: block; height: 100%; background: var(--blue); border-radius: 4px; }
+:root:root[data-design="hybrid"] .ufl-me-g { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: var(--t-meta); color: var(--fg2); }
+:root:root[data-design="hybrid"] .ufl-me-g span { display: inline-flex; align-items: center; gap: 4px; }
+:root:root[data-design="hybrid"] .ufl-k small { display: block; font-size: .9em; color: var(--fg3); }
+:root:root[data-design="hybrid"] .ufl-row.done .ufl-bar { opacity: .45; }
+:root:root[data-design="hybrid"] .ufl-row.cur .ufl-k { color: var(--blue-ink); font-weight: 700; }
+:root:root[data-design="hybrid"] .ufl-row.cur .ufl-bar { box-shadow: 0 0 0 2px var(--blue-soft); }
+:root:root[data-design="hybrid"] .ufl-names span { display: inline-flex; align-items: center; gap: 2px; color: var(--fg3); }
+:root:root[data-design="hybrid"] .ufl-names span:not(:last-child)::after { content: "·"; margin-left: 6px; color: var(--fg3); }
+:root:root[data-design="hybrid"] .ufl-names span.op { color: var(--fg); }
+:root:root[data-design="hybrid"] .ufl-names .ui-icon { width: 12px; height: 12px; color: var(--blue-ink); }
