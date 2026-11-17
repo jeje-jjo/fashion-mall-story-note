@@ -394,3 +394,5 @@ button, input, select, textarea { letter-spacing: inherit; }
 :root:root:root[data-design="hybrid"] .sppath .spsrc { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-ctl); padding: 2px 8px; min-height: 0; height: auto; line-height: 1.5; }
 :root:root:root[data-design="hybrid"] .sppath .spsrc.auto { border-style: dashed; color: var(--fg3); }
 :root:root:root[data-design="hybrid"] .sppath .spsrc.on { background: var(--blue-soft); border-color: color-mix(in srgb, var(--blue) 45%, var(--line)); border-style: solid; color: var(--blue-ink); }
+/* 특수옵션 경로를 펼쳤을 때 아래 장르·옷본 칸과 붙어 보이던 것(제제 2026-11-17) */
+:root:root:root[data-design="hybrid"] .sppath { margin-bottom: var(--sp-sec); }
