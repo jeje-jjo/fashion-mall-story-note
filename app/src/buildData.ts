@@ -341,9 +341,13 @@ export function buildData(t: Tables) {
   if (un.length){
     asRef("x_unlock", "시설 해금 순서", un, [["name", "시설", (v, r) => `${r.row}. ${v}`], ["genre", "장르"], ["w", "크기", (v, r) => `${v}×${r.h}`], ["group", "구분"], ["clothes", "여는 옷"], ["guest", "손님"], ["skip", "흐름", (v) => v ? "제외(소파·의자·인테리어)" : ""]]);
     const inc = un.filter((r: Row) => !r.skip), ar = (r: Row) => (r.w || 1) * (r.h || 1), T = inc.reduce((a: number, r: Row) => a + ar(r), 0) || 1;
+    const chunkN = (w: number) => { const out: Record<string, string[]>[] = []; let cur: Record<string, string[]> = {}, acc = 0;
+      inc.forEach((r: Row) => { (cur[r.genre] ||= []).push(r.name); acc += ar(r); if (acc >= T * w / 100 * (out.length + 1) - 1e-9){ out.push(cur); cur = {}; } });
+      if (Object.keys(cur).length) out.push(cur); return out; };
     const chunk = (w: number) => { const out: Record<string, number>[] = []; let cur: Record<string, number> = {}, acc = 0;
       inc.forEach((r: Row) => { cur[r.genre] = (cur[r.genre] || 0) + ar(r); acc += ar(r); if (acc >= T * w / 100 * (out.length + 1) - 1e-9){ out.push(cur); cur = {}; } });
       if (Object.keys(cur).length) out.push(cur); return out; };
+    const names10 = chunkN(10);
     const runs: [string, number][] = [];
     chunk(5).forEach(c => { const g = Object.entries(c).sort((a, b) => b[1] - a[1])[0][0], a = Object.values(c).reduce((x, y) => x + y, 0);
       if (runs.length && runs[runs.length - 1][0] === g) runs[runs.length - 1][1] += a; else runs.push([g, a]); });
@@ -352,7 +356,7 @@ export function buildData(t: Tables) {
     const pc = (a: number) => Math.round(a / T * 1000) / 10;
     L.unlockFlow = { total: T, count: inc.length,
       flow: runs.map(([g, a]) => [g, Math.round(a / T * 100)]),
-      deciles: chunk(10).map(c => { const s = Object.values(c).reduce((x, y) => x + y, 0); return Object.entries(c).sort((a, b) => b[1] - a[1]).map(([g, a]) => [g, Math.round(a / s * 100)]); }),
+      deciles: chunk(10).map((c, k) => { const s = Object.values(c).reduce((x, y) => x + y, 0); return Object.entries(c).sort((a, b) => b[1] - a[1]).map(([g, a]) => [g, Math.round(a / s * 100), names10[k]?.[g] || []]); }),
       raw: raw.map(([g, a]) => [g, pc(a)]) };
   }
   L.refTables = L.refTables.filter((x: any) => x.rows.length);

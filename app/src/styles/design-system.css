@@ -396,3 +396,10 @@ button, input, select, textarea { letter-spacing: inherit; }
 :root:root:root[data-design="hybrid"] .sppath .spsrc.on { background: var(--blue-soft); border-color: color-mix(in srgb, var(--blue) 45%, var(--line)); border-style: solid; color: var(--blue-ink); }
 /* 특수옵션 경로를 펼쳤을 때 아래 장르·옷본 칸과 붙어 보이던 것(제제 2026-11-17) */
 :root:root:root[data-design="hybrid"] .sppath { margin-bottom: var(--sp-sec); }
+/* 해금 흐름: 10% 구간 장르를 누르면 그 장르 시설 이름(제제 2026-11-17) */
+:root:root[data-design="hybrid"] .ufl-v { display: flex; flex-wrap: wrap; gap: 2px 6px; }
+:root:root[data-design="hybrid"] .ufl-g { all: unset; cursor: pointer; font-size: var(--t-meta); color: var(--fg2); white-space: nowrap; padding: 2px 0; }
+:root:root[data-design="hybrid"] .ufl-g.on { color: var(--blue-ink); font-weight: 700; }
+:root:root[data-design="hybrid"] .ufl-g:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 3px; }
+:root:root[data-design="hybrid"] .ufl-tri { font-size: .85em; color: var(--fg3); }
+:root:root[data-design="hybrid"] .ufl-names { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 2px 0 4px; padding: 6px 10px; border-radius: var(--r-ctl); background: var(--soft); font-size: var(--t-meta); color: var(--fg); line-height: 1.6; }

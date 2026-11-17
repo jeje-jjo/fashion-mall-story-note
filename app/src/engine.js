@@ -2787,7 +2787,7 @@ function unlockFlowCard(F){
     <p class="hint" style="margin:0 0 8px">옷을 만들면 손님이 여는 시설 순서예요. 비율은 크기 지분(1×1 = 1칸, 2×1 = 2칸, 2×2 = 4칸)이고, 소파·의자·인테리어는 뺐어요. 흐름은 5%씩 묶어 가장 많이 열린 장르로 이었어요.</p>
     <div class="ufl-flow">${F.flow.map(([g, p], i) => `${i ? `<span class="ufl-arr">→</span>` : ""}<span class="ufl-step">${dot(g)}${esc(g)} <b>${p}%</b></span>`).join("")}</div>
     <div class="sublbl" style="margin:12px 0 6px">10% 구간별 장르 비중</div>
-    <div class="ufl-dec">${F.deciles.map((d, k) => `<div class="ufl-row"><span class="ufl-k">${k * 10}~${k * 10 + 10}%</span><span class="ufl-bar">${d.map(([g, p]) => `<span style="flex:${p};background:${TYPE_COLOR[g] || "var(--fg3)"}" title="${esc(g)} ${p}%"></span>`).join("")}</span><span class="ufl-v">${d.map(([g, p]) => `${esc(g)} ${p}%`).join(" · ")}</span></div>`).join("")}</div>
+    <div class="ufl-dec">${F.deciles.map((d, k) => `<div class="ufl-row"><span class="ufl-k">${k * 10}~${k * 10 + 10}%</span><span class="ufl-bar">${d.map(([g, p]) => `<span style="flex:${p};background:${TYPE_COLOR[g] || "var(--fg3)"}" title="${esc(g)} ${p}%"></span>`).join("")}</span><span class="ufl-v">${d.map(([g, p]) => { const key = `${k}|${g}`, on = S.uflOpen === key; return `<button type="button" class="ufl-g ${on?"on":""}" data-ufl="${esc(key)}" aria-expanded="${on}">${esc(g)} ${p}% <span class="ufl-tri" aria-hidden="true">${on ? "▴" : "▾"}</span></button>`; }).join("")}</span>${(() => { const hit = d.find(([g]) => S.uflOpen === `${k}|${g}`); return hit ? `<div class="ufl-names">${dot(hit[0])}${(hit[2] || []).map(esc).join(" · ")}</div>` : ""; })()}</div>`).join("")}</div>
     <button type="button" class="linkbtn" data-act="unlockraw" style="margin-top:10px" aria-expanded="${open}">${open ? "자세한 순서 접기" : "자세한 순서(묶지 않은 그대로) 보기"}</button>
     ${open ? `<div class="ufl-flow ufl-raw">${F.raw.map(([g, p], i) => `${i ? `<span class="ufl-arr">→</span>` : ""}<span class="ufl-step">${esc(g)} ${p}%</span>`).join("")}</div>` : ""}
   </section>`;
@@ -3090,6 +3090,7 @@ document.addEventListener("click", e => {
   if (d.act==="bkdown"){ backupDownload(); return; }
   if (d.spsrc){ const k = d.spsrc, cur = S.spDone || []; S.spDone = cur.includes(k) ? cur.filter(x => x !== k) : [...cur, k]; render();
     if (db) writeSerial(`${RUN}/ui/sppath`, {done:S.spDone, t:Date.now()}).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); return; }
+  if (d.ufl){ S.uflOpen = S.uflOpen === d.ufl ? null : d.ufl; render(); return; }
   if (d.act==="unlockraw"){ S.unlockRaw = !S.unlockRaw; render(); return; }
   if (d.act==="sppath"){ S.spPath = !S.spPath; render(); return; }
   if (d.act==="outshare"){ outShare(); return; }
