@@ -1579,22 +1579,21 @@ function viewCoordReq(){
     ${factRows(PARTS.map(([k,l]) => [l,withClo(cPart(c,k),cm)]))}
     ${reqMatchBlock(c.req, `c${c.id}`, c)}`;
   const entry = c => { if (!compact || q) return `<article class="coord sub request-entry">
-    <div class="request-heading"><h3>${head(c)}</h3><button class="iconbtn coedit" data-cedit3="${c.id}" aria-label="${esc(cTitle(c))} 수정">${ICON.pen}</button></div>
+    <div class="request-heading"><h3>${head(c)}</h3></div>
     ${body(c)}
   </article>`;
     const op = !!S.reqX?.[c.id], sum = PARTS.map(([k]) => withClo(cPart(c,k),cm)).filter(Boolean).join(" · ");
     return `<article class="coord sub request-entry compact ${op?"open":""}">
     <div class="request-heading"><button type="button" class="reqrow" data-reqx="${c.id}" aria-expanded="${op}"><span class="reqrow-t">${head(c)}</span>${sum && !op ? `<span class="reqrow-s">${esc(sum)}</span>` : ""}<span class="reqrow-c" aria-hidden="true">${op ? "▴" : "▾"}</span></button></div>
-    ${op ? `${body(c)}<div class="req-act"><button type="button" class="text-action req-edit" data-cedit3="${c.id}">${ICON.pen}요청 수정</button></div>` : ""}
+    ${op ? body(c) : ""}
   </article>`; };
   const all = Object.keys(groups).sort(byAppear);
   const shownCards = q ? names : names.filter(n => S.coordOpen.includes(n));
   const card = n => { const dn = cdone(n), fo = !!S.coordFixOpen[n]; return `<div class="fccard cocard ${dn?"cdone":""}" data-coname="${esc(n)}">
     <div class="fc-h"><b class="fc-n">${esc(n)}</b>
       <span class="fc-c">${groups[n].length}건</span>
-      <button class="chip sm codone ${dn?"on":""}" data-cdone="${esc(n)}" aria-label="${esc(n)} ${dn?"완료 취소":"최종 완료"}" aria-pressed="${dn}">${ICON.ok}${dn?"완료됨":"최종 완료"}</button>
       <span class="fc-gap" aria-hidden="true"></span>
-      <button class="iconbtn act" data-cedit2="${esc(n)}" aria-label="${esc(n)} 이름 수정" aria-pressed="${fo}">${ICON.pen}</button>
+      <button class="chip sm codone ${dn?"on":""}" data-cdone="${esc(n)}" aria-label="${esc(n)} ${dn?"완료 취소":"최종 완료"}" aria-pressed="${dn}">${ICON.ok}${dn?"완료됨":"최종 완료"}</button>
       <button class="iconbtn" data-coordp="${esc(n)}" aria-label="닫기">${ICON.x}</button></div>
     <div class="request-grid">${groups[n].map(entry).join("")}</div>${!hybrid() && fo ? coordFixBox(n, groups[n]) : ""}
   </div>`; };
