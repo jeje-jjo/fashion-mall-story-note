@@ -2968,17 +2968,25 @@ function goalPanel(){
    탭별 위치를 이 기기에 저장해 두고, 다시 열렸을 때(2시간 안) 같은 탭이면 데이터가 다 그려진 뒤 그 위치로 */
 const SCR_KEY = "fms-scroll", SCR_BOOT = Date.now();
 let scrPending = (() => { try{ const v = JSON.parse(localStorage.getItem(SCR_KEY) || "null"); return v && Date.now() - v.t < 2*3600e3 ? v : null; }catch(e){ return null; } })();
-const scrSave = () => { if (scrPending) return; try{ localStorage.setItem(SCR_KEY, JSON.stringify({tab:S.tab, sub:S.coordSub, y:Math.round(scrollY), t:Date.now()})); }catch(e){} };
+/* 2026-11-17: 코디에서 손님을 눌러 내려가 본 뒤 게임에 갔다 오면 맨 위로 가던 문제 →
+   ① 손님 카드가 늦게 그려져도 맞춰지게 '보던 손님 카드'를 기준점으로 저장(위치 숫자는 예비)
+   ② 화면을 톡 건드리기만 해도 복원이 취소되던 것 → 실제로 스크롤할 때만 취소, 기다리는 시간 20초 */
+const scrAnchor = () => { const top = 70; const el = [...document.querySelectorAll("#view [data-coname]")].find(e => e.getBoundingClientRect().bottom > top);
+  return el ? { anchor: el.dataset.coname, off: Math.round(el.getBoundingClientRect().top) } : {}; };
+const scrSave = () => { if (scrPending) return; try{ localStorage.setItem(SCR_KEY, JSON.stringify({tab:S.tab, sub:S.coordSub, y:Math.round(scrollY), ...(S.tab === "coord" ? scrAnchor() : {}), t:Date.now()})); }catch(e){} };
 { let tm = null; addEventListener("scroll", () => { clearTimeout(tm); tm = setTimeout(scrSave, 250); }, {passive:true});
   addEventListener("pagehide", scrSave); document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") scrSave(); }); }
 function scrRestore(){
   const p = scrPending; if (!p) return;
-  if (Date.now() - SCR_BOOT > 10000 || p.tab !== S.tab || (p.tab === "coord" && p.sub !== S.coordSub)){ scrPending = null; return; }
+  if (Date.now() - SCR_BOOT > 20000 || p.tab !== S.tab || (p.tab === "coord" && p.sub !== S.coordSub)){ scrPending = null; return; }
+  if (p.anchor){ const el = document.querySelector(`#view [data-coname="${CSS.escape(p.anchor)}"]`);
+    if (el){ scrollTo(0, Math.max(0, Math.round(el.getBoundingClientRect().top + scrollY - (p.off || 0))));
+      p.doneAt ||= Date.now(); if (Date.now() - p.doneAt > 1500) scrPending = null; return; } }
   if (document.documentElement.scrollHeight >= p.y + innerHeight * 0.6){ scrollTo(0, p.y); }
 }
-addEventListener("touchstart", () => { scrPending = null; }, {passive:true, once:true});
+addEventListener("touchmove", () => { scrPending = null; }, {passive:true, once:true});
 addEventListener("wheel", () => { scrPending = null; }, {passive:true, once:true});
-addEventListener("mousedown", () => { scrPending = null; }, {passive:true, once:true});
+addEventListener("keydown", () => { scrPending = null; }, {once:true});
 function render(){
   counts();
   const ae = document.activeElement;
