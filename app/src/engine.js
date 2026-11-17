@@ -2136,7 +2136,8 @@ const siteContest = (cname, gi) => (DATA.contests||[]).find(x => String(x.name||
 const contestSiteLine = sc => !sc ? "" : [sc.score!=null ? `통과 ${nf(sc.score)}점` : "", sc.prize!=null ? `${nf(sc.prize)}G` : "", sc.option ? `보상 ${sc.option}` : ""].filter(Boolean).join(" · ");
 function viewContest(){
   const filled = S.contests.length;
-  return `${yearCard()}<section class="card">
+  /* 콘테스트 출현 년도 카드는 뺌(제제 2026-11-17: 점수 기준을 찾으려 모으던 것, 이제 사이트 기준이 보임). 기록(cyear)은 그대로 둠 */
+  return `<section class="card">
     <div class="sec-h"><h2>콘테스트 통과 기준</h2><span>${filled} / ${CONTESTS.length*GRADES.length} 기록</span></div>
     <p style="margin:0;color:var(--fg2);font-size:14px">칸마다 사이트 통과 점수·상금·보상 옵션을 먼저 보여 줘요. 칸을 누르면 내 점수 기록을 보고 남길 수 있어요(실패는 더 높은 점수일 때만, 성공은 그 점수로 바뀌어요).</p>
     <div class="hint" style="margin-top:6px">Lv.1~4를 초급~우주급으로 맞췄어요 · 출처: KairoHistory 콘테스트</div>
