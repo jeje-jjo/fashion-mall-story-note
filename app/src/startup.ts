@@ -22,6 +22,13 @@ async function boot(store: unknown) {
   try {
     t = await loadTables(TABLES);
   } catch (e: any) {
+    /* 권한 거부 = 노트 주인이 아닌 구글 계정으로 로그인된 경우(다른 브라우저에 다른 계정이 남아 있을 때, 2026-11-17)
+       → 지금 계정을 보여 주고 다른 계정으로 다시 로그인할 수 있게 */
+    if (!MOCK && String(e?.code ?? "").includes("permission-denied")) {
+      gate("이 계정으로는 열 수 없어요", `${auth.currentUser?.email || "지금 계정"}으로 로그인되어 있어요. 노트 주인 구글 계정으로 다시 로그인해 주세요.`, true);
+      $("gateLogin").textContent = "다른 계정으로 로그인";
+      return;
+    }
     gate("기준 데이터를 받지 못했어요", `${e?.code ?? e} · 새로 고쳐 주세요`);
     return;
   }
@@ -33,7 +40,9 @@ async function boot(store: unknown) {
   }
 }
 
-$("gateLogin").addEventListener("click", () => {
+$("gateLogin").addEventListener("click", async () => {
+  /* 다른 계정으로 로그인: 지금 계정을 먼저 내보내고, 구글 계정 고르는 창을 띄운다 */
+  if (auth.currentUser) { await signOut(auth).catch(() => {}); provider.setCustomParameters({ prompt: "select_account" }); }
   signInWithPopup(auth, provider).catch((e) => gate("로그인하지 못했어요", `${e.code} · 팝업이 막혔다면 허용한 뒤 다시 눌러 주세요`, true));
 });
 
@@ -43,7 +52,7 @@ if (MOCK) {
   let started = false;
   onAuthStateChanged(auth, (u) => {
     if (!u) { gate("패션몰스토리 노트", "본인 계정으로만 쓸 수 있어요", true); return; }
-    if (started) return;
+    if (started) { location.reload(); return; }  // 다른 계정으로 다시 로그인하면 처음부터 다시 연다
     started = true;
     boot(makeDb(fs));
   });
