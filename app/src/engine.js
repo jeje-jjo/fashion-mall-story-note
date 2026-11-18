@@ -71,7 +71,7 @@ const S = {
   tab:"clo", recSub:"contest", homeQ:"", homeOpen:"", homeCt:false, facType:"전체", facSt:"전체", facSort:"기본순", facQ:"", facOpen:null,
   people:{}, contests:[], itemPick:"", itemAlt:"", resetAsk:false, sheet:null, cp:{}, ih:{}, memo:null, memoEdit:false, battleRec:{}, btDraft:{}, btListAll:false, cloBt:null, cloBtView:false, btOpen:true, btNote:false, fcMode:"single", fcNoteOpen:false, fcDraft:{}, coordFixOpen:{}, upHl:null, facFcSel:[], facFcOpen:false, cEdit:null, cScore:"", cRes:"실패", cMsg:"", cMsgErr:false, cReset:false,
   rnKind:"시설", rnOld:"", rnNew:"", rnErr:"",
-  cloCat:[], cloPat:[], cloMat:[], cloOpt:[], cloSlot:{}, cloExp:{}, cloMulti:false, cloRowMulti:{}, cloSt:"추가옵션", cloQ:"", cloOpen:null, cloSp:false, names:{fac:{}, clo:{}, people:{}}, optDraft:{}, chkname:{}, chkscore:{}, scErr:"", scErr2:"", cbattle:{}, cyears:[], cyPick:{}, cyErr:"", cyAsk:null, cyEdit:null, coordDone:[], slotOpen:null, upMulti:false, upStaffs:[], cfxPart:{}, clofix:{}, cloField:{}, fcEdit:{}, facExp:{genre:true}, cloEdit:{}, optKind:{}, cfix:{}, cfxPick:{}, cfxKind:{},
+  cloCat:[], cloPat:[], cloMat:[], cloOpt:[], cloSlot:{}, cloExp:{}, cloMulti:false, cloRowMulti:{}, cloKind:["추가옵션","전투 추천","코디 추천"], cloSt:"미완료", cloQ:"", cloOpen:null, cloSp:false, names:{fac:{}, clo:{}, people:{}}, optDraft:{}, chkname:{}, chkscore:{}, scErr:"", scErr2:"", cbattle:{}, cyears:[], cyPick:{}, cyErr:"", cyAsk:null, cyEdit:null, coordDone:[], slotOpen:null, upMulti:false, upStaffs:[], cfxPart:{}, clofix:{}, cloField:{}, fcEdit:{}, facExp:{genre:true}, cloEdit:{}, optKind:{}, cfix:{}, cfxPick:{}, cfxKind:{},
   coordQ:"", coordOpen:[], coordSub:"req", setF:"전체", setG:"전체", setQ:"", setOpen:null, own:{pat:[],mat:[],opt:[]}, nmOpen:false, nmEdit:false, nmAll:false, logAll:false, confirmSync:false,
   fac:{}, clo:{}, logs:[], live:false
 };
@@ -101,7 +101,7 @@ function autoSaveSel(){
   selTimer = setTimeout(() => { const all = curSel(); S.cloSlot = {...S.cloSlot, all, ...all};
     writeSerial("ui/slots", {slot:S.cloSlot}).catch(() => showNotice("선택을 저장하지 못했어요. 도구 > 화면에서 수동 저장해 주세요.")).finally(() => { selPending = false; }); }, 400);
 }
-const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
+const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
 if (S.facType!=="전체" && S.facType!=="우선개량" && !(S.facType in TYPE_COLOR)) S.facType = "전체";
 if (!Array.isArray(S.cloCat)) S.cloCat = S.cloCat && S.cloCat!=="전체" ? [S.cloCat] : [];
 if (!Array.isArray(S.cloPat)) S.cloPat = S.cloPat && S.cloPat!=="전체" ? [S.cloPat] : [];
@@ -204,6 +204,10 @@ async function persist(kind, id, patch, logEntry){
     if (logEntry) await db.collection("log").add({...logEntry, t:Date.now(), synced: logEntry.synced ?? false, by:"app"});
   }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
+/* 의류 보기(전체 옷·추가옵션·전투 추천·코디 추천 / 미완료·완료)는 기기 사이에서 같게(ui/cloview, 2026-11-18 제제).
+   새 회차를 시작하면 기본값(추가옵션·전투 추천·코디 추천 + 미완료)으로 */
+const CLOVIEW_DEFAULT = { kind:["추가옵션","전투 추천","코디 추천"], st:"미완료" };
+function saveCloView(){ if (db) writeSerial("ui/cloview", {kind:S.cloKind || [], st:S.cloSt, t:Date.now()}).catch(() => {}); }
 function saveCoordOpen(){ if (db) writeSerial("ui/coordopen", {list:S.coordOpen, hide:!!S.coordHideDone, t:Date.now()}).catch(()=>{}); }
 function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg; }
 
@@ -259,6 +263,7 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   db.collection("cbattle").onSnapshot(s => { S.cbattle = Object.fromEntries(s.docs.map(d => { const v = {...d.data()}; if (v.name) v.name = al("battle", v.name); return [+d.id.slice(1), v]; })); render(); }, fail);
   db.collection("cyear").onSnapshot(s => { S.cyears = s.docs.map(d => ({_id:d.id, ...d.data()})); render(); }, fail);
   [1,2,3,4,5].forEach(n => db.doc(`layslots/s${n}`).onSnapshot(s => { S.laySlots = {...(S.laySlots||{}), [n]: s.exists ? s.data() : null}; render(); }, () => {}));
+  db.doc("ui/cloview").onSnapshot(s => { if (!s.exists) return; const v = s.data(); if (Array.isArray(v.kind)) S.cloKind = v.kind; if (v.st) S.cloSt = v.st; remember(); render(); }, () => {});
   db.doc("ui/coordopen").onSnapshot(s => { if (!s.exists) return; const v = s.data(); S.coordOpen = v.list || []; S.coordHideDone = !!v.hide; render(); }, () => {});
   db.doc("ui/layout").onSnapshot(s => { S.layout = {rects: (s.exists && s.data().rects) || []}; render(); }, () => {});
   /* 칩 순서는 해금 순서로 고정(순서 수정 기능을 뺐으므로 ui/chiporder는 읽지 않음, 문서는 그대로 둠) */
@@ -552,6 +557,8 @@ async function toggleBtDone(k){
   const on = !btDone(k), rec = {...bRec(k)};
   if (on) rec.doneRun = RUN; else delete rec.doneRun;
   const rw = applyBtReward(k, on);
+  /* 승리 체크하면 펼쳐 둔 전투 카드와 전투 줄을 자동으로 접는다(제제 2026-11-18) */
+  if (on && S.cloBt === k){ S.cloBt = null; S.cloBtView = false; S.btOpen = false; S.btNote = false; remember(); }
   S.battleRec = {...S.battleRec, [k]:rec}; render();
   const nm = typeof k === "number" ? DATA.battles[k]?.name : (DATA.battlesExtra||[]).find(b => btKeyX(b)===k)?.name;
   toast(on ? `${nm || "전투"} 승리로 체크${rw ? ` · 의류 필터에 ★ ${rw} 선택` : ""}` : `${nm || "전투"} 체크 취소${rw ? ` · ★ ${rw} 선택 해제` : ""}`);
@@ -950,6 +957,8 @@ async function toggleFcDone(oi){
   const on = !fcDone(oi), rec = {...(S.chkscore[oi]||{})};
   if (on) rec.doneRun = RUN; else delete rec.doneRun;
   const rw = applyFcReward(oi, on);
+  /* 완료하면 시설 탭에서 골라 둔 그 패션 체크를 빼고 번호판을 접는다(제제 2026-11-18) */
+  if (on && (S.facFcSel || []).includes(oi + 1)){ S.facFcSel = S.facFcSel.filter(n => n !== oi + 1); S.facFcOpen = false; remember(); }
   S.chkscore = {...S.chkscore, [oi]:rec}; render(); toast(on ? `패션 체크 ${oi+1} 완료${rw ? ` · 의류 필터에 ${rw} 선택` : ""}` : `패션 체크 ${oi+1} 완료 취소${rw ? ` · ${rw} 선택 해제` : ""}`);
   if (db) try{ await writeSerial(`chkscore/k${oi}`, {...rec, t:Date.now(), by:"app"}); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
@@ -1267,13 +1276,25 @@ function spSrcAuto(src){
 }
 const spKey = (o, src) => `${o}|${src}`;
 const spSrcDone = (o, src) => { const a = spSrcAuto(src); return a === null ? (S.spDone || []).includes(spKey(o, src)) : a; };
+/* 직접 체크하는 곳만 모은 표(제제 2026-11-18): 콘테스트 종류 × Lv.1~4 칸에 그 보상 특수옵션. 기타(자격시험·찐빵 등)는 한 줄 */
+function spManualTable(){
+  const cells = {}, other = [];
+  SP_OPTS.forEach(o => optSources(o).forEach(x => { if (spSrcAuto(x) !== null) return; const m = x.match(/^(.+?)\s*Lv\.?\s*(\d)$/);
+    if (m) ((cells[m[1].trim()] ||= {})[+m[2]] ||= []).push([o, x]); else other.push([o, x]); }));
+  const types = Object.keys(cells), chip = ([o, x], lab) => { const d = spSrcDone(o, x);
+    return `<button type="button" class="chip sm spsrc ${d?"on":""}" data-spsrc="${esc(spKey(o, x))}" aria-pressed="${d}" title="${esc(x)}">${d?ICON.ok:""}${esc(lab)}</button>`; };
+  return `<div class="spman"><div class="sublbl" style="margin:0 0 6px">직접 체크하는 곳</div>
+    <div class="spman-t" role="table"><div class="spman-r spman-h" role="row"><span role="columnheader"></span>${[1,2,3,4].map(l => `<span role="columnheader">Lv.${l}</span>`).join("")}</div>
+    ${types.map(t => `<div class="spman-r" role="row"><span class="spman-k" role="rowheader">${esc(t)}</span>${[1,2,3,4].map(l => `<span role="cell">${(cells[t][l] || []).map(it => chip(it, it[0])).join("") || `<i class="spman-e">–</i>`}</span>`).join("")}</div>`).join("")}</div>
+    ${other.length ? `<div class="spman-o"><span class="spman-k">기타</span>${other.map(it => chip(it, `${it[1]} · ${it[0]}`)).join("")}</div>` : ""}</div>`;
+}
 function spPathBox(){
   const rows = SP_OPTS.map(o => { const src = optSources(o), got = src.some(x => spSrcDone(o, x));
     const chips = src.length ? src.map(x => { const a = spSrcAuto(x), d = spSrcDone(o, x);
       return a === null ? `<button type="button" class="chip sm spsrc ${d?"on":""}" data-spsrc="${esc(spKey(o, x))}" aria-pressed="${d}">${d?ICON.ok:""}${esc(x)}</button>`
                         : `<span class="chip sm spsrc auto ${d?"on":""}" title="완료·승리를 따라 자동">${d?ICON.ok:""}${esc(x)}</span>`; }).join("") : `<span class="hint">확인된 경로 없음</span>`;
     return `<li class="${got?"got":""}"><b>${got?ICON.ok:""}${esc(o)}</b><span class="spsrcs">${chips}</span></li>`; }).join("");
-  return `<div class="sppath"><div class="fhead" style="margin:0"><span class="sublbl" style="margin:0">특수옵션 얻는 곳</span><button class="chip sm fold" data-act="sppath" aria-expanded="true">접기 ▴</button></div><ul>${rows}</ul><p class="hint" style="margin:6px 0 0">패션 체크·챌린지는 완료·승리하면 자동으로 체크돼요. 콘테스트·찐빵 등은 눌러서 직접 체크해요. 출처: KairoHistory(전투·패션 체크·콘테스트·자격시험·스터디 보상) · 찐빵은 게임에서 직접 확인</p></div>`;
+  return `<div class="sppath"><div class="fhead" style="margin:0"><span class="sublbl" style="margin:0">특수옵션 얻는 곳</span><button class="chip sm fold" data-act="sppath" aria-expanded="true">접기 ▴</button></div>${spManualTable()}<div class="sublbl" style="margin:12px 0 0">옵션별 얻는 곳</div><ul>${rows}</ul><p class="hint" style="margin:6px 0 0">패션 체크·챌린지는 완료·승리하면 자동으로 체크돼요. 콘테스트·찐빵 등은 눌러서 직접 체크해요. 출처: KairoHistory(전투·패션 체크·콘테스트·자격시험·스터디 보상) · 찐빵은 게임에서 직접 확인</p></div>`;
 }
 function cloNeedBlock(c){
   const names = new Set([c.n, cloName(c)]);
@@ -1440,7 +1461,7 @@ function viewClo(){
     <div class="filter-row">${rowHead("재료","mat","cmat",S.cloMat)}${foldChips(matChips, S.cloMat, "cmat", "mat")}</div>
     <div class="filter-row">${rowHead("옵션","opt","copt",S.cloOpt)}${foldChips(optChips, S.cloOpt, "copt", "opt")}</div>
     </div>
-    ${rankStep ? `<div class="ranknext"><span class="rn-k">${curRank()!=null?`현재 ${curRank()} · `:""}다음 랭크 ${gRank(rankStep.rank)}</span><span class="rn-v">배틀 ${esc(rankStep.battle)} → ${esc(rankStep.char)} → <b>${esc(rankStep.genre)}</b>${rankStep.base?` · 옷본 <b>${esc(rankStep.base)}</b>`:""}${rankStep.study?` · 스터디 ${esc(rankStep.study)}${rankStep.studyItems?.length?`(<b>${rankStep.studyItems.map(esc).join("·")}</b>)`:""}`:""}</span><span class="rn-h">'다음' 점선 칩이 다음에 열리는 것 · 모두 고르면 다음 단계</span></div>` : ""}
+    ${rankStep ? `<div class="ranknext"><button type="button" class="rn-k" data-act="quick" data-q="rank" title="현재 랭크 고르기">${curRank()!=null?`현재 ${curRank()} · `:""}다음 랭크 ${gRank(rankStep.rank)} <span class="rn-tri" aria-hidden="true">▾</span></button><span class="rn-v">배틀 ${esc(rankStep.battle)} → ${esc(rankStep.char)} → <b>${esc(rankStep.genre)}</b>${rankStep.base?` · 옷본 <b>${esc(rankStep.base)}</b>`:""}${rankStep.study?` · 스터디 ${esc(rankStep.study)}${rankStep.studyItems?.length?`(<b>${rankStep.studyItems.map(esc).join("·")}</b>)`:""}`:""}</span><span class="rn-h">'다음' 점선 칩이 다음에 열리는 것 · 모두 고르면 다음 단계</span></div>` : ""}
     ${cntBox}
     <div class="frowgap">${battleRow()}</div>
     ${S.verifyOpen ? verifyBox() : ""}
@@ -2209,11 +2230,13 @@ async function resetAll(){
   const selInit = {cat:["캐주얼","스트리트"], pat:["없음","컷앤소","팬츠"], mat:["없음","라운드넥","스트레이트"], opt:["없음"]};
   Object.entries(ROWF).forEach(([k,f]) => { S[f] = [...selInit[k]]; if (S[f].length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, [k]:true}; });
   selSig = JSON.stringify(curSel()); S.cloSlot = {...S.cloSlot, all:selInit, ...selInit}; remember();
+  S.cloKind = [...CLOVIEW_DEFAULT.kind]; S.cloSt = CLOVIEW_DEFAULT.st; remember();
   if (!db){ S.now = {rank:0, t:Date.now()}; S.fac = {}; S.clo = Object.fromEntries(carry); S.coordDone = []; S.battleRec = {...S.battleRec, ...btNew}; S.roundNo = nextRound; render(); toast("새 회차를 시작했어요"); return; }
   try{
     for (const [id, v] of carry) await writeSerial(`${newRun}/clo/c${id}`, v);
     for (const [i, v] of Object.entries(btNew)) await writeSerial(`battles/b${i}`, v);
     await writeSerial("ui/slots", {slot:S.cloSlot});
+    await writeSerial("ui/cloview", {...CLOVIEW_DEFAULT, t:Date.now()});
     /* 새 회차는 0랭크부터(제제 2026-11-17) */
     await writeSerial(`${newRun}/ui/now`, {rank:0, t:Date.now()});
     await db.collection("log").add({kind:"reset", id:"all", name:"회차 초기화", from:`${roundNo()}회차 (${RUN})`, to:`${nextRound}회차 (${newRun})`, t:Date.now(), synced:false, by:"app"});
@@ -3010,7 +3033,10 @@ function render(){
   if (scrPending) requestAnimationFrame(scrRestore);
   const qk = $("#quick");
   { const rb = document.querySelector('#fab [data-q="rank"]'); if (rb){ const R = curRank(); rb.hidden = R != null && R >= RANK_MAX; rb.querySelector(".fabrank").textContent = R != null ? `R${R}` : "R?"; if (rb.hidden && S.quick==="rank") S.quick = null; } }
-  if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="memo" ? homeMemo(true) : S.quick==="rank" ? rankPanel() : S.quick==="goal" ? goalPanel() : upFinder(true, true)}</div>` : ""; qk.hidden = !S.quick; }
+  /* 목표치·개량 옵션은 한 버튼 안의 탭으로(제제 2026-11-18: 둘을 계속 오감). 마지막에 본 탭을 기억 */
+  { const ub = document.querySelector('#fab [data-q="up"]'); if (ub) ub.hidden = true; if (S.quick === "up"){ S.quick = "goal"; S.guTab = "up"; } }
+  const guTabs = () => `<div class="seg wide gutabs">${[["goal","목표치"],["up","개량 옵션"]].map(([k, l]) => `<button type="button" class="${(S.guTab || "goal") === k ? "on" : ""}" data-gutab="${k}" aria-pressed="${(S.guTab || "goal") === k}">${l}</button>`).join("")}</div>`;
+  if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="memo" ? homeMemo(true) : S.quick==="rank" ? rankPanel() : guTabs() + ((S.guTab || "goal") === "up" ? upFinder(true, true) : goalPanel())}</div>` : ""; qk.hidden = !S.quick; }
   document.querySelectorAll("#fab [data-q]").forEach(b => { const on = S.quick===b.dataset.q; b.classList.toggle("on", on); b.setAttribute("aria-expanded", on); });
   const rp = $("#recentPanel"); if (rp){ rp.innerHTML = S.recentOpen ? recentPanel() : ""; rp.hidden = !S.recentOpen; }
   $("#recentBtn")?.classList.toggle("on", !!S.recentOpen); $("#recentBtn")?.setAttribute("aria-expanded", !!S.recentOpen);
@@ -3219,6 +3245,7 @@ document.addEventListener("click", e => {
     toast(`현재 랭크 ${n}${add.length ? ` · 옷본 ${add.join("·")} 선택` : ""}`); render(); return; }
   if (d.rankclr){ mqNowSave({rank: null}); toast("랭크를 지웠어요"); render(); return; }
   if (d.act==="quick"){ S.quick = S.quick===d.q ? null : d.q; render(); return; }
+  if (d.gutab){ S.guTab = d.gutab; remember(); render(); return; }
   if (d.act==="memoedit"){ S.memoEdit = !S.memoEdit; render(); return; }
   if (d.mpk){ const n = +d.mpk, cur = memoNow().pumpkin; memoSave({pumpkin: pumpkinMonths(cur).includes(n) ? null : n}); return; }
   if (d.mgs){ const n = +d.mgs, g = memoNow().guest || []; memoSave({guest: g.includes(n) ? g.filter(x => x!==n) : [...g, n].sort((a,b)=>a-b)}); return; }
@@ -3269,8 +3296,8 @@ document.addEventListener("click", e => {
   if (d.act==="cmulti"){ S.cloMulti = !S.cloMulti; if (!S.cloMulti){ if (!S.cloRowMulti.cat) S.cloCat = S.cloCat.slice(-1); if (!S.cloRowMulti.pat) S.cloPat = S.cloPat.slice(-1); if (!S.cloRowMulti.mat) S.cloMat = S.cloMat.slice(-1); if (!S.cloRowMulti.opt) S.cloOpt = S.cloOpt.slice(-1); } remember(); render(); return; }
   if (d.rmulti){ const k = d.rmulti; if (S.cloMulti){ S.cloMulti = false; S.cloRowMulti = {cat:true, pat:true, mat:true, opt:true}; } S.cloRowMulti = {...S.cloRowMulti, [k]: !S.cloRowMulti[k]};
     if (!S.cloRowMulti[k]){ const f = ROWF[k]; S[f] = S[f].slice(-1); } remember(); render(); return; }
-  if (d.cst){ if (d.cst==="전체 옷"){ S.cloKind = []; S.cloSt = "전체"; } else S.cloSt = S.cloSt===d.cst ? "전체" : d.cst; remember(); render(); return; }
-  if (d.ckind){ const k = d.ckind, cur = S.cloKind || []; S.cloKind = cur.includes(k) ? cur.filter(x => x!==k) : [...cur, k]; remember(); render(); return; }
+  if (d.cst){ if (d.cst==="전체 옷"){ S.cloKind = []; S.cloSt = "전체"; } else S.cloSt = S.cloSt===d.cst ? "전체" : d.cst; remember(); saveCloView(); render(); return; }
+  if (d.ckind){ const k = d.ckind, cur = S.cloKind || []; S.cloKind = cur.includes(k) ? cur.filter(x => x!==k) : [...cur, k]; remember(); saveCloView(); render(); return; }
   if (d.tclo){ toggleClo(+d.tclo); return; }
   if (d.ofill){ S.optDraft[d.ofill] = d.val; render(); const el = document.getElementById(d.ofill); if (el) el.focus(); return; }
   if (d.otype){ const [cid, k] = d.otype.split("|"); const cur = S.optDraft["ot-"+cid] ?? optOf(DATA.clo.find(x=>x.id===+cid)).likeType ?? ""; S.optDraft["ot-"+cid] = cur===k ? "" : k;
