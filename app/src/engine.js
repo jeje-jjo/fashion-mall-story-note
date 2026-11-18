@@ -666,7 +666,7 @@ function counts(){
   const fd = DATA.fac.filter(facDone).length, ft = DATA.fac.length;
   const tracked = DATA.clo.filter(c => c.done !== null);
   const cd = tracked.filter(cloDone).length, ct = tracked.length;
-  $("#sub").textContent = `${roundLabel()}${gameDate() ? ` · ${gameDate().y}년 ${gameDate().m}월` : ""} · 시설 ${Math.round(fd/ft*100)}% · 신규 손님 옷 ${Math.round(cd/ct*100)}%`;
+  $("#sub").textContent = `${roundLabel()}${gameDate() ? ` · ${gameDate().y}년` : ""} · 시설 ${Math.round(fd/ft*100)}% · 신규 손님 옷 ${Math.round(cd/ct*100)}%`;
   $("#ttl").textContent = ({clo:"의류",fac:"시설",coord:"코디",tool:"도구"})[S.tab] || "";
   $("#saveAll").hidden = !db;
 }
@@ -2231,14 +2231,14 @@ async function resetAll(){
   Object.entries(ROWF).forEach(([k,f]) => { S[f] = [...selInit[k]]; if (S[f].length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, [k]:true}; });
   selSig = JSON.stringify(curSel()); S.cloSlot = {...S.cloSlot, all:selInit, ...selInit}; remember();
   S.cloKind = [...CLOVIEW_DEFAULT.kind]; S.cloSt = CLOVIEW_DEFAULT.st; remember();
-  if (!db){ S.now = {rank:0, year:1, month:3, t:Date.now()}; S.fac = {}; S.clo = Object.fromEntries(carry); S.coordDone = []; S.battleRec = {...S.battleRec, ...btNew}; S.roundNo = nextRound; render(); toast("새 회차를 시작했어요"); return; }
+  if (!db){ S.now = {rank:0, year:1, t:Date.now()}; S.fac = {}; S.clo = Object.fromEntries(carry); S.coordDone = []; S.battleRec = {...S.battleRec, ...btNew}; S.roundNo = nextRound; render(); toast("새 회차를 시작했어요"); return; }
   try{
     for (const [id, v] of carry) await writeSerial(`${newRun}/clo/c${id}`, v);
     for (const [i, v] of Object.entries(btNew)) await writeSerial(`battles/b${i}`, v);
     await writeSerial("ui/slots", {slot:S.cloSlot});
     await writeSerial("ui/cloview", {...CLOVIEW_DEFAULT, t:Date.now()});
     /* 새 회차는 0랭크부터(제제 2026-11-17) */
-    await writeSerial(`${newRun}/ui/now`, {rank:0, year:1, month:3, t:Date.now()});
+    await writeSerial(`${newRun}/ui/now`, {rank:0, year:1, t:Date.now()});
     await db.collection("log").add({kind:"reset", id:"all", name:"회차 초기화", from:`${roundNo()}회차 (${RUN})`, to:`${nextRound}회차 (${newRun})`, t:Date.now(), synced:false, by:"app"});
     await writeSerial("meta/round", {n: nextRound, run: newRun, prevRun: RUN, t: Date.now(), by: "app"});
     toast("새 회차를 시작했어요"); setTimeout(() => location.reload(), 600);
@@ -2450,15 +2450,13 @@ const memoNow = () => ({...MEMO_DEF, ...(S.memo||{})});
 const pumpkinMonths = m => m ? [0,1,2].map(i => (m - 1 + i*4) % 12 + 1).sort((a,b)=>a-b) : [];
 const monthsText = ms => ms.length ? ms.map(m => `<span class="mchip">${m}월</span>`).join("") : "";
 function memoSave(patch){ S.memo = {...memoNow(), ...patch}; render(); if (db) writeSerial("memo/reset", S.memo).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); }
-/* 게임 날짜(제제 2026-11-18): 1년 3월 ~ 10년 3월. runs/rN/ui/now 의 year·month. 진행도 = 지난 달 수 / 108 */
-const GAME_MONTHS = 108;
-const gameDate = () => { const n = S.now || {}; return n.year ? { y:+n.year, m:+(n.month || 3) } : null; };
-const gamePct = d => d ? Math.max(0, Math.min(100, Math.round(((d.y - 1) * 12 + (d.m - 3)) / GAME_MONTHS * 100))) : null;
+/* 게임 연도(제제 2026-11-18): 1년 ~ 10년(월은 안 씀). runs/rN/ui/now.year. 진행도 = (년 - 1) / 9 */
+const gameDate = () => { const n = S.now || {}; return n.year ? { y:+n.year } : null; };
+const gamePct = d => d ? Math.max(0, Math.min(100, Math.round((d.y - 1) / 9 * 100))) : null;
 function gameDatePanel(){
-  const d = gameDate() || { y:null, m:null }, pct = gamePct(gameDate());
-  return `<div class="gdate"><div class="sublbl" style="margin:0 0 6px">지금 게임 날짜 <span class="hint">${d.y ? `${d.y}년 ${d.m}월 · 진행 ${pct}%` : "아직 안 정함"} · 1년 3월 ~ 10년 3월</span></div>
+  const d = gameDate() || { y:null }, pct = gamePct(gameDate());
+  return `<div class="gdate"><div class="sublbl" style="margin:0 0 6px">지금 게임 연도 <span class="hint">${d.y ? `${d.y}년 · 진행 ${pct}%` : "아직 안 정함"} · 1년 ~ 10년</span></div>
     <div class="gd-row"><span class="gd-k">년</span><div class="numpad gd-pad">${Array.from({length:10}, (_, i) => i + 1).map(n => `<button type="button" class="${d.y===n?"on":""}" data-gdy="${n}" aria-pressed="${d.y===n}">${n}</button>`).join("")}</div></div>
-    <div class="gd-row"><span class="gd-k">월</span><div class="numpad gd-pad">${Array.from({length:12}, (_, i) => i + 1).map(n => `<button type="button" class="${d.m===n?"on":""}" data-gdm="${n}" aria-pressed="${d.m===n}">${n}</button>`).join("")}</div></div>
     ${d.y ? `<div class="gd-bar"><span style="width:${pct}%"></span></div>` : ""}</div>`;
 }
 function homeMemo(view){
@@ -3256,8 +3254,7 @@ document.addEventListener("click", e => {
     toast(`현재 랭크 ${n}${add.length ? ` · 옷본 ${add.join("·")} 선택` : ""}`); render(); return; }
   if (d.rankclr){ mqNowSave({rank: null}); toast("랭크를 지웠어요"); render(); return; }
   if (d.act==="quick"){ S.quick = S.quick===d.q ? null : d.q; render(); return; }
-  if (d.gdy){ const y = +d.gdy, g = gameDate(); mqNowSave({year:y, month:g?.m || 3}); toast(`${y}년 ${g?.m || 3}월`); return; }
-  if (d.gdm){ const m = +d.gdm, g = gameDate(); mqNowSave({year:g?.y || 1, month:m}); toast(`${g?.y || 1}년 ${m}월`); return; }
+  if (d.gdy){ const y = +d.gdy; mqNowSave({year:y}); toast(`${y}년`); return; }
   if (d.gutab){ S.guTab = d.gutab; remember(); render(); return; }
   if (d.act==="memoedit"){ S.memoEdit = !S.memoEdit; render(); return; }
   if (d.mpk){ const n = +d.mpk, cur = memoNow().pumpkin; memoSave({pumpkin: pumpkinMonths(cur).includes(n) ? null : n}); return; }
@@ -3607,7 +3604,7 @@ function clickLogCard(){
   const dev = /iPhone/.test(ua) ? "iphone" : (/iPad/.test(ua) || (/Macintosh/.test(ua) && touch)) ? "ipad" : /Macintosh/.test(ua) ? "mac" : "other";
   let lastY = -1, lastScrollT = 0, typing = null;
   const arr = v => Array.isArray(v) ? v.length : (v && v !== "전체" ? 1 : 0);
-  const st = () => { try{ return { tab:S.tab, rec:S.recSub, more:S.moreSub, co:S.coordSub, cs:S.cloSt, ck:(S.cloKind||[]).join(","), cc:arr(S.cloCat), cp:arr(S.cloPat), cm:arr(S.cloMat), cop:arr(S.cloOpt), cbt:S.cloBt, cbv:!!S.cloBtView, fs:Array.isArray(S.facSt)?S.facSt.join(","):S.facSt, ft:S.facType, fc:(S.facFcSel||[]).length, ip:S.itemPick||"", om:S.ocMode||"pick", op:S.ocPick||"", open:S.cloOpen??S.facOpen??null, gy:S.now?.year, gm:S.now?.month }; }catch(e){ return {}; } };
+  const st = () => { try{ return { tab:S.tab, rec:S.recSub, more:S.moreSub, co:S.coordSub, cs:S.cloSt, ck:(S.cloKind||[]).join(","), cc:arr(S.cloCat), cp:arr(S.cloPat), cm:arr(S.cloMat), cop:arr(S.cloOpt), cbt:S.cloBt, cbv:!!S.cloBtView, fs:Array.isArray(S.facSt)?S.facSt.join(","):S.facSt, ft:S.facType, fc:(S.facFcSel||[]).length, ip:S.itemPick||"", om:S.ocMode||"pick", op:S.ocPick||"", open:S.cloOpen??S.facOpen??null, gy:S.now?.year }; }catch(e){ return {}; } };
   const push = ev => { if (clkOff()) return; ev.t = Date.now(); ev.w = innerWidth; ev.y = Math.round(scrollY); CLK.buf.push(ev); if (CLK.buf.length >= 60) flush(); };
   const pick = el => {
     const d = {}; for (const [k, v] of Object.entries(el.dataset || {})) d[k] = String(v).slice(0, 40);
