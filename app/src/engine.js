@@ -1523,6 +1523,7 @@ function coordFixBox(n, list){
   </div>`;
 }
 /* 손님 등장 순서(제제 2026-11-09): 정춘자(처음부터 있음) → 그 손님이 등장하는 옷(옷 "손님" 칸)이 옷 목록에서 앞선 순서 → 정보 없는 손님은 뒤 */
+const GUEST_PLAY_ORDER = ["정춘자","유신사","임휘영","홍대한","고양인","신효승","구승당","매옥준","명동우","모열매","판일호","전미호","도가을","임성산","현대희","모대상","도찬배","원호연","제무령","마중현","백은태","영등호","원의상","고석준","노하나","남태운","우정진","무명순"];
 function guestRank(){
   const m = new Map([["정춘자", -1], [curPerson("정춘자"), -1]]);
   DATA.clo.forEach((c, i) => { const g = String(optOf(c).guest || "").replace(/\s*\(.*\)\s*$/, "").trim(); if (!g) return;
@@ -1586,7 +1587,8 @@ function viewCoordReq(){
   const groups = {};
   rows.forEach(c => { const n = curPerson(c.pb); (groups[n] = groups[n] || []).push(c); });
   const cdone = n => S.coordDone.includes(n);
-  const gr = guestRank(), rk = n => gr.get(n) ?? 9999;
+  /* 손님 순서(제제 2026-11-18): 9~11회차 클릭 기록에서 실제로 손님을 처음 연 순서의 평균. 목록에 없는 손님은 옷 순서 기준으로 뒤에 */
+  const gr = guestRank(), rk = n => { const i = GUEST_PLAY_ORDER.indexOf(n) >= 0 ? GUEST_PLAY_ORDER.indexOf(n) : GUEST_PLAY_ORDER.indexOf(curPerson(n)); return i >= 0 ? i : 1000 + (gr.get(n) ?? 9999); };
   const byAppear = (a,b) => rk(a) - rk(b) || a.localeCompare(b, "ko");
   const names = Object.keys(groups).sort((a,b) => (cdone(a) - cdone(b)) || byAppear(a,b));
   const open = n => q ? true : S.coordOpen.includes(n);
