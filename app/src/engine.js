@@ -2978,15 +2978,21 @@ const scrSave = () => { if (scrPending) return; try{ localStorage.setItem(SCR_KE
   addEventListener("pagehide", scrSave); document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") scrSave(); }); }
 function scrRestore(){
   const p = scrPending; if (!p) return;
-  if (Date.now() - SCR_BOOT > 20000 || p.tab !== S.tab || (p.tab === "coord" && p.sub !== S.coordSub)){ scrPending = null; return; }
-  if (p.anchor){ const el = document.querySelector(`#view [data-coname="${CSS.escape(p.anchor)}"]`);
-    if (el){ scrollTo(0, Math.max(0, Math.round(el.getBoundingClientRect().top + scrollY - (p.off || 0))));
-      p.doneAt ||= Date.now(); if (Date.now() - p.doneAt > 1500) scrPending = null; return; } }
-  if (document.documentElement.scrollHeight >= p.y + innerHeight * 0.6){ scrollTo(0, p.y); }
+  if (Date.now() - SCR_BOOT > 20000 || p.tab !== S.tab || (p.tab === "coord" && p.sub !== S.coordSub)){ scrLog("rs-end", p); scrPending = null; return; }
+  let y = null;
+  if (p.anchor){ const el = document.querySelector(`#view [data-coname="${CSS.escape(p.anchor)}"]`); if (el) y = Math.max(0, Math.round(el.getBoundingClientRect().top + scrollY - (p.off || 0))); }
+  if (y == null && !p.anchor && document.documentElement.scrollHeight >= p.y + innerHeight * 0.6) y = p.y;
+  if (y == null) return;
+  if (Math.abs(scrollY - y) > 2){ p.mine = y; scrollTo(0, y); }
+  if (!p.doneAt){ p.doneAt = Date.now(); scrLog("rs-ok", p); }
+  if (Date.now() - p.doneAt > 2500) scrPending = null;
 }
-addEventListener("touchmove", () => { scrPending = null; }, {passive:true, once:true});
-addEventListener("wheel", () => { scrPending = null; }, {passive:true, once:true});
-addEventListener("keydown", () => { scrPending = null; }, {once:true});
+/* 2026-11-18: 아이폰은 앱 전환 제스처가 화면 터치로 들어와 복원이 바로 취소되던 것으로 보임 →
+   복원이 한 번 된 뒤에 사용자가 크게(120px 넘게) 움직였을 때만 취소. 카드가 늦게 와도 맞추도록 20초 동안 0.3초마다 다시 시도 */
+addEventListener("scroll", () => { const p = scrPending; if (p?.doneAt && p.mine != null && Math.abs(scrollY - p.mine) > 120){ scrLog("rs-user", p); scrPending = null; } }, {passive:true});
+{ const iv = setInterval(() => { if (!scrPending){ clearInterval(iv); return; } scrRestore(); }, 300); }
+setTimeout(() => scrLog("boot", scrPending || {}), 0);  // 다시 열렸을 때 저장된 위치가 있었는지(클릭 기록에 남김)
+function scrLog(k, p){ try{ (window.__fmsClickPush || (() => {}))({ k, y:Math.round(scrollY), py:p?.y, an:p?.anchor || "", tab:S.tab }); }catch(e){} }
 function render(){
   counts();
   const ae = document.activeElement;
@@ -3592,7 +3598,7 @@ function clickLogCard(){
   document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flush(); });
   addEventListener("pagehide", flush);
   push({ k:"open", s1:st(), dev, sh:screen.height, sw:screen.width });
-  window.__fmsClickFlush = flush;
+  window.__fmsClickFlush = flush; window.__fmsClickPush = push;
 })();
 /* 마지막으로 저장된 클릭 기록 한 묶음만 불러와 보여 준다(전부 받기는 부담스러워서). 화면에만 두고 저장하지 않는다 */
 const CLK_DEV = {iphone:"아이폰", ipad:"아이패드", mac:"맥", other:"기타"};
