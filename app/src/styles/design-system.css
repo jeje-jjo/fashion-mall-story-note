@@ -437,3 +437,15 @@ button, input, select, textarea { letter-spacing: inherit; }
 :root:root[data-design="hybrid"] .ranknext .rn-k { all: unset; cursor: pointer; font-weight: 700; color: var(--blue-ink); }
 :root:root[data-design="hybrid"] .ranknext .rn-k:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 3px; }
 :root:root[data-design="hybrid"] .ranknext .rn-tri { font-size: .8em; color: var(--fg3); }
+/* 게임 날짜 고르기 */
+:root:root[data-design="hybrid"] .gdate { margin: 0 0 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+:root:root[data-design="hybrid"] .gd-row { display: grid; grid-template-columns: 1.6em minmax(0, 1fr); gap: 6px; align-items: center; margin-top: 6px; }
+:root:root[data-design="hybrid"] .gd-k { font-size: var(--t-meta); color: var(--fg3); }
+:root:root[data-design="hybrid"] .gd-pad { display: grid; grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); gap: 4px; }
+:root:root[data-design="hybrid"] .gd-pad button { min-height: 28px; font-size: var(--t-ctl); }
+:root:root[data-design="hybrid"] .gd-bar { height: 6px; margin-top: 10px; border-radius: 3px; background: var(--soft); overflow: hidden; }
+:root:root[data-design="hybrid"] .gd-bar span { display: block; height: 100%; background: var(--blue); }
+:root:root:root[data-design="hybrid"] .gd-pad { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; padding: 0; background: none; border: 0; }
+:root:root:root[data-design="hybrid"] .gd-row:first-of-type .gd-pad { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+:root:root:root[data-design="hybrid"] .gd-pad button { min-height: 28px; height: 28px; padding: 0; font-size: var(--t-ctl); }
+:root:root:root[data-design="hybrid"] .gd-pad button:not(.on) { background: var(--soft); border-radius: 6px; }
