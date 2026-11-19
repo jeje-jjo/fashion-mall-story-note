@@ -2528,7 +2528,7 @@ function homeTodo(){
 const MEMO_DEF = {pumpkin:null, guest:[1,6,10]};
 const memoNow = () => ({...MEMO_DEF, ...(S.memo||{})});
 const pumpkinMonths = m => m ? [0,1,2].map(i => (m - 1 + i*4) % 12 + 1).sort((a,b)=>a-b) : [];
-const monthsText = ms => ms.length ? ms.map(m => `<span class="mchip">${m}월</span>`).join("") : "";
+const monthsText = (ms, hot) => ms.length ? ms.map(m => `<span class="mchip ${m===hot?"hot":""}">${m}월</span>`).join("") : "";
 function memoSave(patch){ S.memo = {...memoNow(), ...patch}; render(); if (db) writeSerial("memo/reset", S.memo).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); }
 /* 게임 날짜(제제 2026-11-18, 월은 2026-11-19 다시 넣음): 1년 3월 ~ 10년 3월. runs/rN/ui/now 의 year·month.
    진행도 = 지난 달 수 / 108. 회차 중간에 넣어서 월을 아직 안 고른 경우는 3월로 셈 */
@@ -2546,11 +2546,11 @@ function homeMemo(view){
   const m = memoNow(), ed = !view && !!S.memoEdit, pk = pumpkinMonths(m.pumpkin), gs = [...(m.guest||[])].sort((a,b)=>a-b);
   const grid = (attr, on) => `<div class="mgrid">${Array.from({length:12}, (_,i) => i+1).map(n => `<button type="button" class="chip sm ${on(n)?"on":""}" data-${attr}="${n}" aria-pressed="${on(n)}">${n}월</button>`).join("")}</div>`;
   const rows = `<div class="memo">
-      <div class="mrow"><div class="mh"><b>펌프킨 숍 리셋</b><span>4개월마다</span></div>
-        <div class="mv">${pk.length ? monthsText(pk) : `<span class="hint">아직 모름 · ${view?"메인 리셋 주기에서 고를 수 있어요":"수정에서 열린 월을 골라 주세요"}</span>`}</div>
+      <div class="mrow ${S.mFlash?.pk ? "flash" : ""}"><div class="mh"><b>펌프킨 숍 리셋</b><span>4개월마다</span></div>
+        <div class="mv">${pk.length ? monthsText(pk, S.mFlash?.pk) : `<span class="hint">아직 모름 · ${view?"메인 리셋 주기에서 고를 수 있어요":"수정에서 열린 월을 골라 주세요"}</span>`}</div>
         ${ed ? `<div class="hint" style="margin:8px 0 6px">열린 월 하나를 고르면 4개월 간격으로 채워요</div>${grid("mpk", n => pk.includes(n))}` : ""}</div>
-      <div class="mrow"><div class="mh"><b>손님 활동 목록 리셋</b><span>회차마다 확인</span></div>
-        <div class="mv">${gs.length ? monthsText(gs) : `<span class="hint">고른 월 없음</span>`}</div>
+      <div class="mrow ${S.mFlash?.gs ? "flash" : ""}"><div class="mh"><b>손님 활동 목록 리셋</b><span>회차마다 확인</span></div>
+        <div class="mv">${gs.length ? monthsText(gs, S.mFlash?.gs) : `<span class="hint">고른 월 없음</span>`}</div>
         ${ed ? `<div class="hint" style="margin:8px 0 6px">리셋되는 월을 모두 골라요</div>${grid("mgs", n => gs.includes(n))}` : ""}</div>
     </div>`;
   if (view) return rows;
@@ -3380,7 +3380,12 @@ document.addEventListener("click", e => {
   if (d.rankclr){ mqNowSave({rank: null}); toast("랭크를 지웠어요"); render(); return; }
   if (d.act==="quick"){ S.quick = S.quick===d.q ? null : d.q; render(); return; }
   if (d.gdy){ const y = +d.gdy, g = gameDate(); mqNowSave({year:y, ...(g?.m ? {month:g.m} : {})}); toast(`${y}년${g?.m ? ` ${g.m}월` : ""}`); return; }
-  if (d.gdm){ const m = +d.gdm, g = gameDate(); mqNowSave({year:g?.y || 1, month:m}); toast(`${g?.y || 1}년 ${m}월`); return; }
+  if (d.gdm){ const m = +d.gdm, g = gameDate(); mqNowSave({year:g?.y || 1, month:m});
+    /* 이번 달이 리셋 달이면 그 줄을 2초 반짝(제제 2026-11-19). 달이 넘어가는 건 전달 마지막이라 고른 달 = 리셋 달 */
+    const mm = memoNow(), pk = pumpkinMonths(mm.pumpkin).includes(m), gs = (mm.guest || []).includes(m);
+    toast(`${g?.y || 1}년 ${m}월${pk ? " · 펌프킨 숍 리셋" : ""}${gs ? " · 손님 활동 목록 리셋" : ""}`);
+    if (pk || gs){ S.mFlash = {pk: pk ? m : 0, gs: gs ? m : 0}; render(); clearTimeout(window.__mFlashT); window.__mFlashT = setTimeout(() => { S.mFlash = null; render(); }, 2000); }
+    return; }
   if (d.gutab){ S.guTab = d.gutab; remember(); render(); return; }
   if (d.act==="memoedit"){ S.memoEdit = !S.memoEdit; render(); return; }
   if (d.mpk){ const n = +d.mpk, cur = memoNow().pumpkin; memoSave({pumpkin: pumpkinMonths(cur).includes(n) ? null : n}); return; }
