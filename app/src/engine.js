@@ -1518,7 +1518,7 @@ function viewClo(){
     ${S.spPath ? spPathBox() : ""}
     ${(() => { const hide = allPicked && !S.cloAllShow;
       const bar = allPicked ? `<div class="allpick"><span class="allpick-t">${ICON.ok}장르·옷본·재료·옵션 전부 선택됨<span class="hint">액세서리·특수옵션 제외</span></span><button type="button" class="chip sm" data-act="allpickshow" aria-expanded="${!hide}">${hide?"선택 카드 보기 ▾":"다시 숨기기 ▴"}</button></div>` : "";
-      if (hide) return `${bar}<div class="filter-grid"><div class="filter-row">${spBlock(optChips, S.cloOpt)}</div></div>`;
+      if (hide) return `${bar}<div class="filter-grid fg-solo"><div class="filter-row">${spBlock(optChips, S.cloOpt)}</div></div>`;
       return `${bar}<div class="filter-grid">
     <div class="filter-row">${rowHead("장르","cat","ccat",S.cloCat)}${foldChips(catChips, S.cloCat, "ccat", "cat")}</div>
     <div class="filter-row">${rowHead("옷본","pat","cpat",S.cloPat,rows.length)}${foldChips(patChips, S.cloPat, "cpat", "pat")}</div>
