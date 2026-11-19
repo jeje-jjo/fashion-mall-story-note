@@ -1505,7 +1505,7 @@ function viewClo(){
     </div>`; })()}
     ${rankStep ? `<div class="ranknext"><button type="button" class="rn-k" data-act="quick" data-q="rank" title="현재 랭크 고르기">${curRank()!=null?`현재 ${curRank()} · `:""}다음 랭크 ${gRank(rankStep.rank)} <span class="rn-tri" aria-hidden="true">▾</span></button><span class="rn-v">배틀 ${esc(rankStep.battle)} → ${esc(rankStep.char)} → <b>${esc(rankStep.genre)}</b>${rankStep.base?` · 옷본 <b>${esc(rankStep.base)}</b>`:""}${rankStep.study?` · 스터디 ${esc(rankStep.study)}${rankStep.studyItems?.length?`(<b>${rankStep.studyItems.map(esc).join("·")}</b>)`:""}`:""}</span><span class="rn-h">'다음' 점선 칩이 다음에 열리는 것 · 모두 고르면 다음 단계</span></div>` : ""}
     ${cntBox}
-    <div class="tools ctools toolsgap cloview-below"><div class="cloview"><div class="pillseg" role="group" aria-label="보기"><button type="button" class="${!kinds.length && S.cloSt==="전체"?"on":""}" data-cst="전체 옷">전체 옷</button>${["추가옵션","전투 추천","코디 추천"].map(k => `<button type="button" class="${kinds.includes(k)?"on":""}" data-ckind="${k}" aria-pressed="${kinds.includes(k)}">${k}</button>`).join("")}</div><div class="pillseg" role="group" aria-label="완료 상태">${["미완료","완료"].map(k => `<button type="button" class="${S.cloSt===k?"on":""}" data-cst="${k}" aria-pressed="${S.cloSt===k}">${k}</button>`).join("")}</div></div><input class="search" id="cloQ" placeholder="옷 이름, 옵션, 인물 검색" value="${esc(S.cloQ)}" aria-label="옷 검색"></div>
+    <div class="tools ctools toolsgap cloview-below"><div class="cloview">${(() => { const qo = !!(S.cloQOpen || S.cloQ.trim()); return `<button type="button" class="iconbtn cloq-btn ${qo?"on":""}" data-act="cloqopen" aria-expanded="${qo}" aria-label="${qo?"검색 닫기":"옷 검색"}" title="옷 검색">${ICON.search}</button>`; })()}<div class="pillseg" role="group" aria-label="보기"><button type="button" class="${!kinds.length && S.cloSt==="전체"?"on":""}" data-cst="전체 옷">전체 옷</button>${["추가옵션","전투 추천","코디 추천"].map(k => `<button type="button" class="${kinds.includes(k)?"on":""}" data-ckind="${k}" aria-pressed="${kinds.includes(k)}">${k}</button>`).join("")}</div><div class="pillseg" role="group" aria-label="완료 상태">${["미완료","완료"].map(k => `<button type="button" class="${S.cloSt===k?"on":""}" data-cst="${k}" aria-pressed="${S.cloSt===k}">${k}</button>`).join("")}</div></div>${S.cloQOpen || S.cloQ.trim() ? `<input class="search" id="cloQ" placeholder="옷 이름, 옵션, 인물 검색" value="${esc(S.cloQ)}" aria-label="옷 검색">` : ""}</div>
 
     ${LEGEND}
     <div class="list" id="clothesList" tabindex="-1">${shown.length ? shown.map(c => {
@@ -3417,6 +3417,8 @@ document.addEventListener("click", e => {
   if (d.slotmenu){ S.slotOpen = S.slotOpen===d.slotmenu ? null : d.slotmenu; render(); return; }
   if (d.uflrk != null){ S.uflRk = S.uflRk === d.uflrk ? null : d.uflrk; render(); return; }
   if (d.act==="spfold"){ S.spFold = !S.spFold; remember(); render(); return; }
+  /* 의류 검색은 돋보기를 눌러야 열림(제제 2026-11-19). 닫으면 검색어도 지움 */
+  if (d.act==="cloqopen"){ const open = !(S.cloQOpen || S.cloQ.trim()); S.cloQOpen = open; if (!open) S.cloQ = ""; render(); if (open) $("#cloQ")?.focus(); return; }
   if (d.act==="allpickshow"){ S.cloAllShow = !S.cloAllShow; remember(); render(); return; }
   if (d.act==="csp"){ S.cloSp = !S.cloSp; remember(); render(); return; }
   if (d.oclo){ S.cloOpen = S.cloOpen===+d.oclo ? null : +d.oclo; render(); return; }

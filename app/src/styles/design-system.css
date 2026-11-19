@@ -587,3 +587,10 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pill.opendone { color: #A8C9C0; } }
 :root[data-theme="dark"] .pill.opendone { color: #A8C9C0; }
 :root:root .tools.cloview-below { margin-top: 14px !important; }
+/* 의류 검색 돋보기(제제 2026-11-19) */
+:root:root .cloview .cloq-btn { width: var(--ctl-hh); height: var(--ctl-hh); flex: none; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--fg2); display: inline-grid; place-items: center; padding: 0; }
+:root:root .cloview .cloq-btn .ui-icon { width: 16px; height: 16px; }
+:root:root .cloview .cloq-btn.on { background: var(--blue-soft); color: var(--blue-ink); border-color: color-mix(in srgb, var(--blue) 40%, transparent); }
+:root:root .tools.cloview-below > #cloQ { flex: 1 1 100%; order: 9 !important; margin-top: 8px !important; }
+:root:root .cloview-below .cloview { align-items: center; }
+:root:root .tools.cloview-below { flex-direction: column !important; align-items: stretch; }

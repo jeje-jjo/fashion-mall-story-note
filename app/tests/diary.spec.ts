@@ -27,6 +27,7 @@ test("검색·다중 필터·완료·상세가 빌드된 엔진에서 동작한�
     await expect(page.locator(`.filter-grid [data-ccat="${value}"]`)).toHaveAttribute("aria-pressed", "true");
   }
   await page.locator('[data-cclear="cat"]').click();
+  await page.locator('[data-act="cloqopen"]').click();
   const search = page.getByRole("textbox", { name: "옷 검색" });
   await search.fill("긴소매");
   await expect(search).toBeFocused();
