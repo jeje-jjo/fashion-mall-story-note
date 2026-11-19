@@ -549,10 +549,14 @@ const btAuto = k => { if (typeof k !== "string") return false; const b = (DATA.b
   const nk = x => String(x || "").replace(/\s/g, ""); return (DATA.rankPlan || []).some(p => nk(p.battle) === nk(b.name) && (S.cloCat || []).includes(p.genre)); };
 const btDone = k => bRec(k).doneRun === RUN || btAuto(k);
 /* 챌린지 승리 보상의 특수옵션(제제 2026-11-17: 패션 체크처럼 승리하면 의류 옵션 줄에 자동 선택) */
+/* 보상 글의 옵션 이름 맞추기(제제 2026-11-19): 빈칸 무시, 사이트 표기 → 노트 표기(게리 코튼 = 게리코튼, 카무플라주 패턴 = 카모플라주) */
+const SP_ALIAS = {"카무플라주패턴":"카모플라주", "카무플라주":"카모플라주", "카모플라주패턴":"카모플라주"};
+const spNorm = x => { const k = String(x || "").replace(/\s+/g, ""); return SP_ALIAS[k] || k; };
+const spFind = toks => { const n = toks.map(spNorm); return SP_OPTS.find(o => n.includes(spNorm(o))) || ""; };
 function btRewardOpt(k){
   const b = typeof k === "number" ? DATA.battles[k] : (DATA.battlesExtra || []).find(x => btKeyX(x) === k); if (!b) return "";
   const toks = String(b.site?.win || "").split(/[\/,:·]/).map(x => x.replace(/^(새\s*)?옵션\s*/, "").trim());
-  return SP_OPTS.find(o => toks.includes(o)) || "";
+  return spFind(toks);
 }
 function applyBtReward(k, on){
   const o = btRewardOpt(k); if (!o) return "";
@@ -1291,7 +1295,7 @@ function optSources(o){
   (DATA.checksExtra||[]).forEach(k => { if (has(k.site?.option)) out.push(`모델 체크 ${k.site.id}`); });
   (DATA.contests||[]).forEach(k => { if (has(k.option)) out.push(String(k.name||"콘테스트").replace(/\s+/g," ")); });
   /* 전투 보상(제제 2026-11-12): 보상 문구에 옵션 이름이 있으면 그 전투 승리로 얻음 */
-  const winHas = w => String(w||"").split(/[\/,:·]/).map(x => x.replace(/^(새\s*)?옵션\s*/,"").trim()).includes(o);
+  const winHas = w => String(w||"").split(/[\/,:·]/).map(x => spNorm(x.replace(/^(새\s*)?옵션\s*/,"").trim())).includes(spNorm(o));
   (DATA.battles||[]).forEach((b, i) => { if (winHas(b.site?.win)) out.push(`${bShort(i)} 챌린지 승리`); });
   (DATA.battlesExtra||[]).forEach(b => { if (winHas(b.site?.win)) out.push(`다른 가게 ${b.name} 승리`); });
   const ref = key => ((DATA.refTables||[]).find(t => t.key===key)?.rows || []);
