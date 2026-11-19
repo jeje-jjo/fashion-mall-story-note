@@ -101,7 +101,7 @@ function autoSaveSel(){
   selTimer = setTimeout(() => { const all = curSel(); S.cloSlot = {...S.cloSlot, all, ...all};
     writeSerial("ui/slots", {slot:S.cloSlot}).catch(() => showNotice("선택을 저장하지 못했어요. 도구 > 저장에서 수동 저장해 주세요.")).finally(() => { selPending = false; }); }, 400);
 }
-const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,coModal:S.coModal,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloAllShow:S.cloAllShow,spFold:S.spFold,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
+const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,facMode:S.facMode,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,coModal:S.coModal,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloAllShow:S.cloAllShow,spFold:S.spFold,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
 if (S.facType!=="전체" && S.facType!=="우선개량" && !(S.facType in TYPE_COLOR)) S.facType = "전체";
 if (!Array.isArray(S.cloCat)) S.cloCat = S.cloCat && S.cloCat!=="전체" ? [S.cloCat] : [];
 if (!Array.isArray(S.cloPat)) S.cloPat = S.cloPat && S.cloPat!=="전체" ? [S.cloPat] : [];
@@ -965,7 +965,7 @@ async function toggleFcDone(oi){
   if (on) rec.doneRun = RUN; else delete rec.doneRun;
   const rw = applyFcReward(oi, on);
   /* 완료하면 시설 탭에서 골라 둔 그 패션 체크를 빼고 번호판을 접는다(제제 2026-11-18) */
-  if (on && (S.facFcSel || []).includes(oi + 1)){ S.facFcSel = S.facFcSel.filter(n => n !== oi + 1); S.facFcOpen = false; remember(); }
+  if (on && (S.facFcSel || []).includes(oi + 1)){ S.facFcSel = S.facFcSel.filter(n => n !== oi + 1); remember(); }  /* 목록(1~20)은 접지 않음(제제 2026-11-19) */
   S.chkscore = {...S.chkscore, [oi]:rec}; render(); toast(on ? `패션 체크 ${oi+1} 완료${rw ? ` · 의류 필터에 ${rw} 선택` : ""}` : `패션 체크 ${oi+1} 완료 취소${rw ? ` · ${rw} 선택 해제` : ""}`);
   if (db) try{ await writeSerial(`chkscore/k${oi}`, {...rec, t:Date.now(), by:"app"}); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
@@ -1013,17 +1013,29 @@ function missingShopSet(){
     o.likeDetail.split("/").forEach(n => { const k = nk(n); (ref[k] ||= []).push(c); }); });
   return f => { const l = ref[nk(facName(f))] || ref[nk(f.name)]; return !!l && l.every(c => !cloDone(c)); };
 }
+const facModeOf = () => S.facMode || (S.facFcSel?.length ? "fc" : S.itemPick ? "item" : S.facType && S.facType!=="전체" ? "genre" : "all");
+/* 고른 보기의 줄은 늘 펼쳐서(접기 버튼 없이) 보여 준다 */
+function facModeRow(fm, typeChips){
+  const keep = S.facExp, keepFc = S.facFcOpen;
+  S.facExp = {...keep, genre:true, item:true}; S.facFcOpen = true;
+  const h = fm==="genre" ? genreRow(typeChips) : fm==="fc" ? fcFilterRow() : itemRow();
+  S.facExp = keep; S.facFcOpen = keepFc;
+  return h.replace(/<button class="chip sm fold" data-fexp="[^"]*"[^>]*>[\s\S]*?<\/button>/g, "")
+    .replace(/<button class="chip sm[^"]*" data-act="(?:ffoldall|fopenall|fpin|fcopen)"[^>]*>[\s\S]*?<\/button>/g, "");
+}
 function viewFac(){
   const types = ["전체", ...Object.keys(TYPE_COLOR)];
   const typeChips = types.map(t => { const g = DATA.fac.filter(f => t==="전체" || f.type===t); return [t, t, `${g.filter(facDone).length}/${g.length}`]; });
   { const g = DATA.fac.filter(f => f.p40); typeChips.push(["우선개량", "우선개량", `40P ${g.filter(p40Done).length}/${g.length}`]); }
-  let rows = DATA.fac.filter(f => S.facType==="전체" || (S.facType==="우선개량" ? f.p40 : f.type===S.facType));
+  /* 보기 나누기(제제 2026-11-19): 전체 보기 | 장르 | 패션 체크 | 아이템. 고른 보기의 조건만 걸고, 다른 보기의 선택은 그대로 둔다 */
+  const fm = facModeOf(), fType = fm==="genre" ? S.facType : "전체", fFc = fm==="fc" ? S.facFcSel : [], fIt = fm==="item" ? S.itemPick : "";
+  let rows = DATA.fac.filter(f => fType==="전체" || (fType==="우선개량" ? f.p40 : f.type===fType));
   const stOf = f => facDone(f) ? "완료" : facPartial(f) ? "일부완료" : "미완료";
   if (facSts().length) rows = rows.filter(f => facSts().includes(stOf(f)));
-  if (S.facFcSel.length) rows = rows.filter(f => (FC_OF[f.id]||[]).some(n => S.facFcSel.includes(n)));
+  if (fFc.length) rows = rows.filter(f => (FC_OF[f.id]||[]).some(n => fFc.includes(n)));
   /* 항목으로 찾기: 좋음은 상태가 '전체'일 때만 아직 안 넣은 미완료 시설로 좁힘.
      미완료·일부완료·완료를 고르면 그 상태에서 상성 좋음인 시설을 전부 보여 줌(넣고 완료한 시설이 완료 탭에서 사라지던 문제, 2026-11-09) */
-  const it = S.itemPick, idx = ITEMS.indexOf(it), rel = S.itemAlt || "좋음";
+  const it = fIt, idx = ITEMS.indexOf(it), rel = S.itemAlt || "좋음";
   const notPut = f => !facDone(f) && !putOf(f).includes(it);
   if (idx >= 0) rows = rows.filter(f => rel==="좋음" ? f.m[idx]==="◎" : rel==="보통" ? f.m[idx]==="◯" : f.m[idx]==="×");
   const q = S.facQ.trim();
@@ -1043,26 +1055,25 @@ function viewFac(){
   /* 아이템 모드(좋음): 그 아이템을 넣은 시설(완료 포함)은 아래로, 안 연 매장보다는 위(제제 2026-11-10) */
   const putSink = idx >= 0 && rel==="좋음" ? f => !notPut(f) : () => false;
   /* 우선개량 보기: 40P 체크한 시설은 아래로, 안 연 매장보다는 위(제제 2026-11-11) */
-  const p40Sink = S.facType==="우선개량" ? f => p40Done(f) : () => false;
+  const p40Sink = fType==="우선개량" ? f => p40Done(f) : () => false;
   rows = [...rows].sort((a,b) => (noStore(a)?1:0) - (noStore(b)?1:0) || (p40Sink(a)?1:0) - (p40Sink(b)?1:0) || (putSink(a)?1:0) - (putSink(b)?1:0) || (fcSink(a)?1:0) - (fcSink(b)?1:0) || (first ? first(a,b) : 0) || baseSort(a,b));
   const pc = rows.filter(facPartial).length;
-  const fcOne = S.facFcSel.length===1 && S.facFcSel[0] <= FC_MAX ? S.facFcSel[0]-1 : null;
+  const fcOne = fFc.length===1 && fFc[0] <= FC_MAX ? fFc[0]-1 : null;
   const canPut = idx >= 0 && rel==="좋음";
   return `<section class="card facility-catalog">
-    ${genreRow(typeChips)}
-    <div class="frowgap nol">${fcFilterRow()}</div>
+    <div class="seg wide facmode" role="group" aria-label="시설 보기">${[["all","전체 보기"],["genre","장르"],["fc","패션 체크"],["item","아이템"]].map(([k,l]) => `<button type="button" class="${fm===k?"on":""}" data-facmode="${k}" aria-pressed="${fm===k}">${l}</button>`).join("")}</div>
+    ${fm==="all" ? "" : `<div class="facmode-b">${facModeRow(fm, typeChips)}</div>`}
     ${fcOne!=null ? fcInfoCard(fcOne) : ""}
-    <div class="frowgap nol">${itemRow()}</div>
     <div class="tools toolsgap"><div class="seg">${["전체","미완료","일부완료","완료"].map(k => { const on = k==="전체" ? !facSts().length : facSts().includes(k); return `<button class="${on?"on":""}" data-fst="${k}" aria-pressed="${on}">${k}</button>`; }).join("")}</div></div>
     <div class="tools" style="margin-top:8px">${seg(["기본순","좋음 적은순","패션 체크순","장르순","이름순"], ["이름순","장르순","좋음 적은순","패션 체크순"].includes(S.facSort)?S.facSort:"기본순", "fsort")}<input class="search" id="facQ" placeholder="시설이나 항목 검색" value="${esc(S.facQ)}" aria-label="시설 검색"></div>
     ${canPut && rows.filter(notPut).length ? `<div class="bulkput"><span>보이는 ${rows.filter(notPut).length}곳에 <b>${esc(it)}</b>을(를) 넣었다면</span><button class="btn sm" data-putall="${rows.filter(notPut).map(f=>f.id).join(",")}|${esc(it)}">모두 넣었어요</button></div>` : ""}
-    <div class="filterline"><span>${rows.filter(facDone).length} / ${rows.length} 완료${pc?` · 일부 ${pc}`:""}${it?` · ${esc(it)} 상성 ${rel}`:""}${fcOne!=null?` · 패션 체크 ${fcOne+1}`:S.facFcSel.length?` · 패션 체크 ${S.facFcSel.join("·")}`:""}</span></div>
+    <div class="filterline"><span>${rows.filter(facDone).length} / ${rows.length} 완료${pc?` · 일부 ${pc}`:""}${it?` · ${esc(it)} 상성 ${rel}`:""}${fcOne!=null?` · 패션 체크 ${fcOne+1}`:fFc.length?` · 패션 체크 ${fFc.join("·")}`:""}</span></div>
     <div class="list">${rows.length ? rows.map(f => {
       const d = facDone(f), opened = S.facOpen===f.id, nm = facName(f), put = putShown(f);
       return `<div class="${opened?"open":""}">
         <div class="row ${d?"done":""} ${noStore(f)?"nostore":""}">
           ${canPut ? `<button data-put="${f.id}|${esc(it)}" aria-label="${esc(nm)}에 ${esc(it)} ${put.includes(it)?"넣음 취소":"넣음"}" title="${esc(it)}만 체크해요. 좋음 항목을 다 넣으면 시설 완료">${ck(d || put.includes(it))}</button>`
-            : S.facType==="우선개량" ? `<button class="p40row" data-p40ck="${f.id}" aria-pressed="${p40Done(f)}" aria-label="${esc(nm)} 40P 업그레이드 ${p40Done(f)?"체크 해제":"했음"}" title="우선개량 보기에서는 40P만 체크해요">${ck(p40Done(f))}</button>`
+            : fType==="우선개량" ? `<button class="p40row" data-p40ck="${f.id}" aria-pressed="${p40Done(f)}" aria-label="${esc(nm)} 40P 업그레이드 ${p40Done(f)?"체크 해제":"했음"}" title="우선개량 보기에서는 40P만 체크해요">${ck(p40Done(f))}</button>`
             : `<button data-tfac="${f.id}" aria-label="${esc(nm)} ${d?"미완료로":"전체 완료로"} 바꾸기">${ckFac(f)}</button>`}
           <button class="body" data-ofac="${f.id}" style="text-align:left">
             <div class="t"><span class="n">${esc(nm)}</span>${noStore(f)?`<span class="tag nostore">아직 없는 매장</span>`:""}${typeTag(f.type)}${facPartial(f)?semTag("part","일부완료"):""}${fcTag(f)}${f.p40?p40Tag(f):""}</div>
@@ -2665,13 +2676,13 @@ function viewHome(){
   ${q ? "" : homeToday() + homeTodo() + homeMemo() + homeUp() + homeRecent() + homeLegend() + homeClear() + homeCarry()}`;
 }
 function homeGo(go){
-  if (go==="fac"){ S.tab="fac"; S.itemPick=""; S.facType="전체"; S.facSt=["미완료","일부완료"]; S.facFcSel=[]; S.facFcOpen=false; S.facQ=""; }
+  if (go==="fac"){ S.tab="fac"; S.facMode="all"; S.itemPick=""; S.facType="전체"; S.facSt=["미완료","일부완료"]; S.facFcSel=[]; S.facFcOpen=false; S.facQ=""; }
   else if (go==="clo"){ S.tab="clo"; S.cloSp=false; S.cloSt="미완료"; S.cloKind=["추가옵션"]; S.cloCat=[]; S.cloPat=[]; S.cloMat=[]; S.cloOpt=[]; S.cloQ=""; }
   else if (go==="sp"){ S.tab="clo"; S.cloSp=false; S.cloSt="미완료"; S.cloKind=["추가옵션"]; S.cloCat=[]; S.cloPat=[]; S.cloMat=[]; S.cloOpt=[...SP_OPTS]; S.cloRowMulti={...S.cloRowMulti, opt:true}; S.cloQ=""; }
   else if (go==="coord"){ S.tab="coord"; S.coordQ=""; }
   else if (go==="cloq"){ S.tab="clo"; S.cloSp=false; S.cloSt="전체"; S.cloKind=[]; S.cloCat=[]; S.cloPat=[]; S.cloMat=[]; S.cloOpt=[]; S.cloQ=S.homeQ.trim(); }
   else if (go==="coordq"){ S.tab="coord"; S.coordQ=S.homeQ.trim(); }
-  else if (go==="facq"){ S.tab="fac"; S.itemPick=""; S.facType="전체"; S.facSt="전체"; S.facFcSel=[]; S.facFcOpen=false; S.facQ=S.homeQ.trim(); }
+  else if (go==="facq"){ S.tab="fac"; S.facMode="all"; S.itemPick=""; S.facType="전체"; S.facSt="전체"; S.facFcSel=[]; S.facFcOpen=false; S.facQ=S.homeQ.trim(); }
   else if (go==="log" || go==="contest"){ S.tab="tool"; S.recSub=go; }
   remember(); render(); scrollTo({top:0});
 }
@@ -2823,7 +2834,7 @@ function todayGo(go){
   const [k, a] = go.split("|");
   if (k==="set"){ S.tab="coord"; S.coordSub="set"; S.setF="1벌 남음"; S.setG="전체"; }
   else if (k==="make"){ S.tab="clo"; S.nmOpen=true; }
-  else if (k==="fc"){ S.tab="fac"; S.facFcSel=[+a]; S.facFcOpen=false; }
+  else if (k==="fc"){ S.tab="fac"; S.facFcSel=[+a]; S.facMode="fc"; }
   else if (k==="contest"){ S.tab="tool"; S.recSub="contest"; }
   else if (k==="mq"){ S.tab="coord"; S.coordSub="mq"; }
   else if (k==="rank"){ S.tab="tool"; S.recSub="goal"; S.goalSub="rank"; }
@@ -3327,9 +3338,10 @@ document.addEventListener("click", e => {
   if (d.ialt){ S.itemAlt=d.ialt; remember(); render(); return; }
   if (d.putall){ const [ids, it] = d.putall.split("|"); bulkPut(ids.split(",").map(Number), it); return; }
   if (d.put){ const [fid, it] = d.put.split("|"); togglePut(+fid, it); return; }
-  if (d.pick !== undefined){ S.itemAlt=""; S.itemPick = S.itemPick===d.pick ? "" : d.pick; S.facType="전체"; S.facFcSel=[]; if (S.itemPick){ S.tab="fac"; } remember(); render(); return; }
-  if (d.fcgo !== undefined){ S.tab="fac"; S.facFcSel=[+d.fcgo+1]; S.itemPick=""; S.facType="전체"; S.facFcOpen=false; S.facSt="전체"; S.facQ=""; remember(); render(); scrollTo({top:0}); return; }
-  if (d.ftype){ S.facType=d.ftype; S.facFcSel=[]; S.itemPick=""; S.fcNoteOpen=false; remember(); render(); return; }
+  if (d.pick !== undefined){ S.itemAlt=""; S.itemPick = S.itemPick===d.pick ? "" : d.pick; if (S.itemPick){ S.tab="fac"; S.facMode="item"; } remember(); render(); return; }
+  if (d.fcgo !== undefined){ S.tab="fac"; S.facFcSel=[+d.fcgo+1]; S.facMode="fc"; S.facSt="전체"; S.facQ=""; remember(); render(); scrollTo({top:0}); return; }
+  if (d.ftype){ S.facType=d.ftype; S.fcNoteOpen=false; if (d.ftype!=="전체") S.facMode="genre"; remember(); render(); return; }
+  if (d.facmode){ S.facMode = d.facmode; remember(); render(); return; }
   if (d.act==="ffoldall"){ S.facExp = {genre:false, fc:false, item:false}; S.facFcOpen = false; remember(); render(); return; }
   if (d.act==="fopenall"){ S.facExp = {genre:true, fc:true, item:true}; S.facFcOpen = true; remember(); render(); return; }
   if (d.act==="fpin"){ S.facExpPin = !S.facExpPin; remember(); render(); return; }
@@ -3403,7 +3415,7 @@ document.addEventListener("click", e => {
   if (d.act==="coord-close"){ S.coordUnsel = false; S.coordOpen = []; saveCoordOpen(); render(); return; }
   if (d.act==="fcprev" || d.act==="fcnext"){ const cur = S.facFcSel[0] || 0, n = Math.min(FC_MAX, Math.max(1, cur + (d.act==="fcnext" ? 1 : -1))); S.facType="전체"; S.itemPick=""; S.facFcSel = [n]; S.fcNoteOpen = false; remember(); render(); return; }
   if (d.act==="sumtop"){ const el = document.querySelector("#view .card"); scrollTo({top:0, behavior:"smooth"}); return; }
-  if (d.fcn !== undefined){ const n = +d.fcn; S.facType="전체"; S.itemPick=""; if (S.fcMode==="multi") S.facFcSel = S.facFcSel.includes(n) ? S.facFcSel.filter(x => x!==n) : [...S.facFcSel, n].sort((a,b)=>a-b); else { S.facFcSel = S.facFcSel.includes(n) && S.facFcSel.length===1 ? [] : [n]; } if (!S.facFcSel.length) S.facFcOpen = false; S.fcNoteOpen = false; remember(); render(); return; }
+  if (d.fcn !== undefined){ const n = +d.fcn; S.facMode="fc"; if (S.fcMode==="multi") S.facFcSel = S.facFcSel.includes(n) ? S.facFcSel.filter(x => x!==n) : [...S.facFcSel, n].sort((a,b)=>a-b); else { S.facFcSel = S.facFcSel.includes(n) && S.facFcSel.length===1 ? [] : [n]; } if (!S.facFcSel.length) S.facFcOpen = false; S.fcNoteOpen = false; remember(); render(); return; }
   if (d.act==="fcopen"){ S.facFcOpen = !S.facFcOpen; remember(); render(); return; }
   if (d.cdone !== undefined){ const n = d.cdone; S.coordDone = S.coordDone.includes(n) ? S.coordDone.filter(x => x!==n) : [...S.coordDone, n]; S.coordOpen = S.coordOpen.filter(x => x!==n); saveCoordOpen(); if (S.coModal === n){ S.coModal = null; remember(); } render(); toast(S.coordDone.includes(n) ? `${n} 코디 완료` : `${n} 완료 취소`); if (db) writeSerial(`${RUN}/misc/coord`, {list:S.coordDone}).catch(()=>{}); return; }
   if (d.cled){ const [id,k] = d.cled.split("|"); S.cloEdit[+id] = S.cloEdit[+id]===k ? "" : k; render(); return; }

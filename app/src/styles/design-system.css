@@ -548,3 +548,8 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root .goal-sets-n small { display: inline-block; margin-right: 6px; color: var(--blue-ink); font-size: var(--t-meta); font-weight: 650; }
 :root:root .goal-gr .w > span { white-space: nowrap; }
 @media (max-width: 739px) { :root:root .goal-gr { grid-template-columns: 4.6em minmax(0, 1fr) auto; gap: 6px; padding: 6px 4px; } }
+
+/* 시설 보기 나누기(제제 2026-11-19) */
+:root:root .seg.wide.facmode { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 10px; }
+:root:root .seg.wide.facmode button { min-width: 0; padding: 0 4px; }
+:root:root .facmode-b { margin-bottom: 4px; }
