@@ -586,3 +586,4 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root .ip-k.ip-alldone::before { background: transparent; border: 1px dashed var(--fg3); box-sizing: border-box; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pill.opendone { color: #A8C9C0; } }
 :root[data-theme="dark"] .pill.opendone { color: #A8C9C0; }
+:root:root .tools.cloview-below { margin-top: 14px !important; }
