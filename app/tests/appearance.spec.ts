@@ -60,7 +60,9 @@ for (const skin of ["atelier", "paper"]) {
       await fits();
       await page.locator('[data-tab="coord"]').click();
       await page.locator("[data-cochip]").first().click();
+      await expect(page.locator(".comodal")).toBeVisible();
       await fits();
+      await page.locator('[data-act="comodal-x"]').click();
       await page.locator('[data-tab="tool"]').click();
       for (const sub of ["contest", "calc", "ref", "set"]) {
         await page.locator(`[data-rsub="${sub}"]`).click();

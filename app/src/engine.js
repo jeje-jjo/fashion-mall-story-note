@@ -101,7 +101,7 @@ function autoSaveSel(){
   selTimer = setTimeout(() => { const all = curSel(); S.cloSlot = {...S.cloSlot, all, ...all};
     writeSerial("ui/slots", {slot:S.cloSlot}).catch(() => showNotice("선택을 저장하지 못했어요. 도구 > 화면에서 수동 저장해 주세요.")).finally(() => { selPending = false; }); }, 400);
 }
-const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
+const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,coModal:S.coModal,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
 if (S.facType!=="전체" && S.facType!=="우선개량" && !(S.facType in TYPE_COLOR)) S.facType = "전체";
 if (!Array.isArray(S.cloCat)) S.cloCat = S.cloCat && S.cloCat!=="전체" ? [S.cloCat] : [];
 if (!Array.isArray(S.cloPat)) S.cloPat = S.cloPat && S.cloPat!=="전체" ? [S.cloPat] : [];
@@ -1281,12 +1281,14 @@ function spManualTable(){
   const cells = {}, other = [];
   SP_OPTS.forEach(o => optSources(o).forEach(x => { if (spSrcAuto(x) !== null) return; const m = x.match(/^(.+?)\s*Lv\.?\s*(\d)$/);
     if (m) ((cells[m[1].trim()] ||= {})[+m[2]] ||= []).push([o, x]); else other.push([o, x]); }));
-  const types = Object.keys(cells), chip = ([o, x], lab) => { const d = spSrcDone(o, x);
-    return `<button type="button" class="chip sm spsrc ${d?"on":""}" data-spsrc="${esc(spKey(o, x))}" aria-pressed="${d}" title="${esc(x)}">${d?ICON.ok:""}${esc(lab)}</button>`; };
+  /* 콘테스트 칸에는 통과 점수도(사이트 값, 제제 2026-11-19) */
+  const nk = v => String(v || "").replace(/\s+/g, ""), scoreOf = x => (DATA.contests || []).find(k => nk(k.name) === nk(x))?.score;
+  const types = Object.keys(cells), chip = ([o, x], lab, withScore) => { const d = spSrcDone(o, x), sc = withScore ? scoreOf(x) : null;
+    return `<button type="button" class="chip sm spsrc ${d?"on":""} ${sc != null ? "has-sc" : ""}" data-spsrc="${esc(spKey(o, x))}" aria-pressed="${d}" title="${esc(x)}"><span class="sp-o">${d?ICON.ok:""}${esc(lab)}</span>${sc != null ? `<small class="sp-sc">${nf0(sc)}점</small>` : ""}</button>`; };
   return `<div class="spman"><div class="sublbl" style="margin:0 0 6px">직접 체크하는 곳</div>
     <div class="spman-t" role="table"><div class="spman-r spman-h" role="row"><span role="columnheader"></span>${[1,2,3,4].map(l => `<span role="columnheader">Lv.${l}</span>`).join("")}</div>
-    ${types.map(t => `<div class="spman-r" role="row"><span class="spman-k" role="rowheader">${esc(t)}</span>${[1,2,3,4].map(l => `<span role="cell">${(cells[t][l] || []).map(it => chip(it, it[0])).join("") || `<i class="spman-e">–</i>`}</span>`).join("")}</div>`).join("")}</div>
-    ${other.length ? `<div class="spman-o"><span class="spman-k">기타</span>${other.map(it => chip(it, `${it[1]} · ${it[0]}`)).join("")}</div>` : ""}</div>`;
+    ${types.map(t => `<div class="spman-r" role="row"><span class="spman-k" role="rowheader">${esc(t)}</span>${[1,2,3,4].map(l => `<span role="cell">${(cells[t][l] || []).map(it => chip(it, it[0], true)).join("") || `<i class="spman-e">–</i>`}</span>`).join("")}</div>`).join("")}
+    ${other.length ? `<div class="spman-r spman-or" role="row"><span class="spman-k" role="rowheader">기타</span><span class="spman-oc" role="cell">${other.map(it => chip(it, `${it[1].replace(/^모든 옷을 다 만들면 이벤트로 1개$/, "옷 전부 만들면")} · ${it[0]}`)).join("")}</span></div>` : ""}</div></div>`;
 }
 function spPathBox(){
   const rows = SP_OPTS.map(o => { const src = optSources(o), got = src.some(x => spSrcDone(o, x));
@@ -1590,7 +1592,7 @@ function viewCoordReq(){
   /* 손님 순서(제제 2026-11-18): 9~11회차 클릭 기록에서 실제로 손님을 처음 연 순서의 평균. 목록에 없는 손님은 옷 순서 기준으로 뒤에 */
   const gr = guestRank(), rk = n => { const i = GUEST_PLAY_ORDER.indexOf(n) >= 0 ? GUEST_PLAY_ORDER.indexOf(n) : GUEST_PLAY_ORDER.indexOf(curPerson(n)); return i >= 0 ? i : 1000 + (gr.get(n) ?? 9999); };
   const byAppear = (a,b) => rk(a) - rk(b) || a.localeCompare(b, "ko");
-  const names = Object.keys(groups).sort((a,b) => (cdone(a) - cdone(b)) || byAppear(a,b));
+  const names = Object.keys(groups).sort(byAppear);  // 완료한 손님도 제자리(제제 2026-11-19)
   const open = n => q ? true : S.coordOpen.includes(n);
   const allOpen = names.length && names.every(n => S.coordOpen.includes(n));
   /* 패드·폰(제제 2026-11-10): 요청을 한 줄(번호·제목·통과한 옷)로 접어 두고 눌러서 펼침. 넓은 화면은 그대로 다 펼침 */
@@ -1627,7 +1629,18 @@ function viewCoordReq(){
     <div class="chips cfoldchips cochips">${all.filter(n => !S.coordHideDone || !cdone(n) || S.coordOpen.includes(n)).map(n => `<button class="chip ${S.coordOpen.includes(n)?"on":""} ${cdone(n)?"done":""}" data-cochip="${esc(n)}" aria-pressed="${S.coordOpen.includes(n)}">${cdone(n)?ICON.ok:""}${esc(n)}${S.coordUnsel && S.coordOpen.includes(n)?` <span class="cox" aria-hidden="true">×</span>`:""}</button>`).join("") || `<span class="hint">검색 결과가 없어요</span>`}</div>
 
   </section>
-  ${shownCards.length ? `<div class="cogrid">${shownCards.map(card).join("")}</div>` : `<section class="card"><div class="empty">${q?"검색 결과가 없어요":"위에서 손님을 누르면 요청이 나와요"}</div></section>`}`;
+  ${q ? (shownCards.length ? `<div class="cogrid">${shownCards.map(card).join("")}</div>` : `<section class="card"><div class="empty">검색 결과가 없어요</div></section>`)
+      : (S.coModal && groups[S.coModal] ? coModal(S.coModal) : "")}`;
+  /* 손님 요청 팝업(제제 2026-11-19): 아이폰에서 다른 앱에 갔다 오면 맨 위로 가던 문제 → 목록은 그대로 두고 가운데 창으로.
+     [선택 취소] = 칩 선택도 풀고 닫기, [최종 완료] = 완료 표시(창 닫힘), [×] = 선택은 남기고 닫기. 열린 창은 기기에 기억해 다시 열려도 그대로 */
+  function coModal(n){ const dn = cdone(n);
+    return `<div class="comodal-back" data-comodal-back="1"><div class="comodal" role="dialog" aria-modal="true" aria-label="${esc(n)} 요청">
+      <div class="comodal-h"><b class="fc-n">${esc(n)}</b><span class="fc-c">${groups[n].length}건${dn ? " · 완료" : ""}</span><span class="fc-gap" aria-hidden="true"></span>
+        <button type="button" class="chip sm" data-act="comodal-unsel">선택 취소</button>
+        <button type="button" class="chip sm codone ${dn?"on":""}" data-cdone="${esc(n)}" aria-pressed="${dn}">${ICON.ok}${dn?"완료됨":"최종 완료"}</button>
+        <button type="button" class="iconbtn" data-act="comodal-x" aria-label="창 닫기">${ICON.x}</button></div>
+      <div class="comodal-b"><div class="request-grid">${groups[n].map(entry).join("")}</div></div>
+    </div></div>`; }
 }
 
 /* ---------- 코디 탭: [손님 요청 | 코디 세트] ---------- */
@@ -3041,6 +3054,7 @@ function render(){
     if (focusId){ const el=document.getElementById(focusId); if(el){ el.focus({preventScroll:true}); try{el.setSelectionRange(caret,caret)}catch(e){} } }
   }
   renderSheet();
+  document.documentElement.classList.toggle("modal-open", S.tab === "coord" && S.coordSub === "req" && !!S.coModal && !!document.querySelector(".comodal"));
   if (scrPending) requestAnimationFrame(scrRestore);
   const qk = $("#quick");
   { const rb = document.querySelector('#fab [data-q="rank"]'); if (rb){ const R = curRank(); rb.hidden = R != null && R >= RANK_MAX; rb.querySelector(".fabrank").textContent = R != null ? `R${R}` : "R?"; if (rb.hidden && S.quick==="rank") S.quick = null; } }
@@ -3092,6 +3106,7 @@ document.addEventListener("click", e => {
     const wrap = e.target.closest("#view .list > div"), ob = wrap?.querySelector(":scope > .row [data-ofac], :scope > .row [data-oclo]");
     if (ob && !window.getSelection()?.toString()){ ob.click(); return; }
   }
+  if (e.target.dataset?.comodalBack){ S.coModal = null; remember(); render(); return; }
   const pk = e.target.closest("[data-p40ck]"); if (pk){ e.preventDefault(); toggleP40(+pk.dataset.p40ck); return; }
   const b = e.target.closest("button"); if (!b) return;
   if (b.id==="saveAll"){ saveAll(); return; }
@@ -3330,10 +3345,11 @@ document.addEventListener("click", e => {
   if (d.act==="sync-cancel"){ S.confirmSync=false; render(); return; }
   if (d.act==="sync-ok"){ markSynced(); return; }
   if (d.cochip !== undefined){ const n = d.cochip;
-    if (S.coordOpen.includes(n)){
-      if (S.coordUnsel){ S.coordOpen = S.coordOpen.filter(x => x!==n); if (!S.coordOpen.length) S.coordUnsel = false; saveCoordOpen(); render(); return; }
-      coordJump(n); return; }
-    S.coordOpen = [...S.coordOpen, n]; saveCoordOpen(); render(); requestAnimationFrame(() => coordJump(n)); return; }
+    if (S.coordOpen.includes(n) && S.coordUnsel){ S.coordOpen = S.coordOpen.filter(x => x!==n); if (!S.coordOpen.length) S.coordUnsel = false; saveCoordOpen(); render(); return; }
+    if (!S.coordOpen.includes(n)){ S.coordOpen = [...S.coordOpen, n]; saveCoordOpen(); }
+    S.coModal = n; remember(); render(); return; }
+  if (d.act==="comodal-x"){ S.coModal = null; remember(); render(); return; }
+  if (d.act==="comodal-unsel"){ const n = S.coModal; S.coordOpen = S.coordOpen.filter(x => x!==n); if (!S.coordOpen.length) S.coordUnsel = false; saveCoordOpen(); S.coModal = null; remember(); render(); return; }
   if (d.coordp !== undefined){ const n = d.coordp; S.coordOpen = S.coordOpen.includes(n) ? S.coordOpen.filter(x => x!==n) : [...S.coordOpen, n]; if (!S.coordOpen.length) S.coordUnsel = false; saveCoordOpen(); render(); return; }
   if (d.act==="coord-open"){ S.coordOpen = [...new Set(DATA.coord.map(c => curPerson(c.pb)))]; saveCoordOpen(); render(); return; }
   if (d.act==="coord-hidedone"){ S.coordHideDone = !S.coordHideDone; remember(); saveCoordOpen(); render(); return; }
@@ -3343,7 +3359,7 @@ document.addEventListener("click", e => {
   if (d.act==="sumtop"){ const el = document.querySelector("#view .card"); scrollTo({top:0, behavior:"smooth"}); return; }
   if (d.fcn !== undefined){ const n = +d.fcn; S.facType="전체"; S.itemPick=""; if (S.fcMode==="multi") S.facFcSel = S.facFcSel.includes(n) ? S.facFcSel.filter(x => x!==n) : [...S.facFcSel, n].sort((a,b)=>a-b); else { S.facFcSel = S.facFcSel.includes(n) && S.facFcSel.length===1 ? [] : [n]; } if (!S.facFcSel.length) S.facFcOpen = false; S.fcNoteOpen = false; remember(); render(); return; }
   if (d.act==="fcopen"){ S.facFcOpen = !S.facFcOpen; remember(); render(); return; }
-  if (d.cdone !== undefined){ const n = d.cdone; S.coordDone = S.coordDone.includes(n) ? S.coordDone.filter(x => x!==n) : [...S.coordDone, n]; S.coordOpen = S.coordOpen.filter(x => x!==n); saveCoordOpen(); render(); toast(S.coordDone.includes(n) ? `${n} 코디 완료` : `${n} 완료 취소`); if (db) writeSerial(`${RUN}/misc/coord`, {list:S.coordDone}).catch(()=>{}); return; }
+  if (d.cdone !== undefined){ const n = d.cdone; S.coordDone = S.coordDone.includes(n) ? S.coordDone.filter(x => x!==n) : [...S.coordDone, n]; S.coordOpen = S.coordOpen.filter(x => x!==n); saveCoordOpen(); if (S.coModal === n){ S.coModal = null; remember(); } render(); toast(S.coordDone.includes(n) ? `${n} 코디 완료` : `${n} 완료 취소`); if (db) writeSerial(`${RUN}/misc/coord`, {list:S.coordDone}).catch(()=>{}); return; }
   if (d.cled){ const [id,k] = d.cled.split("|"); S.cloEdit[+id] = S.cloEdit[+id]===k ? "" : k; render(); return; }
   if (d.ptog){ const k = d.ptog, id = +k.slice(3); const o = optOf(DATA.clo.find(x=>x.id===id)); const cur = S.optDraft[k] ?? !!(k.startsWith("gx")?o.guest:o.like); S.optDraft[k] = !cur; render(); return; }
   if (d.btog){ const id = +d.btog; const cur = S.optDraft["bo-"+id] ?? !!S.cbattle[id]?.on; S.optDraft["bo-"+id] = !cur; render(); return; }

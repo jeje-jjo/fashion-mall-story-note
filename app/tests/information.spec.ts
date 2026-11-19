@@ -49,6 +49,7 @@ for (const width of [320, 390, 768, 1440]) {
     if (await page.locator('[data-reqx]').count()) await page.locator('[data-reqx]').first().click();
     await expect(page.locator(".request-entry").first()).toContainText("상의");
     await fits();
+    await page.locator('[data-act="comodal-x"]').click();
     await page.locator('[data-tab="clo"]').click();
     await page.locator('[data-act="btopen"]').click();
     await page.locator('.cfoldchips [data-cbt="0"]').click();

@@ -449,3 +449,27 @@ button, input, select, textarea { letter-spacing: inherit; }
 :root:root:root[data-design="hybrid"] .gd-row:first-of-type .gd-pad { grid-template-columns: repeat(10, minmax(0, 1fr)); }
 :root:root:root[data-design="hybrid"] .gd-pad button { min-height: 28px; height: 28px; padding: 0; font-size: var(--t-ctl); }
 :root:root:root[data-design="hybrid"] .gd-pad button:not(.on) { background: var(--soft); border-radius: 6px; }
+
+/* 손님 요청 팝업(가운데 창) */
+.comodal-back { position: fixed; inset: 0; z-index: 120; display: flex; align-items: center; justify-content: center; padding: max(16px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom)); background: color-mix(in srgb, #1b1416 42%, transparent); }
+.comodal { width: min(720px, 100%); max-height: min(86vh, 100%); display: flex; flex-direction: column; background: var(--card); border-radius: 16px; box-shadow: 0 18px 48px #0003; overflow: hidden; }
+.comodal-h { display: flex; align-items: center; gap: 8px; padding: 14px 16px 12px; border-bottom: 1px solid var(--line); flex: none; }
+.comodal-h .fc-n { font-size: var(--t-item); font-weight: 700; }
+.comodal-h .fc-c { font-size: var(--t-meta); color: var(--fg3); }
+.comodal-h .fc-gap { flex: 1 1 auto; }
+.comodal-h .codone { display: inline-flex; align-items: center; gap: 4px; }
+.comodal-h .codone .ui-icon { width: 14px; height: 14px; }
+.comodal-b { overflow: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 8px 16px 16px; }
+html.modal-open, html.modal-open body { overflow: hidden; }
+/* 직접 체크 표: 통과 점수 줄, 기타도 같은 표 안 한 줄(4칸 합침) */
+:root:root:root[data-design="hybrid"] .spman .spsrc.has-sc { flex-direction: column; gap: 0; padding: 3px 4px; line-height: 1.25; }
+:root:root:root[data-design="hybrid"] .spman .sp-o { display: inline-flex; align-items: center; gap: 2px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root:root:root[data-design="hybrid"] .spman .sp-sc { font-size: .85em; color: var(--fg3); font-variant-numeric: tabular-nums; }
+:root:root:root[data-design="hybrid"] .spman .spsrc.on .sp-sc { color: var(--blue-ink); }
+:root:root:root[data-design="hybrid"] .spman-or { margin-top: 2px; }
+:root:root:root[data-design="hybrid"] .spman-or .spman-oc { grid-column: 2 / -1; display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; justify-content: stretch !important; }
+:root:root:root[data-design="hybrid"] .spman-or .spsrc { width: 100%; }
+@media (max-width: 739px) { :root:root:root[data-design="hybrid"] .spman-or .spman-oc { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+:root:root:root[data-design="hybrid"] .spman-or .spsrc { white-space: normal; height: auto; min-height: 30px; line-height: 1.3; text-overflow: clip; }
+:root:root:root[data-design="hybrid"] .spman-or { align-items: start; }
+:root:root:root[data-design="hybrid"] .spman-or .spman-k { padding-top: 6px; }
