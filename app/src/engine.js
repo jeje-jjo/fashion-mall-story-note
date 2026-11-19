@@ -3142,7 +3142,7 @@ function render(){
   { const rb = document.querySelector('#fab [data-q="rank"]'); if (rb){ const R = curRank(); rb.hidden = R != null && R >= RANK_MAX; rb.querySelector(".fabrank").textContent = R != null ? `R${R}` : "R?"; if (rb.hidden && S.quick==="rank") S.quick = null; } }
   /* 목표치·개량 옵션은 한 버튼 안의 탭으로(제제 2026-11-18: 둘을 계속 오감). 마지막에 본 탭을 기억 */
   { const ub = document.querySelector('#fab [data-q="up"]'); if (ub) ub.hidden = true; if (S.quick === "up"){ S.quick = "goal"; S.guTab = "up"; } }
-  const guTabs = () => `<div class="seg wide gutabs">${[["goal","목표치"],["up","개량 옵션"]].map(([k, l]) => `<button type="button" class="${(S.guTab || "goal") === k ? "on" : ""}" data-gutab="${k}" aria-pressed="${(S.guTab || "goal") === k}">${l}</button>`).join("")}</div>`;
+  const guTabs = () => `<div class="gutabs-wrap"><div class="seg wide gutabs">${[["goal","목표치"],["up","개량 옵션"]].map(([k, l]) => `<button type="button" class="${(S.guTab || "goal") === k ? "on" : ""}" data-gutab="${k}" aria-pressed="${(S.guTab || "goal") === k}">${l}</button>`).join("")}</div></div>`;
   if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="memo" ? gameDatePanel() + homeMemo(true) : S.quick==="rank" ? rankPanel() : guTabs() + ((S.guTab || "goal") === "up" ? upFinder(true, true) : goalPanel())}</div>` : ""; qk.hidden = !S.quick; }
   document.querySelectorAll("#fab [data-q]").forEach(b => { const on = S.quick===b.dataset.q; b.classList.toggle("on", on); b.setAttribute("aria-expanded", on); });
   const rp = $("#recentPanel"); if (rp){ rp.innerHTML = S.recentOpen ? recentPanel() : ""; rp.hidden = !S.recentOpen; }
