@@ -1061,6 +1061,7 @@ function viewFac(){
       return `<div class="${opened?"open":""}">
         <div class="row ${d?"done":""} ${noStore(f)?"nostore":""}">
           ${canPut ? `<button data-put="${f.id}|${esc(it)}" aria-label="${esc(nm)}에 ${esc(it)} ${put.includes(it)?"넣음 취소":"넣음"}" title="${esc(it)}만 체크해요. 좋음 항목을 다 넣으면 시설 완료">${ck(d || put.includes(it))}</button>`
+            : S.facType==="우선개량" ? `<button class="p40row" data-p40ck="${f.id}" aria-pressed="${p40Done(f)}" aria-label="${esc(nm)} 40P 업그레이드 ${p40Done(f)?"체크 해제":"했음"}" title="우선개량 보기에서는 40P만 체크해요">${ck(p40Done(f))}</button>`
             : `<button data-tfac="${f.id}" aria-label="${esc(nm)} ${d?"미완료로":"전체 완료로"} 바꾸기">${ckFac(f)}</button>`}
           <button class="body" data-ofac="${f.id}" style="text-align:left">
             <div class="t"><span class="n">${esc(nm)}</span>${noStore(f)?`<span class="tag nostore">아직 없는 매장</span>`:""}${typeTag(f.type)}${facPartial(f)?semTag("part","일부완료"):""}${fcTag(f)}${f.p40?p40Tag(f):""}</div>
