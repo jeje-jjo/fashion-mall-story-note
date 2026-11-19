@@ -3180,7 +3180,9 @@ function render(){
 /* 내려 볼 때 위에 붙는 요약줄(2026-11-06 제제: 고른 칩 요약만). 의류 = 고른 칩, 시설 = 장르·패션 체크(이전·다음)·아이템 */
 function sumHtml(){
   const chip = (attr, v, label) => `<button class="chip sm on" data-${attr}="${esc(v)}" aria-label="${esc(label)} 빼기">${esc(label)} ×</button>`;
-  if (S.tab==="clo"){
+  /* 의류는 위에 붙는 요약줄 안 띄움(제제 2026-11-19: 정신없음) */
+  if (S.tab==="clo") return "";
+  if (false){
     const cs = [...S.cloCat.map(v => chip("ccat", v, v)), ...S.cloPat.map(v => chip("cpat", v, v)), ...S.cloMat.map(v => chip("cmat", v, v)), ...S.cloOpt.map(v => chip("copt", v, (SP_OPTS.includes(v)?"★ ":"")+v))];
     const bt = S.cloBt != null && DATA.battles[S.cloBt] ? `<button class="chip sm on" data-cbt="${S.cloBt}">${esc(bShort(S.cloBt))} ×</button>` : "";
     if (!cs.length && !bt) return "";
