@@ -101,7 +101,7 @@ function autoSaveSel(){
   selTimer = setTimeout(() => { const all = curSel(); S.cloSlot = {...S.cloSlot, all, ...all};
     writeSerial("ui/slots", {slot:S.cloSlot}).catch(() => showNotice("선택을 저장하지 못했어요. 도구 > 화면에서 수동 저장해 주세요.")).finally(() => { selPending = false; }); }, 400);
 }
-const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,coModal:S.coModal,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
+const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,coModal:S.coModal,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloAllShow:S.cloAllShow,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
 if (S.facType!=="전체" && S.facType!=="우선개량" && !(S.facType in TYPE_COLOR)) S.facType = "전체";
 if (!Array.isArray(S.cloCat)) S.cloCat = S.cloCat && S.cloCat!=="전체" ? [S.cloCat] : [];
 if (!Array.isArray(S.cloPat)) S.cloPat = S.cloPat && S.cloPat!=="전체" ? [S.cloPat] : [];
@@ -416,7 +416,7 @@ if (S.cloSlot) S.cloSlot = slotAlias(S.cloSlot);
 const slotBtns = key => { const has = S.cloSlot[key] != null;
   return `<button class="chip sm ghostchip" data-slot="save|${key}">${key==="all"?"전체 저장":"저장"}</button><button class="chip sm ghostchip" data-slot="load|${key}" ${has?"":'aria-disabled="true"'} style="${has?"":"opacity:.45"}">불러오기</button>${has?`<button class="chip sm ghostchip" data-slot="del|${key}" aria-label="저장 삭제">×</button>`:""}`; };
 const rowHead = (label, key, attr, cur, total) => { label = `<i class="rdot r-${key}" aria-hidden="true"></i>${label}`; const open = S.slotOpen===key, has = S.cloSlot[key] != null, exp = !!S.cloExp[key];
-  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${label}</span><button class="chip sm ${allSel(cur, key)?"on":""}" data-${attr}="전체" aria-pressed="${allSel(cur, key)}" title="${allSel(cur, key)?"전체 해제":"이 줄 전체 선택"}">전체${total!=null?`<b>${total}</b>`:""}</button>${key==="opt" && S.spAvail?.length ? (() => { const all = S.spAvail.every(k => cur.includes(k)); return `<button class="chip sm spchip ${all?"on":""}" data-act="spall" aria-pressed="${all}" title="${all?"특수 옵션만 해제":"특수 옵션만 전체 선택"}">★ 특수<span class="ph-x">${all?" 해제":" 전체"}</span></button>`; })() : ""}<button class="chip sm fold" data-cfold="${key}" aria-expanded="${exp}">${exp?`<span class="ph-x">접기 </span>▴`:`<span class="ph-x">펼치기 </span>▾${cur.length?` <b>${cur.length}</b>`:""}`}</button></span><span class="fh-act">${cur.length?`<button class="chip sm" data-cclear="${key}"><span class="ph-x">전체</span>해제</button>`:""}<button class="chip sm ${isMulti(key)?"on":""}" data-rmulti="${key}" aria-pressed="${isMulti(key)}">${isMulti(key)?"다중":"단일"}</button></span></div>
+  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${label}</span><button class="chip sm ${allSel(cur, key)?"on":""}" data-${attr}="전체" aria-pressed="${allSel(cur, key)}" title="${allSel(cur, key)?"전체 해제":"이 줄 전체 선택"}">전체${total!=null?`<b>${total}</b>`:""}</button><button class="chip sm fold" data-cfold="${key}" aria-expanded="${exp}">${exp?`<span class="ph-x">접기 </span>▴`:`<span class="ph-x">펼치기 </span>▾${cur.length?` <b>${cur.length}</b>`:""}`}</button></span><span class="fh-act">${cur.length?`<button class="chip sm" data-cclear="${key}"><span class="ph-x">전체</span>해제</button>`:""}<button class="chip sm ${isMulti(key)?"on":""}" data-rmulti="${key}" aria-pressed="${isMulti(key)}">${isMulti(key)?"다중":"단일"}</button></span></div>
   `; };
 /* 접힘: 칩을 모두 숨김(선택은 유지, 머리에 선택 개수 표시). 펼침: 전체 칩 */
 const ORDER_KEYS = ["pat","mat","opt"];
@@ -441,8 +441,14 @@ async function saveChipOrder(order){
 }
 const foldChips = (list, cur, attr, key) => {
   if (S.orderEdit && ORDER_KEYS.includes(key)) return `<div class="chips cfoldchips dragwrap" data-dwrap="${key}">${list.filter(([k]) => k!=="전체").map(([k,label]) => `<span class="chip dragchip" data-dk="${key}" data-dv="${esc(k)}"><i aria-hidden="true">⋮⋮</i>${label}</span>`).join("")}</div>`;
-  return `<div class="chips cfoldchips ${S.cloExp[key]?"is-expanded":"is-strip"}" aria-label="${({cat:"장르",pat:"옷본",mat:"재료",opt:"옵션"})[key]} 선택">${list.filter(([k]) => k!=="전체").map(([k,label,meta]) => `<button class="chip ${isOn(k,cur)?"on":""} ${attr==="copt" && SP_OPTS.includes(k)?"spchip":""} ${meta===0?"zero":""}" data-${attr}="${esc(k)}" aria-pressed="${isOn(k,cur)}" ${S.nextTgt?.[key]?.includes(k)&&!isOn(k,cur)?'data-next="1" title="다음 랭크에서 열려요"':""}>${label}${meta!==""&&meta!=null?`<b>${meta}</b>`:""}</button>`).join("")}</div>`;
+  const L = list.filter(([k]) => k!=="전체" && !(key==="opt" && SP_OPTS.includes(k)));
+  return `<div class="chips cfoldchips ${S.cloExp[key]?"is-expanded":"is-strip"}" aria-label="${({cat:"장르",pat:"옷본",mat:"재료",opt:"옵션"})[key]} 선택">${L.map(x => chipBtn(x, cur, attr, key)).join("")}</div>`;
 };
+const chipBtn = ([k,label,meta], cur, attr, key) => `<button class="chip ${isOn(k,cur)?"on":""} ${attr==="copt" && SP_OPTS.includes(k)?"spchip":""} ${meta===0?"zero":""}" data-${attr}="${esc(k)}" aria-pressed="${isOn(k,cur)}" ${S.nextTgt?.[key]?.includes(k)&&!isOn(k,cur)?'data-next="1" title="다음 랭크에서 열려요"':""}>${label}${meta!==""&&meta!=null?`<b>${meta}</b>`:""}</button>`;
+/* 특수옵션은 옵션 줄 안에서 따로 묶음(제제 2026-11-19). 몇 개 안 돼서 늘 펼쳐 둔다 */
+const spBlock = (list, cur) => { const sp = list.filter(([k]) => SP_OPTS.includes(k)); if (!sp.length) return "";
+  const all = sp.every(([k]) => cur.includes(k)), n = sp.filter(([k]) => cur.includes(k)).length;
+  return `<div class="optsp"><div class="optsp-h"><span class="sublbl" style="margin:0">★ 특수옵션</span><span class="hint">${n}/${sp.length} 선택</span><button class="chip sm spchip ${all?"on":""}" data-act="spall" aria-pressed="${all}">${all?"특수 해제":"특수 전체"}</button></div><div class="chips cfoldchips is-expanded" aria-label="특수옵션 선택">${sp.map(x => chipBtn(x, cur, "copt", "opt")).join("")}</div></div>`; };
 
 const cloName = c => S.names.clo[c.id] || c.n;
 const cloRenamed = () => { const m = {}; DATA.clo.forEach(c => { const nn = S.names.clo[c.id]; if (nn && nn !== c.n) m[c.n] = nn; }); return m; };
@@ -1392,6 +1398,9 @@ function viewClo(){
   S.spAvail = opts.map(([k]) => k).filter(k => SP_OPTS.includes(k));
   S.rowAvail = {cat: cats.filter(k => k!=="전체"), pat: pats.map(([k]) => k), mat: mats.map(([k]) => k), opt: opts.map(([k]) => k)};
   const rankStep = nextRankStep(S.rowAvail); S.nextTgt = nextTargets(rankStep, S.rowAvail);
+  /* 전부 골랐는지: 장르 전부, 옷본은 액세서리 빼고, 재료, 옵션은 특수옵션 빼고('없음'은 안 골라도 됨) */
+  const needAll = (key, cur, skip) => { const av = (S.rowAvail[key] || []).filter(k => k!=="없음" && !skip(k)); return av.length > 0 && av.every(k => cur.includes(k)); };
+  const allPicked = needAll("cat", S.cloCat, () => false) && needAll("pat", S.cloPat, k => k==="액세서리") && needAll("mat", S.cloMat, () => false) && needAll("opt", S.cloOpt, k => SP_OPTS.includes(k));
   const optChips = [["전체","전체 옵션",rows.length], ...opts.map(([k,v]) => [k, SP_OPTS.includes(k) ? "★ "+k : k, v])];
   if (S.cloOpt.length) rows = rows.filter(c => S.cloOpt.includes(optName(c)));
   if (S.cloSt==="미완료") rows = rows.filter(c => !cloDone(c));
@@ -1457,12 +1466,15 @@ function viewClo(){
     <div class="tools ctools toolsgap"><div class="cloview"><div class="pillseg" role="group" aria-label="보기"><button type="button" class="${!kinds.length && S.cloSt==="전체"?"on":""}" data-cst="전체 옷">전체 옷</button>${["추가옵션","전투 추천","코디 추천"].map(k => `<button type="button" class="${kinds.includes(k)?"on":""}" data-ckind="${k}" aria-pressed="${kinds.includes(k)}">${k}</button>`).join("")}</div><div class="pillseg" role="group" aria-label="완료 상태">${["미완료","완료"].map(k => `<button type="button" class="${S.cloSt===k?"on":""}" data-cst="${k}" aria-pressed="${S.cloSt===k}">${k}</button>`).join("")}</div></div><input class="search" id="cloQ" placeholder="옷 이름, 옵션, 인물 검색" value="${esc(S.cloQ)}" aria-label="옷 검색"></div>
     <div class="filter-toolbar fhead"><span class="fh-l">${(() => { const allExp = ["cat","pat","mat","opt"].every(k => S.cloExp[k]); return `<button class="chip sm" data-act="${allExp?"foldall":"openall"}" aria-expanded="${allExp}">${allExp?"전체 접기":"전체 펼치기"}</button>`; })()}<button class="chip sm ${S.cloMulti?"on":""}" data-act="cmulti" aria-pressed="${S.cloMulti}">전체 다중선택</button><span class="seg mini cntseg" role="group" aria-label="숫자 기준">${[["opt","옵션<span class=\"ph-x\">기준</span>"],["all","전체<span class=\"ph-x\">기준</span>"]].map(([v,l]) => `<button type="button" class="${cntMode===v?"on":""}" data-cntmode="${v}" aria-pressed="${cntMode===v}">${l}</button>`).join("")}</span></span><span class="fh-act"><button type="button" class="chip sm ${S.spPath?"on":""}" data-act="sppath" aria-expanded="${!!S.spPath}"><span class="ph-x">특수옵션 </span>경로</button><a href="#clothesList" class="catalog-jump"><span class="cj-w">목록</span> <b>${rows.length}벌</b> ↓</a></span></div>
     ${S.spPath ? spPathBox() : ""}
-    <div class="filter-grid">
+    ${(() => { const hide = allPicked && !S.cloAllShow;
+      const bar = allPicked ? `<div class="allpick"><span class="allpick-t">${ICON.ok}장르·옷본·재료·옵션 전부 선택됨<span class="hint">액세서리·특수옵션 제외</span></span><button type="button" class="chip sm" data-act="allpickshow" aria-expanded="${!hide}">${hide?"선택 카드 보기 ▾":"다시 숨기기 ▴"}</button></div>` : "";
+      if (hide) return `${bar}<div class="filter-grid"><div class="filter-row">${spBlock(optChips, S.cloOpt)}</div></div>`;
+      return `${bar}<div class="filter-grid">
     <div class="filter-row">${rowHead("장르","cat","ccat",S.cloCat)}${foldChips(catChips, S.cloCat, "ccat", "cat")}</div>
     <div class="filter-row">${rowHead("옷본","pat","cpat",S.cloPat,rows.length)}${foldChips(patChips, S.cloPat, "cpat", "pat")}</div>
     <div class="filter-row">${rowHead("재료","mat","cmat",S.cloMat)}${foldChips(matChips, S.cloMat, "cmat", "mat")}</div>
-    <div class="filter-row">${rowHead("옵션","opt","copt",S.cloOpt)}${foldChips(optChips, S.cloOpt, "copt", "opt")}</div>
-    </div>
+    <div class="filter-row">${rowHead("옵션","opt","copt",S.cloOpt)}${foldChips(optChips, S.cloOpt, "copt", "opt")}${spBlock(optChips, S.cloOpt)}</div>
+    </div>`; })()}
     ${rankStep ? `<div class="ranknext"><button type="button" class="rn-k" data-act="quick" data-q="rank" title="현재 랭크 고르기">${curRank()!=null?`현재 ${curRank()} · `:""}다음 랭크 ${gRank(rankStep.rank)} <span class="rn-tri" aria-hidden="true">▾</span></button><span class="rn-v">배틀 ${esc(rankStep.battle)} → ${esc(rankStep.char)} → <b>${esc(rankStep.genre)}</b>${rankStep.base?` · 옷본 <b>${esc(rankStep.base)}</b>`:""}${rankStep.study?` · 스터디 ${esc(rankStep.study)}${rankStep.studyItems?.length?`(<b>${rankStep.studyItems.map(esc).join("·")}</b>)`:""}`:""}</span><span class="rn-h">'다음' 점선 칩이 다음에 열리는 것 · 모두 고르면 다음 단계</span></div>` : ""}
     ${cntBox}
     <div class="frowgap">${battleRow()}</div>
@@ -3338,6 +3350,7 @@ document.addEventListener("click", e => {
   if (d.cfpart){ return; }
   if (d.cfxreset){ const c = DATA.coord.find(x => x.id===+d.cfxreset); const from = cTitle(c); delete S.optDraft["cfx-"+c.id]; saveCfix(c, {title:""}, {kind:"coordreq", from, to:c.r, synced:false}); toast("원래 제목으로 되돌렸어요"); return; }
   if (d.slotmenu){ S.slotOpen = S.slotOpen===d.slotmenu ? null : d.slotmenu; render(); return; }
+  if (d.act==="allpickshow"){ S.cloAllShow = !S.cloAllShow; remember(); render(); return; }
   if (d.act==="csp"){ S.cloSp = !S.cloSp; remember(); render(); return; }
   if (d.oclo){ S.cloOpen = S.cloOpen===+d.oclo ? null : +d.oclo; render(); return; }
   if (d.act==="log-all"){ S.logAll=true; render(); return; }
