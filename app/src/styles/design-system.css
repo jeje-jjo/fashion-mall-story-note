@@ -594,3 +594,9 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root .tools.cloview-below > #cloQ { flex: 1 1 100%; order: 9 !important; margin-top: 8px !important; }
 :root:root .cloview-below .cloview { align-items: center; }
 :root:root .tools.cloview-below { flex-direction: column !important; align-items: stretch; }
+/* 검색 줄: 위 구분선 없앰, 폰은 전체/추천 두 개, 검색창 글씨는 본문 크기(제제 2026-11-19) */
+:root:root .tools.cloview-below { border-top: 0 !important; padding-top: 0 !important; }
+:root:root .cloview .ck-phone { display: none; }
+@media (max-width: 739px) { :root:root .cloview .ck-desk { display: none; } :root:root .cloview .ck-phone { display: inline-flex; } }
+:root:root .tools.cloview-below > #cloQ { font-size: var(--t-body) !important; height: 36px !important; min-height: 36px !important; box-sizing: border-box; padding-top: 0 !important; padding-bottom: 0 !important; line-height: 36px; }
+:root:root .tools.cloview-below > #cloQ::placeholder { font-size: var(--t-body); }

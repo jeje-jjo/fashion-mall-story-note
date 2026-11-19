@@ -12,7 +12,7 @@ test("검색·다중 필터·완료·상세가 빌드된 엔진에서 동작한�
   await expect(page.locator("#previewBanner")).toBeVisible();
   await expect(page.locator("#clothesList img")).toHaveCount(0);
   // 기본 보기가 '미완료'라 체크하면 목록에서 빠짐 → 전체 옷 보기로 바꾸고 확인(2026-11-18)
-  await page.locator('[data-cst="전체 옷"]').click();
+  await page.locator('[data-cst="전체 옷"]:visible').click();
   const toggle = page.locator("[data-tclo]").first();
   const id = await toggle.getAttribute("data-tclo");
   const target = page.locator(`[data-tclo="${id}"]`);

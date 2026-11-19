@@ -4,7 +4,7 @@ test("의류 상세에서 제작·활용·속성·궁합을 함께 보고 직접
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
   await page.goto("./");
-  await page.locator('[data-cst="전체 옷"]').click();
+  await page.locator('[data-cst="전체 옷"]:visible').click();
   if (!(await page.locator("#cloQ").count())) await page.locator('[data-act="cloqopen"]').click();
   await page.locator("#cloQ").fill("체크 A라인");
   await page.locator('[data-oclo="143"]').first().click();
@@ -32,7 +32,7 @@ for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     const fits = async () => expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
     await page.goto("./");
-    await page.locator('[data-cst="전체 옷"]').click();
+    await page.locator('[data-cst="전체 옷"]:visible').click();
     if (!(await page.locator("#cloQ").count())) await page.locator('[data-act="cloqopen"]').click();
     await page.locator("#cloQ").fill("체크 A라인");
     await page.locator('[data-oclo="143"]').first().click();

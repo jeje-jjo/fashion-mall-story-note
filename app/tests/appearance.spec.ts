@@ -5,7 +5,7 @@ test("디자인 전환은 진행·필터·펼친 상세를 유지하고 기기�
   page.on("pageerror", error => errors.push(error.message));
   await page.goto("./");
   await expect(page.locator("html")).toHaveAttribute("data-skin", "classic");
-  await page.locator('[data-cst="전체 옷"]').click();
+  await page.locator('[data-cst="전체 옷"]:visible').click();
   if (!(await page.locator("#cloQ").count())) await page.locator('[data-act="cloqopen"]').click();
   await page.locator("#cloQ").fill("체크 A라인");
   await page.locator('[data-oclo="143"]').first().click();
@@ -48,7 +48,7 @@ for (const skin of ["atelier", "paper"]) {
       await page.goto("./");
       await expect(page.locator("#gate")).toBeHidden();
       const fits = async () => expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-      await page.locator('[data-cst="전체 옷"]').click();
+      await page.locator('[data-cst="전체 옷"]:visible').click();
       if (!(await page.locator("#cloQ").count())) await page.locator('[data-act="cloqopen"]').click();
       await page.locator("#cloQ").fill("체크 A라인");
       await page.locator('[data-oclo="143"]').first().click();
