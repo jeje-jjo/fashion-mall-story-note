@@ -1313,6 +1313,9 @@ function spSrcAuto(src){
 const spKey = (o, src) => `${o}|${src}`;
 const spSrcDone = (o, src) => { const a = spSrcAuto(src); return a === null ? (S.spDone || []).includes(spKey(o, src)) : a; };
 /* 직접 체크하는 곳만 모은 표(제제 2026-11-18): 콘테스트 종류 × Lv.1~4 칸에 그 보상 특수옵션. 기타(자격시험·찐빵 등)는 한 줄 */
+/* 경로 이름 보이는 글(제제 2026-11-19): 저장 키는 그대로 두고 화면 글만 바꿈 */
+const SP_LABEL = {"자격시험 12":"오리지널리티 상급 자격시험", "자격시험 13":"사이버 상급 자격시험", "모든 옷을 다 만들면 이벤트로 1개":"옷 전부 만들면"};
+const spLabel = x => SP_LABEL[x] || x;
 function spManualTable(){
   const cells = {}, other = [];
   SP_OPTS.forEach(o => optSources(o).forEach(x => { if (spSrcAuto(x) !== null) return; const m = x.match(/^(.+?)\s*Lv\.?\s*(\d)$/);
@@ -1324,13 +1327,13 @@ function spManualTable(){
   return `<div class="spman"><div class="sublbl" style="margin:0 0 6px">직접 체크하는 곳</div>
     <div class="spman-t" role="table"><div class="spman-r spman-h" role="row"><span role="columnheader"></span>${[1,2,3,4].map(l => `<span role="columnheader">Lv.${l}</span>`).join("")}</div>
     ${types.map(t => `<div class="spman-r" role="row"><span class="spman-k" role="rowheader">${esc(t)}</span>${[1,2,3,4].map(l => `<span role="cell">${(cells[t][l] || []).map(it => chip(it, it[0], true)).join("") || `<i class="spman-e">–</i>`}</span>`).join("")}</div>`).join("")}
-    ${other.length ? `<div class="spman-r spman-or" role="row"><span class="spman-k" role="rowheader">기타</span><span class="spman-oc" role="cell">${other.map(it => chip(it, `${it[1].replace(/^모든 옷을 다 만들면 이벤트로 1개$/, "옷 전부 만들면")} · ${it[0]}`)).join("")}</span></div>` : ""}</div></div>`;
+    ${other.length ? `<div class="spman-r spman-or" role="row"><span class="spman-k" role="rowheader">기타</span><span class="spman-oc" role="cell">${other.map(it => chip(it, `${spLabel(it[1])} · ${it[0]}`)).join("")}</span></div>` : ""}</div></div>`;
 }
 function spPathBox(){
   const rows = SP_OPTS.map(o => { const src = optSources(o), got = src.some(x => spSrcDone(o, x));
     const chips = src.length ? src.map(x => { const a = spSrcAuto(x), d = spSrcDone(o, x);
-      return a === null ? `<button type="button" class="chip sm spsrc ${d?"on":""}" data-spsrc="${esc(spKey(o, x))}" aria-pressed="${d}">${d?ICON.ok:""}${esc(x)}</button>`
-                        : `<span class="chip sm spsrc auto ${d?"on":""}" title="완료·승리를 따라 자동">${d?ICON.ok:""}${esc(x)}</span>`; }).join("") : `<span class="hint">확인된 경로 없음</span>`;
+      return a === null ? `<button type="button" class="chip sm spsrc ${d?"on":""}" data-spsrc="${esc(spKey(o, x))}" aria-pressed="${d}">${d?ICON.ok:""}${esc(spLabel(x))}</button>`
+                        : `<span class="chip sm spsrc auto ${d?"on":""}" title="완료·승리를 따라 자동">${d?ICON.ok:""}${esc(spLabel(x))}</span>`; }).join("") : `<span class="hint">확인된 경로 없음</span>`;
     return `<li class="${got?"got":""}"><b>${got?ICON.ok:""}${esc(o)}</b><span class="spsrcs">${chips}</span></li>`; }).join("");
   return `<div class="sppath"><div class="fhead" style="margin:0"><span class="sublbl" style="margin:0">특수옵션 얻는 곳</span><button class="chip sm fold" data-act="sppath" aria-expanded="true">접기 ▴</button></div>${spManualTable()}<div class="sublbl" style="margin:12px 0 0">옵션별 얻는 곳</div><ul>${rows}</ul><p class="hint" style="margin:6px 0 0">패션 체크·챌린지는 완료·승리하면 자동으로 체크돼요. 콘테스트·찐빵 등은 눌러서 직접 체크해요. 출처: KairoHistory(전투·패션 체크·콘테스트·자격시험·스터디 보상) · 찐빵은 게임에서 직접 확인</p></div>`;
 }
