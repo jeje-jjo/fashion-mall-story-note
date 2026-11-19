@@ -1855,9 +1855,10 @@ const mqBuiltIds = () => { const s = new Set(); Object.values(S.mqBuilt || {}).f
 let _mqPlanCache = {};
 function mqPlan(gi){
   const g = LAY_G[gi];
-  const doneKey = DATA.clo.filter(cloMade).map(c => c.id).join(",") + "|" + JSON.stringify(S.mqBuilt || {});
+  /* 만든 옷만이 아니라 그 장르 옷 전부로 짠다(제제 2026-11-19): 체크할 옷을 미리 알 수 있게. 체크해도 구성이 바뀌지 않게 완료 여부는 점수에 안 넣음 */
+  const doneKey = JSON.stringify(S.mqBuilt || {});
   const ck = gi + "|" + doneKey; if (_mqPlanCache[ck]) return _mqPlanCache[ck];
-  const pool = DATA.clo.filter(c => cloMade(c) && c.site?.genre === g && MQ_KIND[c.site?.kind]);
+  const pool = DATA.clo.filter(c => c.site?.genre === g && MQ_KIND[c.site?.kind]);
   const U = new Map(), use = id => U.set(id, (U.get(id) || 0) + 1);
   const ok = (c, se) => mqMatch(c, se) >= 0;
   const cs = (c, sk, se) => -10000 * (U.get(c.id) || 0) + (c.s === se ? 100 : 0) + (c.site?.sales?.[sk] || 0) * 0.2 + mqPop(c) * 0.01;
@@ -1934,9 +1935,9 @@ function viewMannequin(){
   return `<section class="card">
     <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">마네킹</span><span class="hint">장르마다 ${MQ_PER}개 · 만듦 ${plans.reduce((a, q) => a + q.builtN, 0)}/${MQ_PER * LAY_G.length}</span></span></div>
     <div class="chips">${plans.map(chip).join("")}</div>
-    <div class="hint" style="margin-top:10px">마네킹 하나에 봄·가을·여름·겨울 풀세트(상의+하의 또는 셋업, 아우터, 액세서리)를 입혀요. 세 계절끼리는 옷이 안 겹치고, 옷은 전부 그 장르의 만든 옷이에요(체크하는 옷은 완료한 것, 일반 옷은 만든 걸로 보되 필요한 옵션에 넣은 옷은 빼요). 다른 마네킹과는 덜 쓴 옷부터 골라요. ✓를 누르면 그 조합으로 고정돼요. 계절 궁합·판매 점수는 사이트 추정값 · 출처: KairoHistory</div>
+    <div class="hint" style="margin-top:10px">마네킹 하나에 봄·가을·여름·겨울 풀세트(상의+하의 또는 셋업, 아우터, 액세서리)를 입혀요. 세 계절끼리는 옷이 안 겹치고, 옷은 그 장르 옷 전부에서 골라요. <b>회색</b>은 아직 완료 체크 안 한 옷·안 산 액세서리예요(액세서리는 눌러서 산 걸로). 다른 마네킹과는 덜 쓴 옷부터 골라요. ✓를 누르면 그 조합으로 고정돼요. 계절 궁합·판매 점수는 사이트 추정값 · 출처: KairoHistory</div>
   </section>
-  <section class="card"><div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${esc(layGName(p.g))}</span><span class="hint">만든 옷 ${p.poolN}벌${p.okN ? ` · 다른 마네킹과 겹치는 옷 ${sameN}벌` : ""}</span></span></div>
+  <section class="card"><div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${esc(layGName(p.g))}</span><span class="hint">옷 ${p.poolN}벌 · 완료 ${DATA.clo.filter(c => c.site?.genre === p.g && MQ_KIND[c.site?.kind] && cloDone(c)).length}벌${p.okN ? ` · 다른 마네킹과 겹치는 옷 ${sameN}벌` : ""}</span></span></div>
     ${p.okN ? "" : `<div class="mq-warn">${ICON.warn}지금은 만들 수 없어요 · ${esc(p.reason)}</div>`}
     ${p.okN ? `<div class="cardgrid mqgrid">${p.list.map(m => mqSetCard(p, m)).join("")}</div>` : ""}</section>`;
 }
