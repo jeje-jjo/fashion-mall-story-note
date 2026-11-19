@@ -528,3 +528,5 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root .ufr-names { margin: 2px 0 4px; }
 :root:root .ufr-names b { font-size: var(--t-meta); margin-right: 4px; }
 @media (min-width: 740px) { :root:root .ufr { font-size: 13px; max-width: 640px; } :root:root .ufr-c { min-height: 30px; font-size: 13px; } }
+/* 도구 탭 메뉴 7개: 폰에서는 4칸 격자로 두 줄을 가지런히 */
+@media (max-width: 739px) { :root:root .seg.wide.toolnav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; } :root:root .seg.wide.toolnav button { min-width: 0; padding: 0 4px; } }

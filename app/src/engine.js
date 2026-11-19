@@ -99,7 +99,7 @@ function autoSaveSel(){
   const sig = JSON.stringify(curSel()); if (sig === selSig) return;
   selSig = sig; selPending = true; clearTimeout(selTimer);
   selTimer = setTimeout(() => { const all = curSel(); S.cloSlot = {...S.cloSlot, all, ...all};
-    writeSerial("ui/slots", {slot:S.cloSlot}).catch(() => showNotice("선택을 저장하지 못했어요. 도구 > 화면에서 수동 저장해 주세요.")).finally(() => { selPending = false; }); }, 400);
+    writeSerial("ui/slots", {slot:S.cloSlot}).catch(() => showNotice("선택을 저장하지 못했어요. 도구 > 저장에서 수동 저장해 주세요.")).finally(() => { selPending = false; }); }, 400);
 }
 const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,coModal:S.coModal,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloAllShow:S.cloAllShow,spFold:S.spFold,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
 if (S.facType!=="전체" && S.facType!=="우선개량" && !(S.facType in TYPE_COLOR)) S.facType = "전체";
@@ -335,7 +335,7 @@ async function resetContest(key){
 /* 지금 저장: 앱 상태를 저장소에 다시 전부 써서 혹시 빠진 변경이 없게 함 */
 async function saveAll(){
   if (!db){ showNotice("미리보기에서는 저장할 수 없어요."); return; }
-  const btn = $("#saveAll"); btn.disabled = true; btn.textContent = "저장 중…";
+  const btn = document.querySelector('[data-act="saveall"]') || $("#saveAll"); btn.disabled = true; btn.textContent = "저장 중…";
   const w = []; const put = (path, data) => w.push(writeSerial(path, data));
   Object.entries(S.fac).forEach(([id,v]) => put(`${RUN}/fac/f${id}`, v));
   Object.entries(S.clo).forEach(([id,v]) => put(`${RUN}/clo/c${id}`, v));
@@ -348,7 +348,7 @@ async function saveAll(){
   /* 기기에는 바로 저장되고(Firestore 기기 캐시), 서버 확인은 네트워크에 따라 늦을 수 있다 → 6초 넘으면 안내하고 버튼을 풀어 준다 */
   let slow = setTimeout(() => { slow = null; btn.disabled = false; btn.textContent = "지금 저장"; toast("이 기기에는 저장됐어요. 서버로 보내는 중이라 조금 걸려요(연결되면 자동으로 올라가요)"); }, 6000);
   const r = await Promise.allSettled(w); const bad = r.filter(x => x.status==="rejected").length;
-  if (!slow){ if (bad) showNotice(`${bad}건을 서버에 저장하지 못했어요. 도구 > 관리 > 진행 데이터 백업으로 파일을 받아 두세요.`); else toast(`${w.length}건 모두 서버에 올렸어요`); return; }
+  if (!slow){ if (bad) showNotice(`${bad}건을 서버에 저장하지 못했어요. 도구 > 저장 > 진행 데이터 백업으로 파일을 받아 두세요.`); else toast(`${w.length}건 모두 서버에 올렸어요`); return; }
   clearTimeout(slow);
   btn.disabled = false; btn.textContent = "지금 저장";
   if (bad) showNotice(`${bad}건을 저장하지 못했어요. 잠시 뒤 다시 눌러 주세요.`); else toast(`${w.length}건 모두 저장했어요`);
@@ -675,7 +675,7 @@ function counts(){
   const cd = tracked.filter(cloDone).length, ct = tracked.length;
   $("#sub").textContent = `${roundLabel()}${gameDate() ? ` · ${gameDate().y}년` : ""} · 시설 ${Math.round(fd/ft*100)}% · 신규 손님 옷 ${Math.round(cd/ct*100)}%`;
   $("#ttl").textContent = ({clo:"의류",fac:"시설",coord:"코디",tool:"도구"})[S.tab] || "";
-  $("#saveAll").hidden = !db;
+  $("#saveAll").hidden = true;  /* 머리줄 버튼은 숨김, 도구 > 저장으로 옮김(제제 2026-11-19) */
 }
 const pendingList = () => {
   const net = new Map();
@@ -2383,7 +2383,7 @@ function backupCard(){
 function viewLog(){
   const pend = pendingList();
   const hist = S.logs.slice(0, S.logAll ? 500 : 30);
-  return `${backupCard()}${importCard()}${renameCard()}${resetCard()}<section class="card">
+  return `${importCard()}${renameCard()}${resetCard()}<section class="card">
     <div class="sec-h"><h2>시트에 반영할 변경</h2><span>${pend.length}건</span></div>
     <p style="margin:0;color:var(--fg2);font-size:14px">여기 쌓인 변경은 아직 구글 시트에 들어가지 않았어요. 대화에서 "시트에 반영해줘"라고 하면 이 목록대로 넣어 드려요.</p>
     ${pend.length ? `<div class="flushlist" style="margin-top:12px">${pend.map(p => `<div class="log"><span class="ic">${ICON.up}</span><div class="body"><div class="t">${esc(p.kind==="rename"||p.kind==="person"||p.kind==="cloname"?p.from:p.name)}</div><div class="s">${kindLabel[p.kind]} · ${esc(valLabel(p,p.from))} → <b style="color:var(--fg)">${esc(valLabel(p,p.to))}</b></div></div><span class="s" style="font-size:12px;color:var(--fg3)">${fmtT(p.t)}</span></div>`).join("")}</div>
@@ -2914,14 +2914,25 @@ function viewRec(){
 }
 
 /* ---------- 도구 탭(2026-11-06 개편): 콘테스트 · 계산기 · 자료 · 관리 · 화면 · 더 보기 ---------- */
-const TOOL_SUBS = [["contest","콘테스트"],["calc","계산기"],["ref","자료"],["log","관리"],["set","화면"],["more","더 보기"]];
+const TOOL_SUBS = [["contest","콘테스트"],["calc","계산기"],["ref","자료"],["save","저장"],["log","관리"],["set","화면"],["more","더 보기"]];
 const MORE_SUBS = [["todo","할 일·검색"],["goal","목표"],["layout","배치"],["up","개량 옵션 표"]];
 function viewTool(){
   if (["goal","layout","up","home"].includes(S.recSub)){ S.moreSub = S.recSub==="home" ? "todo" : S.recSub; S.recSub = "more"; }
   const cur = TOOL_SUBS.some(([k]) => k===S.recSub) ? S.recSub : "contest";
   const pc = pendingList().length;
-  return `<section class="card subnav"><div class="seg wide">${TOOL_SUBS.map(([k,l]) => `<button class="${cur===k?"on":""}" data-rsub="${k}" aria-pressed="${cur===k}">${l}</button>`).join("")}</div></section>
-  ${({contest:viewContest, calc:viewCalc, ref:viewRef, log:viewLog, set:viewSet, more:viewMore})[cur]()}`;
+  return `<section class="card subnav"><div class="seg wide toolnav">${TOOL_SUBS.map(([k,l]) => `<button class="${cur===k?"on":""}" data-rsub="${k}" aria-pressed="${cur===k}">${l}</button>`).join("")}</div></section>
+  ${({contest:viewContest, calc:viewCalc, ref:viewRef, save:viewSave, log:viewLog, set:viewSet, more:viewMore})[cur]()}`;
+}
+/* 저장(제제 2026-11-19): 흩어져 있던 저장 기능을 한곳에. 진행 백업 파일 · 클릭 기록 · 의류 선택 · 서버에 지금 저장 */
+function viewSave(){
+  return `${backupCard()}${clickLogCard()}${selSaveCard()}${saveNowCard()}`;
+}
+function saveNowCard(){
+  return `<section class="card prefs-card">
+    <div class="sec-h"><h2>서버에 지금 저장</h2><span>Firebase</span></div>
+    <p class="hint" style="margin:0 0 10px">체크는 누를 때마다 자동으로 서버에 올라가요. 혹시 빠진 게 있을까 걱정될 때만 눌러서 이 기기 상태(시설·옷·패션 체크·코디·이름)를 서버에 전부 다시 써요.</p>
+    <button type="button" class="btn ghost sm" data-act="saveall" ${db ? "" : "disabled"}>지금 저장</button>
+  </section>`;
 }
 function viewCalc(){ return homeClear() + homeCarry() + homeCarryNow(); }
 /* 현재 인계 데이터(제제 2026-11-11): 이번에 이어받는 양을 넣으면, 다음 회차에 그보다 많이 받으려면 최소 얼마가 있어야 하는지.
@@ -2966,7 +2977,7 @@ function viewSet(){
     ${row("기기", segB("device", [["auto","자동"],["phone","핸드폰"],["desk","PC·패드"]]))}
     ${row("테마", segB("mode", [["system","시스템"],["light","라이트"],["dark","다크"]]))}
     ${row("메인 색상", `<div class="pals">${[["rose","#955F64","빈티지 로즈"],["red","#994F53","뮤트 레드"],["taupe","#8E706E","로즈 토프"],["blue","#3182F6","기존 블루"]].map(([k,c,l]) => `<button type="button" class="pal" data-pal="${k}" style="--p:${c}"><i aria-hidden="true"></i>${l}</button>`).join("")}</div>`)}
-  </section><section class="card prefs-card"><div class="sec-h"><h2>현재 랭크</h2><span>오른쪽 아래 R 버튼과 같아요 · 10이면 버튼이 사라지니 여기서 고쳐요</span></div>${rankPanel()}</section>${selSaveCard()}${clickLogCard()}${homeLegend()}`;
+  </section><section class="card prefs-card"><div class="sec-h"><h2>현재 랭크</h2><span>오른쪽 아래 R 버튼과 같아요 · 10이면 버튼이 사라지니 여기서 고쳐요</span></div>${rankPanel()}</section>${homeLegend()}`;
 }
 function viewMore(){
   const cur = MORE_SUBS.some(([k]) => k===S.moreSub) ? S.moreSub : "todo";
@@ -3142,7 +3153,7 @@ document.addEventListener("click", e => {
   if (e.target.dataset?.comodalBack){ S.coModal = null; remember(); render(); return; }
   const pk = e.target.closest("[data-p40ck]"); if (pk){ e.preventDefault(); toggleP40(+pk.dataset.p40ck); return; }
   const b = e.target.closest("button"); if (!b) return;
-  if (b.id==="saveAll"){ saveAll(); return; }
+  if (b.id==="saveAll" || b.dataset.act==="saveall"){ saveAll(); return; }
   const d = b.dataset;
   if (d.tab || d.go){ const t = TAB_MAP[d.tab || d.go] || d.tab || d.go; if (OLD_TAB[t]){ S.tab="tool"; S.recSub=OLD_TAB[t]; } else S.tab = t; S.confirmSync=false; remember(); render(); scrollTo({top:0}); return; }
   if (d.ihb){ S.ih = {...(S.ih||{}), ["b_"+d.ihb]: +d.v}; ihSave(); render(); return; }
