@@ -3092,7 +3092,7 @@ function goalPanel(){
     return `<div class="goalpanel"><div class="sublbl" style="margin:0 0 8px">목표치 <span class="hint">점원 장르 기준 · 합계</span></div>${chips}
       <div class="goal-b"><div class="sublbl" style="margin:0 0 4px">${esc(st.name)} · ${esc(st.g)}${main ? ` <span class="hint">${esc(layGName(main))}</span>` : ""}</div>
         ${bt ? `<div class="goal-row goal-btd"><span class="k">${esc(bShort(bt.i))} 챌린지</span><button type="button" class="chip sm codone ${bt.done?"on":""}" data-btdone="${bt.i}" aria-pressed="${bt.done}">${ICON.ok}${bt.done ? "승리함" : "승리 체크"}</button></div>
-          ${(() => { const rw = btRewardOpt(bt.i), win = fmtWin(bt.b.site?.win); return rw || win ? `<div class="goal-row goal-rw"><span class="k">보상</span><span class="w">${rw ? `<b class="goal-sp">★ ${esc(rw)}</b>` : ""}${win ? `<small>${esc(win)}</small>` : ""}</span></div>` : ""; })()}
+          ${(() => { const rw = btRewardOpt(bt.i); return rw ? `<div class="goal-row goal-rw"><span class="k">보상</span><span class="w"><b class="goal-sp">★ ${esc(rw)}</b></span></div>` : ""; })()}
           ${row("품질 합계", bt, bt.v[0], () => "입은 옷 합계")}${row("매력 합계", bt, bt.v[1], () => "입은 옷 합계")}${row(`직원 ${sn}`, bt, bt.v[2], () => "출전 직원 한 명")}
           ${bt.b.note ? `<div class="hint" style="margin-top:4px">${esc(bt.b.note)}</div>` : ""}${goalSets(bt.i)}` : `<div class="hint">이 점원 장르의 챌린지가 없어요</div>`}</div>
       <div class="goal-b"><div class="sublbl" style="margin:0 0 4px">${esc(layGName(main) || "같은 장르")} 패션 체크</div>
