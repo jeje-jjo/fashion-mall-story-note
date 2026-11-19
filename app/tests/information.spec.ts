@@ -50,8 +50,9 @@ for (const width of [320, 390, 768, 1440]) {
     await expect(page.locator(".request-entry").first()).toContainText("상의");
     await fits();
     await page.locator('[data-act="comodal-x"]').click();
-    await page.locator('[data-tab="clo"]').click();
-    await page.locator('[data-act="btopen"]').click();
+    await page.locator('[data-tab="tool"]').click();
+    await page.locator('[data-rsub="ref"]').click();
+    await page.locator('[data-refg="전투"]').click();
     await page.locator('.cfoldchips [data-cbt="0"]').click();
     await expect(page.getByRole("heading", { name: "상대 기준과 내 기록", exact: true })).toBeVisible();
     await fits();

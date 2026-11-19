@@ -553,3 +553,21 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root .seg.wide.facmode { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 10px; }
 :root:root .seg.wide.facmode button { min-width: 0; padding: 0 4px; }
 :root:root .facmode-b { margin-bottom: 4px; }
+
+/* 작은 버튼 높이 통일(제제 2026-11-19): 칩·알약·작은 분할 버튼을 같은 높이로. 폰 30, 패드·PC 32 */
+:root:root { --ctl-hh: 30px; }
+@media (min-width: 740px) { :root:root { --ctl-hh: 32px; } }
+:root:root #view .chip.sm, :root:root #view .pill { height: var(--ctl-hh); min-height: 0; box-sizing: border-box; display: inline-flex; align-items: center; padding-top: 0; padding-bottom: 0; line-height: 1; }
+:root:root #view .seg.mini, :root:root #view .tools .seg:not(.wide), :root:root #view .seg.facst { height: var(--ctl-hh); box-sizing: border-box; padding: 2px; align-items: stretch; }
+:root:root #view .seg.mini > button, :root:root #view .tools .seg:not(.wide) > button { height: auto; min-height: 0; padding-top: 0; padding-bottom: 0; display: inline-flex; align-items: center; justify-content: center; }
+/* 보기 고르는 줄과 그 아래 선택 줄 사이를 띄움 */
+:root:root .seg.wide.facmode { margin-bottom: 14px; }
+:root:root .facmode-b .rowhead { margin-bottom: 8px; }
+/* 목표치: 고른 점원 칩의 작은 글씨도 보이게 */
+:root:root .goal-st .chip.on small { color: inherit; opacity: .85; }
+:root:root .goal-btd .codone { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; }
+:root:root .goal-btd .codone .ui-icon { width: 14px; height: 14px; }
+:root:root .goal-rw .w { display: flex; flex-direction: column; gap: 2px; }
+:root:root .goal-sp { color: var(--blue-ink); font-weight: 700; }
+:root:root .goal-rw small { color: var(--fg3); font-size: var(--t-meta); line-height: 1.5; }
+:root:root .seg.wide.refgrp { margin-bottom: 14px !important; }

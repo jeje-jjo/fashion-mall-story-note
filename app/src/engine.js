@@ -1424,7 +1424,7 @@ function viewClo(){
   const catOrder = Object.fromEntries(cats.map((k,i) => [k,i]));
   rows = [...rows].sort((a,b) => ((optOf(b).guest?1:0) - (optOf(a).guest?1:0)) || (catOrder[a.c]-catOrder[b.c]) || a.id-b.id);
   /* 전투 리스트: 다른 조건은 그대로 두고 목록만 바꿔 보여 줌. 장르가 같은 옷 + 이 전투로 추천한 옷, 추천 → 맞는 조건 많은 순 */
-  const btOn = S.cloBtView && S.cloBt != null && DATA.battles[S.cloBt];
+  const btOn = false;  /* 전투는 도구 > 자료 > 전투로 옮김(제제 2026-11-19) */
   const btCs = btOn ? bCond(S.cloBt) : [], btHits = c => btCs.filter(t => termHit(c, t)).length;
   const btMatchTag = c => { if (!btCs.length || battleOf(c)===S.cloBt) return ""; const h = btHits(c); return h===btCs.length ? `<span class="tag plain">조건 ${h}/${btCs.length}</span>` : `<span class="tag plain">조건 ${h}/${btCs.length}</span>`; };
   if (btOn){ const bi = S.cloBt, cs = bCond(bi), hits = c => cs.filter(t => termHit(c, t)).length;
@@ -1490,9 +1490,6 @@ function viewClo(){
     </div>`; })()}
     ${rankStep ? `<div class="ranknext"><button type="button" class="rn-k" data-act="quick" data-q="rank" title="현재 랭크 고르기">${curRank()!=null?`현재 ${curRank()} · `:""}다음 랭크 ${gRank(rankStep.rank)} <span class="rn-tri" aria-hidden="true">▾</span></button><span class="rn-v">배틀 ${esc(rankStep.battle)} → ${esc(rankStep.char)} → <b>${esc(rankStep.genre)}</b>${rankStep.base?` · 옷본 <b>${esc(rankStep.base)}</b>`:""}${rankStep.study?` · 스터디 ${esc(rankStep.study)}${rankStep.studyItems?.length?`(<b>${rankStep.studyItems.map(esc).join("·")}</b>)`:""}`:""}</span><span class="rn-h">'다음' 점선 칩이 다음에 열리는 것 · 모두 고르면 다음 단계</span></div>` : ""}
     ${cntBox}
-    <div class="frowgap">${battleRow()}</div>
-    ${S.verifyOpen ? verifyBox() : ""}
-    ${S.cloBt != null && DATA.battles[S.cloBt] ? battleCard(S.cloBt) : ""}
 
     ${LEGEND}
     <div class="list" id="clothesList" tabindex="-1">${shown.length ? shown.map(c => {
@@ -2898,8 +2895,16 @@ function uflRankGrid(G, dot, isOpen){
 function viewRef(){
   const all = DATA.refTables || [];
   const grpOf = k => (REF_GROUPS.find(([, ks]) => ks.includes(k)) || ["기타"])[0];
-  const groups = [...REF_GROUPS.map(([g]) => g), ...(all.some(t => grpOf(t.key) === "기타") ? ["기타"] : [])].filter(g => all.some(t => grpOf(t.key) === g));
+  const groups = [...[...REF_GROUPS.map(([g]) => g), ...(all.some(t => grpOf(t.key) === "기타") ? ["기타"] : [])].filter(g => all.some(t => grpOf(t.key) === g)), "전투"];
   const g = groups.includes(S.refG) ? S.refG : (all.find(t => t.key === S.refKey) ? grpOf(S.refKey) : groups[0]);
+  /* 전투(제제 2026-11-19): 의류 탭에서 옮김. 승리 체크는 목표치 점원 상세에서도 */
+  if (g === "전투") return `<section class="card">
+    <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">자료</span><span class="hint">공략 사이트 표 ${all.length}개</span></span></div>
+    <div class="seg wide refgrp" style="margin-bottom:8px">${groups.map(x => `<button class="${x===g?"on":""}" data-refg="${x}" aria-pressed="${x===g}">${x}</button>`).join("")}</div>
+    ${(() => { const k = S.btOpen; S.btOpen = true; const h = battleRow(); S.btOpen = k; return h.replace(/<button class="switch[^"]*" data-act="btview"[\s\S]*?<\/button>/, "").replace(/<button[^>]*data-act="btopen"[^>]*>[\s\S]*?<\/button>/, ""); })()}
+    ${S.verifyOpen ? verifyBox() : ""}
+    ${S.cloBt != null && DATA.battles[S.cloBt] ? battleCard(S.cloBt) : ""}
+    <div class="hint" style="margin-top:8px">출처: KairoHistory(개인 참고용, 카이로소프트 공식 아님)</div></section>`;
   const tabs = all.filter(t => grpOf(t.key) === g), cur = tabs.find(t => t.key===S.refKey) || tabs[0]; if (!cur) return `<section class="card"><div class="empty">자료가 없어요</div></section>`;
   const cols = Object.keys(cur.rows[0] || {}).filter(k => /^c\d+$/.test(k)).sort((a,b) => +a.slice(1) - +b.slice(1));
   const lab = (DATA.refCols||{})[cur.key] || {};
@@ -3052,7 +3057,8 @@ function goalPanel(){
     const sn = bt && (!bt.b.stat || bt.b.stat === "-" ? "특기 능력" : bt.b.stat);
     return `<div class="goalpanel"><div class="sublbl" style="margin:0 0 8px">목표치 <span class="hint">점원 장르 기준 · 합계</span></div>${chips}
       <div class="goal-b"><div class="sublbl" style="margin:0 0 4px">${esc(st.name)} · ${esc(st.g)}${main ? ` <span class="hint">${esc(layGName(main))}</span>` : ""}</div>
-        ${bt ? `<div class="goal-row"><span class="k">${esc(bShort(bt.i))} 챌린지</span><span class="w">${bt.done ? "승리 ✓" : "아직"}</span></div>
+        ${bt ? `<div class="goal-row goal-btd"><span class="k">${esc(bShort(bt.i))} 챌린지</span><button type="button" class="chip sm codone ${bt.done?"on":""}" data-btdone="${bt.i}" aria-pressed="${bt.done}">${ICON.ok}${bt.done ? "승리함" : "승리 체크"}</button></div>
+          ${(() => { const rw = btRewardOpt(bt.i), win = fmtWin(bt.b.site?.win); return rw || win ? `<div class="goal-row goal-rw"><span class="k">보상</span><span class="w">${rw ? `<b class="goal-sp">★ ${esc(rw)}</b>` : ""}${win ? `<small>${esc(win)}</small>` : ""}</span></div>` : ""; })()}
           ${row("품질 합계", bt, bt.v[0], () => "입은 옷 합계")}${row("매력 합계", bt, bt.v[1], () => "입은 옷 합계")}${row(`직원 ${sn}`, bt, bt.v[2], () => "출전 직원 한 명")}
           ${bt.b.note ? `<div class="hint" style="margin-top:4px">${esc(bt.b.note)}</div>` : ""}${goalSets(bt.i)}` : `<div class="hint">이 점원 장르의 챌린지가 없어요</div>`}</div>
       <div class="goal-b"><div class="sublbl" style="margin:0 0 4px">${esc(layGName(main) || "같은 장르")} 패션 체크</div>
