@@ -1603,7 +1603,7 @@ function viewCoordReq(){
     ${(c.req?.conds || []).filter(x => x.startsWith("지정 옷")).map(x => `<p class="req-text">${esc(x.replace(/\s*\(#\d+\)/g, ""))}</p>`).join("")}
     ${factRows(PARTS.map(([k,l]) => [l,withClo(cPart(c,k),cm)]))}
     ${reqMatchBlock(c.req, `c${c.id}`, c)}`;
-  const entry = c => { if (!compact || q) return `<article class="coord sub request-entry">
+  const entry = (c, full) => { if (full || !compact || q) return `<article class="coord sub request-entry">
     <div class="request-heading"><h3>${head(c)}</h3></div>
     ${body(c)}
   </article>`;
@@ -1620,7 +1620,7 @@ function viewCoordReq(){
       <span class="fc-gap" aria-hidden="true"></span>
       <button class="chip sm codone ${dn?"on":""}" data-cdone="${esc(n)}" aria-label="${esc(n)} ${dn?"완료 취소":"최종 완료"}" aria-pressed="${dn}">${ICON.ok}${dn?"완료됨":"최종 완료"}</button>
       <button class="iconbtn" data-coordp="${esc(n)}" aria-label="닫기">${ICON.x}</button></div>
-    <div class="request-grid">${groups[n].map(entry).join("")}</div>${!hybrid() && fo ? coordFixBox(n, groups[n]) : ""}
+    <div class="request-grid">${groups[n].map(c => entry(c)).join("")}</div>${!hybrid() && fo ? coordFixBox(n, groups[n]) : ""}
   </div>`; };
   return `<section class="card customer-catalog">
     <div class="tools toolsgap"><input class="search" id="coordQ" placeholder="인물, 요청, 옷 이름 검색" value="${esc(q)}" aria-label="코디 검색"></div>
@@ -1639,7 +1639,7 @@ function viewCoordReq(){
         <button type="button" class="chip sm" data-act="comodal-unsel">선택 취소</button>
         <button type="button" class="chip sm codone ${dn?"on":""}" data-cdone="${esc(n)}" aria-pressed="${dn}">${ICON.ok}${dn?"완료됨":"최종 완료"}</button>
         <button type="button" class="iconbtn" data-act="comodal-x" aria-label="창 닫기">${ICON.x}</button></div>
-      <div class="comodal-b"><div class="request-grid">${groups[n].map(entry).join("")}</div></div>
+      <div class="comodal-b"><div class="request-grid">${groups[n].map(c => entry(c, true)).join("")}</div></div>
     </div></div>`; }
 }
 
