@@ -274,6 +274,7 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   db.doc(`${RUN}/ui/goals`).onSnapshot(s => { S.goals = (s.exists && s.data()) || null; render(); }, () => {});
   db.doc(`${RUN}/ui/now`).onSnapshot(s => { S.now = (s.exists && s.data()) || null; render(); }, () => {});
   db.doc(`${RUN}/ui/mqcfg`).onSnapshot(s => { S.mqCfg = (s.exists && s.data()) || null; render(); }, () => {});
+  db.doc(`${RUN}/ui/mqacc`).onSnapshot(s => { S.mqAcc = ((s.exists && s.data()) || {}).ids || []; render(); }, () => {});
   db.doc(`${RUN}/ui/sppath`).onSnapshot(s => { S.spDone = ((s.exists && s.data()) || {}).done || []; render(); }, () => {});
   db.doc(`${RUN}/misc/coord`).onSnapshot(s => { S.coordDone = (s.exists && s.data().list) || []; render(); }, fail);
   db.collection("coordfix").onSnapshot(s => { S.cfix = Object.fromEntries(s.docs.map(d => { const v = {...d.data()}; ["pt","pb","po","pa"].forEach(k => { if (v[k]) v[k] = alSlash("clo", v[k]); }); return [+d.id.slice(1), v]; })); render(); }, fail);
@@ -1916,7 +1917,11 @@ async function mqToggleBuilt(gi, k){
   if (db) try{ await writeSerial(`${RUN}/mannequins/${key}`, rec); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
 function mqSetCard(p, m){
-  const pcs = o => MQ_SLOTS.map(([k, l]) => { const c = o && o[k] != null ? CLO_BY_ID.get(o[k]) : null; return c ? `<span class="mq-pc ${cloMade(c)?"":"dim"}"><small>${c.site?.kind==="셋업"?"셋업":l}</small>${esc(cloName(c))}</span>` : ""; }).join("");
+  /* 회색 = 아직 안 됨(제제 2026-11-19): 옷은 완료 체크 전, 액세서리는 산 걸 직접 눌러 표시(${RUN}/ui/mqacc) */
+  const pcs = o => MQ_SLOTS.map(([k, l]) => { const c = o && o[k] != null ? CLO_BY_ID.get(o[k]) : null; if (!c) return "";
+    const lab = `<small>${c.site?.kind==="셋업"?"셋업":l}</small>${esc(cloName(c))}`;
+    if (k === "a"){ const own = (S.mqAcc || []).includes(c.id); return `<button type="button" class="mq-pc mq-acc ${own?"":"dim"}" data-mqacc="${c.id}" aria-pressed="${own}" title="${own?"샀음 · 누르면 취소":"누르면 산 걸로"}">${lab}</button>`; }
+    return `<span class="mq-pc ${cloDone(c)?"":"dim"}">${lab}</span>`; }).join("");
   return `<div class="fccard mqset ${m.built?"built":""}">
     <div class="fc-h"><b class="fc-n">마네킹 ${m.k+1}</b>${m.outfits ? `<button class="iconbtn act ${m.built?"on":""}" data-mqbuilt="${p.gi}|${m.k}" aria-label="마네킹 ${m.k+1} ${m.built?"만듦 취소":"만듦"}" aria-pressed="${!!m.built}">${ICON.ok}</button>` : ""}<span class="fc-c">${m.built ? "만듦" : m.outfits ? "추천" : "못 만듦"}</span></div>
     ${m.outfits ? MQ_SK.map(([sk, se]) => `<div class="mqset-row"><span class="mqset-s">${se}</span><div class="mq-pcs">${pcs(m.outfits[sk])}</div></div>`).join("") : `<div class="empty">${esc(p.reason)}</div>`}
@@ -3246,6 +3251,8 @@ document.addEventListener("click", e => {
     if (db) writeSerial(`${RUN}/ui/sppath`, {done:S.spDone, t:Date.now()}).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); return; }
   if (d.ufl){ S.uflOpen = S.uflOpen === d.ufl ? null : d.ufl; render(); return; }
   if (d.act==="unlockraw"){ S.unlockRaw = !S.unlockRaw; render(); return; }
+  if (d.mqacc !== undefined){ const id = +d.mqacc, cur = S.mqAcc || []; S.mqAcc = cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]; render();
+    if (db) writeSerial(`${RUN}/ui/mqacc`, {ids:S.mqAcc, t:Date.now()}).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); return; }
   if (d.act==="sppath"){ S.spPath = !S.spPath; render(); return; }
   if (d.act==="outshare"){ outShare(); return; }
   if (d.act==="outsave"){ outSave(); return; }

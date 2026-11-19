@@ -600,3 +600,9 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 @media (max-width: 739px) { :root:root .cloview .ck-desk { display: none; } :root:root .cloview .ck-phone { display: inline-flex; } }
 :root:root .tools.cloview-below > #cloQ { font-size: var(--t-body) !important; height: 36px !important; min-height: 36px !important; box-sizing: border-box; padding-top: 0 !important; padding-bottom: 0 !important; line-height: 36px; }
 :root:root .tools.cloview-below > #cloQ::placeholder { font-size: var(--t-body); }
+/* 마네킹: 회색 = 아직(옷 완료 전·액세서리 안 삼). 흐리게 대신 회색 글씨로(제제 2026-11-19) */
+:root:root .mq-pc.dim { opacity: 1; color: var(--fg3); font-weight: 450; }
+:root:root .mq-pc.dim small { color: var(--fg3); opacity: .8; }
+:root:root button.mq-acc { border: 0; background: none; padding: 2px 4px; margin: -2px -4px; border-radius: 6px; font: inherit; font-size: var(--t-body); font-weight: 600; color: var(--fg); cursor: pointer; text-align: left; }
+:root:root button.mq-acc.dim { color: var(--fg3); font-weight: 450; text-decoration: underline dotted; text-underline-offset: 3px; }
+:root:root button.mq-acc:hover { background: var(--soft); }
