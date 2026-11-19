@@ -365,8 +365,13 @@ function toast(msg, undo){
   $("#toastMsg").textContent = msg; undoFn = undo;
   $("#toastUndo").hidden = !undo;
   const t=$("#toast"); t.classList.add("show");
-  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove("show"), 3200);
+  /* 되돌리기가 있는 안내는 10초(제제 2026-11-19). 새 안내가 오면 앞 것은 바로 바뀜 */
+  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove("show"), undo ? 10000 : 3200);
 }
+/* 보상(옷본·재료·옵션·특수옵션)을 얻는 완료·승리를 체크하면 1초 뒤 의류 탭으로(제제 2026-11-19). 그 사이 취소하면 안 감 */
+let goCloT = null;
+function goCloSoon(still){ clearTimeout(goCloT); const from = S.tab; if (from === "clo") return;
+  goCloT = setTimeout(() => { if (!still() || S.tab !== from) return; S.tab = "clo"; S.quick = null; remember(); render(); scrollTo({top:0}); }, 1000); }
 $("#toastUndo").onclick = () => { $("#toast").classList.remove("show"); undoFn && undoFn(); };
 
 function togglePut(id, it, noUndo){
@@ -575,7 +580,8 @@ async function toggleBtDone(k){
   if (on && S.cloBt === k){ S.cloBt = null; S.cloBtView = false; S.btOpen = false; S.btNote = false; remember(); }
   S.battleRec = {...S.battleRec, [k]:rec}; render();
   const nm = typeof k === "number" ? DATA.battles[k]?.name : (DATA.battlesExtra||[]).find(b => btKeyX(b)===k)?.name;
-  toast(on ? `${nm || "전투"} 승리로 체크${rw ? ` · 의류 필터에 ★ ${rw} 선택` : ""}` : `${nm || "전투"} 체크 취소${rw ? ` · ★ ${rw} 선택 해제` : ""}`);
+  toast(on ? `${nm || "전투"} 승리로 체크${rw ? ` · 의류 필터에 ★ ${rw} 선택` : ""}` : `${nm || "전투"} 체크 취소${rw ? ` · ★ ${rw} 선택 해제` : ""}`, on ? () => { if (btDone(k)) toggleBtDone(k); } : null);
+  if (on && rw) goCloSoon(() => btDone(k)); else clearTimeout(goCloT);
   if (db) try{ await writeSerial(`battles/b${k}`, {...rec, t:Date.now(), by:"app"}); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
 const btDoneBtn = (k, label) => `<button class="iconbtn act ${btDone(k)?"on":""}" data-btdone="${k}" aria-label="${esc(label)} ${btDone(k)?"승리 체크 취소":"승리 체크"}" aria-pressed="${btDone(k)}">${ICON.ok}</button>`;
@@ -986,7 +992,8 @@ async function toggleFcDone(oi){
   const rw = applyFcReward(oi, on);
   /* 완료하면 시설 탭에서 골라 둔 그 패션 체크를 빼고 번호판을 접는다(제제 2026-11-18) */
   if (on && (S.facFcSel || []).includes(oi + 1)){ S.facFcSel = S.facFcSel.filter(n => n !== oi + 1); remember(); }  /* 목록(1~20)은 접지 않음(제제 2026-11-19) */
-  S.chkscore = {...S.chkscore, [oi]:rec}; render(); toast(on ? `패션 체크 ${oi+1} 완료${rw ? ` · 의류 필터에 ${rw} 선택` : ""}` : `패션 체크 ${oi+1} 완료 취소${rw ? ` · ${rw} 선택 해제` : ""}`);
+  S.chkscore = {...S.chkscore, [oi]:rec}; render(); toast(on ? `패션 체크 ${oi+1} 완료${rw ? ` · 의류 필터에 ${rw} 선택` : ""}` : `패션 체크 ${oi+1} 완료 취소${rw ? ` · ${rw} 선택 해제` : ""}`, on ? () => { if (fcDone(oi)) toggleFcDone(oi); } : null);
+  if (on && rw) goCloSoon(() => fcDone(oi)); else clearTimeout(goCloT);
   if (db) try{ await writeSerial(`chkscore/k${oi}`, {...rec, t:Date.now(), by:"app"}); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
 /* 지금 할 패션 체크 = 완료한 것 중 가장 큰 번호 + 1(제제 2026-11-19). 그 체크에 걸린 시설 태그에 경고 표시 */
