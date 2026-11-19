@@ -880,7 +880,7 @@ function itemRow(){
 /* 장르 조건 */
 function genreRow(typeChips){
   const o = !!S.facExp.genre, cur = S.facType;
-  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">장르</span>${cur!=="전체"?`<button class="chip sm on" data-ftype="전체">${esc(cur)} ×</button>`:""}<button class="chip sm fold" data-fexp="genre" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span>
+  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">장르</span><button class="chip sm fold" data-fexp="genre" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span>
     <span class="fh-act"><button class="chip sm" data-act="ffoldall">전체 접기</button><button class="chip sm" data-act="fopenall">전체 펼치기</button><button class="chip sm ${S.facExpPin?"on":""}" data-act="fpin" aria-pressed="${!!S.facExpPin}" title="지금 접힘 상태를 다음에도 유지">${S.facExpPin?"고정됨":"고정"}</button></span></div>
   ${o ? chips(typeChips, cur, "ftype") : ""}`;
 }
@@ -962,7 +962,7 @@ function fcFilterRow(){
   const nums = Array.from({length:FC_MAX}, (_,i) => i+1);
   return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">패션 체크</span>${sel.map(n => `<button class="chip sm on ${fcDone(n-1)?"fcdone":""}" data-fcn="${n}" title="${esc(checkName(n-1))}${fcDone(n-1)?" · 완료":""}">${n}</button>`).join("")}${!multi && sel.length===1 ? `<button class="chip sm ghostchip" data-act="fcprev" ${sel[0]<=1?'disabled style="opacity:.4"':""} aria-label="이전 패션 체크">‹ ${sel[0]>1?sel[0]-1:""}</button><button class="chip sm ghostchip" data-act="fcnext" ${sel[0]>=FC_MAX?'disabled style="opacity:.4"':""} aria-label="다음 패션 체크">${sel[0]<FC_MAX?sel[0]+1:""} ›</button>` : ""}<button class="chip sm fold" data-fexp="fc" aria-expanded="${open}">${open?"접기 ▴":"펼치기 ▾"}</button></span>
     <span class="fh-act"><button class="chip sm" data-act="fcreset" ${sel.length||open?"":'disabled style="opacity:.5"'}>초기화</button><button class="chip sm ${multi?"":"on"}" data-act="fcsingle" aria-pressed="${!multi}">단일</button><button class="chip sm ${multi?"on":""}" data-act="fcmulti" aria-pressed="${multi}">다중</button></span></div>
-  ${open ? `<div class="numpad">${nums.map(n => `<button class="${sel.includes(n)?"on":""} ${fcDone(n-1)?"fcdone":""}" data-fcn="${n}" aria-pressed="${sel.includes(n)}" title="${esc(checkName(n-1))}${fcDone(n-1)?" · 완료":""}">${n}</button>`).join("")}</div>${(DATA.checksExtra||[]).length?`<div class="chips" style="margin-top:8px"><button class="chip sm ${S.fcExtra?"on":""}" data-act="fcextra" aria-pressed="${!!S.fcExtra}">모델 체크 ${(DATA.checksExtra||[]).length}</button></div>${S.fcExtra?fcExtraList():""}`:""}` : ""}`;
+  ${open ? `<div class="numpad">${nums.map(n => `<button class="${sel.includes(n)?"on":""} ${fcDone(n-1)?"fcdone":""}" data-fcn="${n}" aria-pressed="${sel.includes(n)}" title="${esc(checkName(n-1))}${fcDone(n-1)?" · 완료":""}">${n}</button>`).join("")}</div>` : ""}`;
 }
 /* 패션 체크 완료(제제 2026-11-09): chkscore/k{oi}.doneRun = 그 회차 run 경로. 회차가 바뀌면 자연히 미완료로 */
 const fcDone = oi => S.chkscore[oi]?.doneRun === RUN;
@@ -3181,7 +3181,7 @@ function render(){
 function sumHtml(){
   const chip = (attr, v, label) => `<button class="chip sm on" data-${attr}="${esc(v)}" aria-label="${esc(label)} 빼기">${esc(label)} ×</button>`;
   /* 의류는 위에 붙는 요약줄 안 띄움(제제 2026-11-19: 정신없음) */
-  if (S.tab==="clo") return "";
+  if (S.tab==="clo" || S.tab==="fac") return "";  /* 시설도(제제 2026-11-19) */
   if (false){
     const cs = [...S.cloCat.map(v => chip("ccat", v, v)), ...S.cloPat.map(v => chip("cpat", v, v)), ...S.cloMat.map(v => chip("cmat", v, v)), ...S.cloOpt.map(v => chip("copt", v, (SP_OPTS.includes(v)?"★ ":"")+v))];
     const bt = S.cloBt != null && DATA.battles[S.cloBt] ? `<button class="chip sm on" data-cbt="${S.cloBt}">${esc(bShort(S.cloBt))} ×</button>` : "";
