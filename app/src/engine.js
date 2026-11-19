@@ -841,15 +841,28 @@ const stTag = f => facDone(f) ? semTag("done","완료") : facPartial(f) ? semTag
 const needLine = f => needOf(f).map(i => putShown(f).includes(i) ? `<span class="putdone">${i} ✓</span>` : i).join(" · ") || "상성 좋음 항목 없음";
 
 /* 아이템 조건: 모아야 할 항목. 고르면 아래 시설 목록이 그 항목 기준으로 걸러짐 */
+/* 아이템 숫자(제제 2026-11-19): 열린 매장 기준 / 전체 기준 두 숫자. 색은 세 단계
+   - 미완료: 열린 매장에 아직 넣을 곳이 있음(필요 숫자 많은 3개는 진하게, 기존 그대로)
+   - 열린 곳 완료: 열린 매장은 다 넣었고 아직 없는 매장에만 남음
+   - 완전 완료: 남은 곳 없음 */
 function itemRow(){
+  const ns = missingShopSet();
   const openF = DATA.fac.filter(f => !facDone(f));
-  const need = {}; openF.forEach(f => needOf(f).filter(i => !putOf(f).includes(i)).forEach(i => need[i]=(need[i]||0)+1));
-  const sorted = Object.entries(need).sort((a,b)=>b[1]-a[1]);
+  const need = {}, needO = {};
+  openF.forEach(f => needOf(f).filter(i => !putOf(f).includes(i)).forEach(i => { need[i] = (need[i]||0) + 1; if (!ns(f)) needO[i] = (needO[i]||0) + 1; }));
+  const st = k => needO[k] ? "todo" : need[k] ? "opendone" : "alldone";
+  const keys = [...new Set([...Object.keys(need), ...ITEMS])];
+  const sorted = keys.sort((a,b) => (needO[b]||0) - (needO[a]||0) || (need[b]||0) - (need[a]||0) || ITEMS.indexOf(a) - ITEMS.indexOf(b));
+  const top = new Set(sorted.filter(k => needO[k]).slice(0, 3));
   const it = S.itemPick, o = !!S.facExp.item, rel = S.itemAlt || "좋음";
-  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">아이템</span>${it?`<button class="chip sm on" data-pick="">${esc(it)} ×</button>`:""}<button class="chip sm fold" data-fexp="item" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span>
+  const openN = openF.filter(f => !ns(f)).length;
+  const pill = k => { const s2 = st(k), cls = k===it ? "need" : s2==="todo" ? (top.has(k) ? "must" : "") : s2;
+    return `<button class="pill ip-${s2} ${cls}" data-pick="${esc(k)}" aria-pressed="${k===it}" title="열린 매장 ${(needO[k]||0)*2} / 전체 ${(need[k]||0)*2}">${s2==="alldone" ? `<span class="ip-ok" aria-hidden="true">✓</span>` : ""}${esc(k)}<b>${(needO[k]||0)*2}<small>/${(need[k]||0)*2}</small></b></button>`; };
+  return `<div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">아이템</span><button class="chip sm fold" data-fexp="item" aria-expanded="${o}">${o?"접기 ▴":"펼치기 ▾"}</button></span>
     ${it ? `<span class="fh-act"><span class="seg mini">${["좋음","보통","나쁨"].map(k=>`<button class="${rel===k?"on":""}" data-ialt="${k}" aria-pressed="${rel===k}">${k}</button>`).join("")}</span></span>` : ""}</div>
-  ${o ? `<div class="hint" style="margin:-2px 0 8px">완료 안 된 ${openF.length}곳 · 시설당 2개 기준 · 좋음은 상태 '전체'면 아직 안 넣은 미완료 시설, 상태를 고르면 그 상태 전부 · 보통·나쁨은 완료 포함 전체</div>
-  <div class="pills">${sorted.map(([k,v],i)=>`<button class="pill ${k===it?"need":i<3?"must":""}" data-pick="${esc(k)}" aria-pressed="${k===it}">${esc(k)}<b>${v*2}</b></button>`).join("")}${ITEMS.filter(k => !need[k]).map(k=>`<button class="pill ${k===it?"need":"off"}" data-pick="${esc(k)}" aria-pressed="${k===it}">${esc(k)}<b>0</b></button>`).join("")}</div>` : ""}`;
+  ${o ? `<div class="hint" style="margin:-2px 0 8px">숫자는 <b>열린 매장 / 전체</b> · 완료 안 된 ${openF.length}곳(열린 매장 ${openN}곳) · 시설당 2개 기준 · 좋음은 상태 '전체'면 아직 안 넣은 미완료 시설, 상태를 고르면 그 상태 전부 · 보통·나쁨은 완료 포함 전체</div>
+  <div class="pills">${sorted.map(pill).join("")}</div>
+  <div class="ip-legend"><span class="ip-k ip-todo">남음</span><span class="ip-k ip-opendone">열린 곳 완료</span><span class="ip-k ip-alldone">✓ 전부 완료</span></div>` : ""}`;
 }
 /* 장르 조건 */
 function genreRow(typeChips){

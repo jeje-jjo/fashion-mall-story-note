@@ -574,3 +574,15 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 /* 지금 할 패션 체크 표시(제제 2026-11-19) */
 :root:root .tag .fc-pin { display: inline-flex; margin-left: 3px; color: #C2410C; vertical-align: -2px; }
 :root:root .tag .fc-pin .ui-icon { width: 12px; height: 12px; }
+
+/* 아이템 알약 세 단계(제제 2026-11-19) */
+:root:root .pill b small { font-weight: 500; opacity: .6; margin-left: 1px; font-size: .9em; }
+:root:root .pill.opendone { background: color-mix(in srgb, #5F8C82 14%, var(--card)); color: #3F6B61; border: 1px solid color-mix(in srgb, #5F8C82 40%, transparent); }
+:root:root .pill.alldone { background: transparent; color: var(--fg3); border: 1px dashed var(--line); }
+:root:root .pill .ip-ok { margin-right: 3px; color: var(--fg3); }
+:root:root .ip-legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; font-size: var(--t-meta); color: var(--fg3); }
+:root:root .ip-k::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 4px; border-radius: 3px; vertical-align: -1px; background: var(--soft2, var(--soft)); }
+:root:root .ip-k.ip-opendone::before { background: color-mix(in srgb, #5F8C82 30%, var(--card)); }
+:root:root .ip-k.ip-alldone::before { background: transparent; border: 1px dashed var(--fg3); box-sizing: border-box; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pill.opendone { color: #A8C9C0; } }
+:root[data-theme="dark"] .pill.opendone { color: #A8C9C0; }
