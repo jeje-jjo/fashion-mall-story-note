@@ -637,3 +637,10 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root .memo .mchip.hot { box-shadow: 0 0 0 1.5px var(--blue) inset; color: var(--blue-ink); font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { :root:root .memo .mrow.flash { animation: none; box-shadow: 0 0 0 1.5px var(--blue) inset; } }
 :root:root .filter-grid.fg-solo { grid-template-columns: minmax(0, 1fr) !important; }
+/* 12회차 개선(제제 2026-11-19) */
+:root:root .gd-ttl { display: flex; align-items: center; gap: 8px; }
+:root:root .gd-ttl > span { flex: 1 1 auto; min-width: 0; }
+:root:root .gd-next { flex: none; }
+:root:root .seg.wide.facmode { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+/* 아래 탭: 버튼 누르는 범위를 위로 8px 넓힘 */
+@media (max-width: 739px) { :root:root nav.tabs button::before { content: ""; position: absolute; left: 0; right: 0; top: -8px; height: 8px; } }

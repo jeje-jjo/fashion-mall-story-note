@@ -101,7 +101,7 @@ function autoSaveSel(){
   selTimer = setTimeout(() => { const all = curSel(); S.cloSlot = {...S.cloSlot, all, ...all};
     writeSerial("ui/slots", {slot:S.cloSlot}).catch(() => showNotice("선택을 저장하지 못했어요. 도구 > 저장에서 수동 저장해 주세요.")).finally(() => { selPending = false; }); }, 400);
 }
-const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,facMode:S.facMode,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,coModal:S.coModal,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpV2:S.cloExpV2,cloMulti:S.cloMulti,cloAllShow:S.cloAllShow,spFold:S.spFold,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
+const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,facMode:S.facMode,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,guLast:S.guLast,coModal:S.coModal,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpV2:S.cloExpV2,cloMulti:S.cloMulti,cloAllShow:S.cloAllShow,spFold:S.spFold,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
 if (S.facType!=="전체" && S.facType!=="우선개량" && !(S.facType in TYPE_COLOR)) S.facType = "전체";
 if (!Array.isArray(S.cloCat)) S.cloCat = S.cloCat && S.cloCat!=="전체" ? [S.cloCat] : [];
 if (!Array.isArray(S.cloPat)) S.cloPat = S.cloPat && S.cloPat!=="전체" ? [S.cloPat] : [];
@@ -1045,6 +1045,7 @@ function missingShopSet(){
     o.likeDetail.split("/").forEach(n => { const k = nk(n); (ref[k] ||= []).push(c); }); });
   return f => { const l = ref[nk(facName(f))] || ref[nk(f.name)]; return !!l && l.every(c => !cloDone(c)); };
 }
+if (S.facType === "우선개량"){ S.facType = "전체"; S.facMode = "p40"; }
 const facModeOf = () => S.facMode || (S.facFcSel?.length ? "fc" : S.itemPick ? "item" : S.facType && S.facType!=="전체" ? "genre" : "all");
 /* 고른 보기의 줄은 늘 펼쳐서(접기 버튼 없이) 보여 준다 */
 function facModeRow(fm, typeChips){
@@ -1058,9 +1059,9 @@ function facModeRow(fm, typeChips){
 function viewFac(){
   const types = ["전체", ...Object.keys(TYPE_COLOR)];
   const typeChips = types.map(t => { const g = DATA.fac.filter(f => t==="전체" || f.type===t); return [t, t, `${g.filter(facDone).length}/${g.length}`]; });
-  { const g = DATA.fac.filter(f => f.p40); typeChips.push(["우선개량", "우선개량", `40P ${g.filter(p40Done).length}/${g.length}`]); }
+  /* 우선개량은 보기 줄로 옮김(제제 2026-11-19) */
   /* 보기 나누기(제제 2026-11-19): 전체 보기 | 장르 | 패션 체크 | 아이템. 고른 보기의 조건만 걸고, 다른 보기의 선택은 그대로 둔다 */
-  const fm = facModeOf(), fType = fm==="genre" ? S.facType : "전체", fFc = fm==="fc" ? S.facFcSel : [], fIt = fm==="item" ? S.itemPick : "";
+  const fm = facModeOf(), fType = fm==="p40" ? "우선개량" : fm==="genre" && S.facType !== "우선개량" ? S.facType : "전체", fFc = fm==="fc" ? S.facFcSel : [], fIt = fm==="item" ? S.itemPick : "";
   let rows = DATA.fac.filter(f => fType==="전체" || (fType==="우선개량" ? f.p40 : f.type===fType));
   const stOf = f => facDone(f) ? "완료" : facPartial(f) ? "일부완료" : "미완료";
   if (facSts().length) rows = rows.filter(f => facSts().includes(stOf(f)));
@@ -1093,8 +1094,8 @@ function viewFac(){
   const fcOne = fFc.length===1 && fFc[0] <= FC_MAX ? fFc[0]-1 : null;
   const canPut = idx >= 0 && rel==="좋음";
   return `<section class="card facility-catalog">
-    <div class="seg wide facmode" role="group" aria-label="시설 보기">${[["all","전체 보기"],["genre","장르"],["fc","패션 체크"],["item","아이템"]].map(([k,l]) => `<button type="button" class="${fm===k?"on":""}" data-facmode="${k}" aria-pressed="${fm===k}">${l}</button>`).join("")}</div>
-    ${fm==="all" ? "" : `<div class="facmode-b">${facModeRow(fm, typeChips)}</div>`}
+    <div class="seg wide facmode" role="group" aria-label="시설 보기">${[["all","전체<span class=\"ph-x\"> 보기</span>"],["genre","장르"],["fc","<span class=\"ph-x\">패션 </span>체크"],["item","아이템"],["p40","우선<span class=\"ph-x\">개량</span>"]].map(([k,l]) => `<button type="button" class="${fm===k?"on":""}" data-facmode="${k}" aria-pressed="${fm===k}">${l}</button>`).join("")}</div>
+    ${fm==="all" || fm==="p40" ? "" : `<div class="facmode-b">${facModeRow(fm, typeChips)}</div>`}
     ${fcOne!=null ? fcInfoCard(fcOne) : ""}
     <div class="tools toolsgap"><div class="seg">${["전체","미완료","일부완료","완료"].map(k => { const on = k==="전체" ? !facSts().length : facSts().includes(k); return `<button class="${on?"on":""}" data-fst="${k}" aria-pressed="${on}">${k}</button>`; }).join("")}</div></div>
     <div class="tools" style="margin-top:8px">${seg(["기본순","좋음 적은순","패션 체크순","장르순","이름순"], ["이름순","장르순","좋음 적은순","패션 체크순"].includes(S.facSort)?S.facSort:"기본순", "fsort")}<input class="search" id="facQ" placeholder="시설이나 항목 검색" value="${esc(S.facQ)}" aria-label="시설 검색"></div>
@@ -2539,7 +2540,7 @@ const gameDate = () => { const n = S.now || {}; return n.year ? { y:+n.year, m:n
 const gamePct = d => d ? Math.max(0, Math.min(100, Math.round(((d.y - 1) * 12 + ((d.m || 3) - 3)) / GAME_MONTHS * 100))) : null;
 function gameDatePanel(){
   const d = gameDate() || { y:null, m:null }, pct = gamePct(gameDate());
-  return `<div class="gdate"><div class="sublbl" style="margin:0 0 6px">지금 게임 날짜 <span class="hint">${d.y ? `${d.y}년${d.m ? ` ${d.m}월` : ""} · 진행 ${pct}%` : "아직 안 정함"} · 1년 3월 ~ 10년 3월</span></div>
+  return `<div class="gdate"><div class="sublbl gd-ttl" style="margin:0 0 6px"><span>지금 게임 날짜 <span class="hint">${d.y ? `${d.y}년${d.m ? ` ${d.m}월` : ""} · 진행 ${pct}%` : "아직 안 정함"}</span></span><button type="button" class="chip sm gd-next" title="1년 3월 ~ 10년 3월" data-act="gdnext">다음 달 ▸</button></div>
     <div class="gd-row"><span class="gd-k">년</span><div class="numpad gd-pad">${Array.from({length:10}, (_, i) => i + 1).map(n => `<button type="button" class="${d.y===n?"on":""}" data-gdy="${n}" aria-pressed="${d.y===n}">${n}</button>`).join("")}</div></div>
     <div class="gd-row"><span class="gd-k">월</span><div class="numpad gd-pad">${Array.from({length:12}, (_, i) => i + 1).map(n => `<button type="button" class="${d.m===n?"on":""}" data-gdm="${n}" aria-pressed="${d.m===n}">${n}</button>`).join("")}</div></div>
     ${d.y ? `<div class="gd-bar"><span style="width:${pct}%"></span></div>` : ""}</div>`;
@@ -3168,9 +3169,11 @@ function render(){
   { const rb = document.querySelector('#fab [data-q="rank"]'); if (rb){ const R = curRank(); rb.hidden = R != null && R >= RANK_MAX; rb.querySelector(".fabrank").textContent = R != null ? `R${R}` : "R?"; if (rb.hidden && S.quick==="rank") S.quick = null; } }
   /* 목표치·개량 옵션은 한 버튼 안의 탭으로(제제 2026-11-18: 둘을 계속 오감). 마지막에 본 탭을 기억 */
   { const ub = document.querySelector('#fab [data-q="up"]'); if (ub) ub.hidden = true; if (S.quick === "up"){ S.quick = "goal"; S.guTab = "up"; } }
-  const guTabs = () => `<div class="gutabs-wrap"><div class="seg wide gutabs">${[["goal","목표치"],["up","개량 옵션"]].map(([k, l]) => `<button type="button" class="${(S.guTab || "goal") === k ? "on" : ""}" data-gutab="${k}" aria-pressed="${(S.guTab || "goal") === k}">${l}</button>`).join("")}</div></div>`;
-  if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="memo" ? gameDatePanel() + homeMemo(true) : S.quick==="rank" ? rankPanel() : guTabs() + ((S.guTab || "goal") === "up" ? upFinder(true, true) : goalPanel())}</div>` : ""; qk.hidden = !S.quick; }
-  document.querySelectorAll("#fab [data-q]").forEach(b => { const on = S.quick===b.dataset.q; b.classList.toggle("on", on); b.setAttribute("aria-expanded", on); });
+  /* 날짜·목표치·개량 옵션을 한 창의 탭으로(제제 2026-11-19: 달 바꾸고 바로 목표치·개량 옵션을 봄). 달력 버튼 = 날짜 탭, 과녁 버튼 = 목표치/개량 옵션 */
+  if (S.quick === "memo"){ S.quick = "gu"; S.guTab = "date"; } else if (S.quick === "goal"){ S.quick = "gu"; if (S.guTab === "date" || !S.guTab) S.guTab = S.guLast || "goal"; }
+  const guTabs = () => `<div class="gutabs-wrap"><div class="seg wide gutabs">${[["date","날짜"],["goal","목표치"],["up","개량 옵션"]].map(([k, l]) => `<button type="button" class="${(S.guTab || "goal") === k ? "on" : ""}" data-gutab="${k}" aria-pressed="${(S.guTab || "goal") === k}">${l}</button>`).join("")}</div></div>`;
+  if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="rank" ? rankPanel() : guTabs() + (S.guTab === "date" ? gameDatePanel() + homeMemo(true) : (S.guTab || "goal") === "up" ? upFinder(true, true) : goalPanel())}</div>` : ""; qk.hidden = !S.quick; }
+  document.querySelectorAll("#fab [data-q]").forEach(b => { const q = b.dataset.q, on = S.quick==="gu" ? (q==="memo" ? S.guTab==="date" : q==="goal" && S.guTab!=="date") : S.quick===q; b.classList.toggle("on", on); b.setAttribute("aria-expanded", on); });
   const rp = $("#recentPanel"); if (rp){ rp.innerHTML = S.recentOpen ? recentPanel() : ""; rp.hidden = !S.recentOpen; }
   $("#recentBtn")?.classList.toggle("on", !!S.recentOpen); $("#recentBtn")?.setAttribute("aria-expanded", !!S.recentOpen);
   window.__prefsApply?.();
@@ -3216,6 +3219,8 @@ document.addEventListener("click", e => {
     const wrap = e.target.closest("#view .list > div"), ob = wrap?.querySelector(":scope > .row [data-ofac], :scope > .row [data-oclo]");
     if (ob && !window.getSelection()?.toString()){ ob.click(); return; }
   }
+  /* 아래 탭 줄 빈 곳(버튼 사이·아래 여백)을 눌러도 가장 가까운 탭으로(제제 2026-11-19) */
+  if (e.target.matches?.("nav.tabs, nav.tabs .in")){ const bs = [...document.querySelectorAll("nav.tabs [data-tab]")]; const nb = bs.sort((a,b) => Math.abs(a.getBoundingClientRect().left + a.offsetWidth/2 - e.clientX) - Math.abs(b.getBoundingClientRect().left + b.offsetWidth/2 - e.clientX))[0]; if (nb){ nb.click(); return; } }
   if (e.target.dataset?.comodalBack){ S.coModal = null; remember(); render(); return; }
   const pk = e.target.closest("[data-p40ck]"); if (pk){ e.preventDefault(); toggleP40(+pk.dataset.p40ck); return; }
   const b = e.target.closest("button"); if (!b) return;
@@ -3382,15 +3387,23 @@ document.addEventListener("click", e => {
     if (add.length){ S.cloPat = [...(S.cloPat || []), ...add]; if (S.cloPat.length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, pat:true}; remember(); }
     toast(`현재 랭크 ${n}${add.length ? ` · 옷본 ${add.join("·")} 선택` : ""}`); render(); return; }
   if (d.rankclr){ mqNowSave({rank: null}); toast("랭크를 지웠어요"); render(); return; }
-  if (d.act==="quick"){ S.quick = S.quick===d.q ? null : d.q; render(); return; }
+  if (d.act==="quick"){
+    if (d.q==="memo" || d.q==="goal"){ const tgt = d.q==="memo" ? "date" : (S.guLast || "goal");
+      if (S.quick==="gu" && (d.q==="memo" ? S.guTab==="date" : S.guTab!=="date")) S.quick = null; else { S.quick = "gu"; S.guTab = tgt; }
+      remember(); render(); return; }
+    S.quick = S.quick===d.q ? null : d.q; render(); return; }
   if (d.gdy){ const y = +d.gdy, g = gameDate(); mqNowSave({year:y, ...(g?.m ? {month:g.m} : {})}); toast(`${y}년${g?.m ? ` ${g.m}월` : ""}`); return; }
-  if (d.gdm){ const m = +d.gdm, g = gameDate(); mqNowSave({year:g?.y || 1, month:m});
+  if (d.act==="gdnext" || d.gdm){ const g = gameDate(); let y = g?.y || 1, m;
+    /* 다음 달(제제 2026-11-19): 12월 다음은 다음 해 1월. 10년 3월이 끝 */
+    if (d.act==="gdnext"){ m = g ? (g.m || 3) + 1 : 3; if (m > 12){ m = 1; y = Math.min(10, y + 1); } if (y >= 10 && m > 3 && g?.y >= 10){ toast("10년 3월이 마지막이에요"); return; } }
+    else m = +d.gdm;
+    mqNowSave({year:y, month:m});
     /* 다음 달이 리셋 달이면 그 줄 테두리를 천천히 반짝(제제 2026-11-19): 이번 달 안에 미리 끝내라는 알림 */
     const nm = m % 12 + 1, mm = memoNow(), pk = pumpkinMonths(mm.pumpkin).includes(nm), gs = (mm.guest || []).includes(nm);
-    toast(`${g?.y || 1}년 ${m}월${pk || gs ? ` · 다음 달 ${[pk && "펌프킨 숍", gs && "손님 활동 목록"].filter(Boolean).join("·")} 리셋` : ""}`);
+    toast(`${y}년 ${m}월${pk || gs ? ` · 다음 달 ${[pk && "펌프킨 숍", gs && "손님 활동 목록"].filter(Boolean).join("·")} 리셋` : ""}`);
     if (pk || gs){ S.mFlash = {pk: pk ? nm : 0, gs: gs ? nm : 0}; render(); clearTimeout(window.__mFlashT); window.__mFlashT = setTimeout(() => { S.mFlash = null; render(); }, 3600); }
     return; }
-  if (d.gutab){ S.guTab = d.gutab; remember(); render(); return; }
+  if (d.gutab){ S.guTab = d.gutab; if (d.gutab !== "date") S.guLast = d.gutab; remember(); render(); return; }
   if (d.act==="memoedit"){ S.memoEdit = !S.memoEdit; render(); return; }
   if (d.mpk){ const n = +d.mpk, cur = memoNow().pumpkin; memoSave({pumpkin: pumpkinMonths(cur).includes(n) ? null : n}); return; }
   if (d.mgs){ const n = +d.mgs, g = memoNow().guest || []; memoSave({guest: g.includes(n) ? g.filter(x => x!==n) : [...g, n].sort((a,b)=>a-b)}); return; }
