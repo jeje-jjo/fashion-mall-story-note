@@ -969,7 +969,10 @@ async function toggleFcDone(oi){
   S.chkscore = {...S.chkscore, [oi]:rec}; render(); toast(on ? `패션 체크 ${oi+1} 완료${rw ? ` · 의류 필터에 ${rw} 선택` : ""}` : `패션 체크 ${oi+1} 완료 취소${rw ? ` · ${rw} 선택 해제` : ""}`);
   if (db) try{ await writeSerial(`chkscore/k${oi}`, {...rec, t:Date.now(), by:"app"}); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
-const fcTag = f => FC_OF[f.id] ? semTag(facFcAllDone(f) ? "done" : "fc", `패션 체크 ${FC_OF[f.id].join("·")}${facFcAllDone(f) ? " 완료" : ""}`) + (S.facFcSel.length && S.facFcSel.every(n => (FC_ALT[f.id]||[]).includes(n)) ? `<span class="tag">대신 가능</span>` : "") : "";
+/* 지금 할 패션 체크 = 완료한 것 중 가장 큰 번호 + 1(제제 2026-11-19). 그 체크에 걸린 시설 태그에 경고 표시 */
+const fcNextNo = () => { let m = 0; for (let n = 1; n <= FC_MAX; n++) if (fcDone(n-1)) m = n; return m < FC_MAX ? m + 1 : null; };
+const fcTag = f => FC_OF[f.id] ? (() => { const nx = fcNextNo(), hot = !facFcAllDone(f) && nx != null && FC_OF[f.id].includes(nx);
+  return semTag(facFcAllDone(f) ? "done" : "fc", `패션 체크 ${FC_OF[f.id].join("·")}${facFcAllDone(f) ? " 완료" : ""}${hot ? `<i class="fc-pin" title="지금 할 패션 체크 ${nx}" aria-label="지금 할 패션 체크">${ICON.warn}</i>` : ""}`); })() + (S.facFcSel.length && S.facFcSel.every(n => (FC_ALT[f.id]||[]).includes(n)) ? `<span class="tag">대신 가능</span>` : "") : "";
 const dotFac = f => facDone(f) ? `<span class="fdot on" aria-label="완료">${ICON.check}</span>` : facPartial(f) ? `<span class="fdot part" aria-label="일부완료">${putOf(f).filter(x => needOf(f).includes(x)).length}/${needOf(f).length}</span>` : `<span class="fdot" aria-label="미완료"></span>`;
 /* 패션 체크 수정 폼(기존 디자인 인라인용): 이름 / 통과 기록 / 코디 기록 */
 function fcEditForm(oi){
@@ -1066,7 +1069,7 @@ function viewFac(){
     ${fcOne!=null ? fcInfoCard(fcOne) : ""}
     <div class="tools toolsgap"><div class="seg">${["전체","미완료","일부완료","완료"].map(k => { const on = k==="전체" ? !facSts().length : facSts().includes(k); return `<button class="${on?"on":""}" data-fst="${k}" aria-pressed="${on}">${k}</button>`; }).join("")}</div></div>
     <div class="tools" style="margin-top:8px">${seg(["기본순","좋음 적은순","패션 체크순","장르순","이름순"], ["이름순","장르순","좋음 적은순","패션 체크순"].includes(S.facSort)?S.facSort:"기본순", "fsort")}<input class="search" id="facQ" placeholder="시설이나 항목 검색" value="${esc(S.facQ)}" aria-label="시설 검색"></div>
-    ${canPut && rows.filter(notPut).length ? `<div class="bulkput"><span>보이는 ${rows.filter(notPut).length}곳에 <b>${esc(it)}</b>을(를) 넣었다면</span><button class="btn sm" data-putall="${rows.filter(notPut).map(f=>f.id).join(",")}|${esc(it)}">모두 넣었어요</button></div>` : ""}
+    ${(() => { const bp = rows.filter(f => notPut(f) && !noStore(f)); /* 아직 없는 매장은 빼고(제제 2026-11-19) */ return canPut && bp.length ? `<div class="bulkput"><span>열린 매장 ${bp.length}곳에 <b>${esc(it)}</b>을(를) 넣었다면</span><button class="btn sm" data-putall="${bp.map(f=>f.id).join(",")}|${esc(it)}">모두 넣었어요</button></div>` : ""; })()}
     <div class="filterline"><span>${rows.filter(facDone).length} / ${rows.length} 완료${pc?` · 일부 ${pc}`:""}${it?` · ${esc(it)} 상성 ${rel}`:""}${fcOne!=null?` · 패션 체크 ${fcOne+1}`:fFc.length?` · 패션 체크 ${fFc.join("·")}`:""}</span></div>
     <div class="list">${rows.length ? rows.map(f => {
       const d = facDone(f), opened = S.facOpen===f.id, nm = facName(f), put = putShown(f);

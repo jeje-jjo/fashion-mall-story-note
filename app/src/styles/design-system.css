@@ -571,3 +571,6 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root .goal-sp { color: var(--blue-ink); font-weight: 700; }
 :root:root .goal-rw small { color: var(--fg3); font-size: var(--t-meta); line-height: 1.5; }
 :root:root .seg.wide.refgrp { margin-bottom: 14px !important; }
+/* 지금 할 패션 체크 표시(제제 2026-11-19) */
+:root:root .tag .fc-pin { display: inline-flex; margin-left: 3px; color: #C2410C; vertical-align: -2px; }
+:root:root .tag .fc-pin .ui-icon { width: 12px; height: 12px; }
