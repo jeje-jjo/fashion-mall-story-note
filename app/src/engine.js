@@ -1442,7 +1442,12 @@ function viewClo(){
   if (q) rows = rows.filter(c => [c.n,cloName(c),c.p,c.m,c.o,withNames(c.x),c.tg,c.col,optOf(c).guest,optOf(c).like,optOf(c).likeDetail].some(v => (v||"").includes(q)));
   /* 정렬: 신규 손님 있는 옷 먼저 > 장르 순서 > 원래 순서 */
   const catOrder = Object.fromEntries(cats.map((k,i) => [k,i]));
-  rows = [...rows].sort((a,b) => ((optOf(b).guest?1:0) - (optOf(a).guest?1:0)) || (catOrder[a.c]-catOrder[b.c]) || a.id-b.id);
+  /* 특수옵션 옷은 언제나 일반 옷보다 위(제제 2026-11-19). 특수옵션 안에서는 매장·신규 손님·챌린지·손님 요청이 붙은 옷 먼저(많은 순), 그다음 특수옵션별 */
+  const spPrio = new Map(rows.filter(isSp).map(c => { const o = optOf(c); return [c.id, (o.guest?1:0) + (o.likeType==="신규 매장"?1:0) + (battleOf(c) >= 0 ? 1 : 0) + (DATA.coord.some(r => coordHasClo(r, c)) ? 1 : 0)]; }));
+  rows = [...rows].sort((a,b) => (isSp(b) - isSp(a))
+    || (isSp(a) ? (spPrio.get(b.id) - spPrio.get(a.id)) || (SP_OPTS.indexOf(a.o) - SP_OPTS.indexOf(b.o))
+               : ((optOf(b).guest?1:0) - (optOf(a).guest?1:0)) || (catOrder[a.c]-catOrder[b.c]))
+    || a.id-b.id);
   /* 전투 리스트: 다른 조건은 그대로 두고 목록만 바꿔 보여 줌. 장르가 같은 옷 + 이 전투로 추천한 옷, 추천 → 맞는 조건 많은 순 */
   const btOn = false;  /* 전투는 도구 > 자료 > 전투로 옮김(제제 2026-11-19) */
   const btCs = btOn ? bCond(S.cloBt) : [], btHits = c => btCs.filter(t => termHit(c, t)).length;
