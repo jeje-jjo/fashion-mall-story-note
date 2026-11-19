@@ -3385,10 +3385,10 @@ document.addEventListener("click", e => {
   if (d.act==="quick"){ S.quick = S.quick===d.q ? null : d.q; render(); return; }
   if (d.gdy){ const y = +d.gdy, g = gameDate(); mqNowSave({year:y, ...(g?.m ? {month:g.m} : {})}); toast(`${y}년${g?.m ? ` ${g.m}월` : ""}`); return; }
   if (d.gdm){ const m = +d.gdm, g = gameDate(); mqNowSave({year:g?.y || 1, month:m});
-    /* 이번 달이 리셋 달이면 그 줄을 2초 반짝(제제 2026-11-19). 달이 넘어가는 건 전달 마지막이라 고른 달 = 리셋 달 */
-    const mm = memoNow(), pk = pumpkinMonths(mm.pumpkin).includes(m), gs = (mm.guest || []).includes(m);
-    toast(`${g?.y || 1}년 ${m}월${pk ? " · 펌프킨 숍 리셋" : ""}${gs ? " · 손님 활동 목록 리셋" : ""}`);
-    if (pk || gs){ S.mFlash = {pk: pk ? m : 0, gs: gs ? m : 0}; render(); clearTimeout(window.__mFlashT); window.__mFlashT = setTimeout(() => { S.mFlash = null; render(); }, 2000); }
+    /* 다음 달이 리셋 달이면 그 줄 테두리를 천천히 반짝(제제 2026-11-19): 이번 달 안에 미리 끝내라는 알림 */
+    const nm = m % 12 + 1, mm = memoNow(), pk = pumpkinMonths(mm.pumpkin).includes(nm), gs = (mm.guest || []).includes(nm);
+    toast(`${g?.y || 1}년 ${m}월${pk || gs ? ` · 다음 달 ${[pk && "펌프킨 숍", gs && "손님 활동 목록"].filter(Boolean).join("·")} 리셋` : ""}`);
+    if (pk || gs){ S.mFlash = {pk: pk ? nm : 0, gs: gs ? nm : 0}; render(); clearTimeout(window.__mFlashT); window.__mFlashT = setTimeout(() => { S.mFlash = null; render(); }, 3600); }
     return; }
   if (d.gutab){ S.guTab = d.gutab; remember(); render(); return; }
   if (d.act==="memoedit"){ S.memoEdit = !S.memoEdit; render(); return; }
