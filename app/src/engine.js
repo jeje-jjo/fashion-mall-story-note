@@ -3017,24 +3017,21 @@ function patchKeep(oldEl, newEl, keep){
 }
 /* 목표치 빠른 보기(제제 2026-11-10): 챌린지 배틀 + 패션 체크를 다 깨려면 필요한 최소값.
    배틀 품질·매력, 패션 체크 코디 점수는 입은 옷 합계, 직원 능력은 그 배틀의 능력(접객·속도·솜씨) 하나. 승리·완료 체크한 것은 '남은 것'에서 빠짐 */
+/* 목표치 점원 상세(제제 2026-11-19): 이긴 코디(내 코디 기록)가 있으면 그것, 없으면 사이트 추천 세트. 옷 이름만 */
+function goalSets(i){
+  const r = bRec(i), b = DATA.battles[i];
+  const mine = btSlots(i).map(([k, , j]) => r.slots?.[k]?.n ?? (b.ex?.[j] || "")).filter(Boolean);
+  if (btDone(i) && mine.length) return `<div class="goal-sets"><div class="goal-sets-h">클리어한 코디</div><div class="goal-sets-n">${mine.map(esc).join(" · ")}</div></div>`;
+  const sets = (b.site?.sets || []).map(x => { const set = (DATA.sets || []).find(s => s.id === x.setId); if (!set) return null; const inf = setInfo(set);
+    return [x.setId, inf.items.map(it => it.c ? cloName(it.c) : (it.name || "#" + it.id))]; }).filter(Boolean);
+  if (!sets.length) return mine.length ? `<div class="goal-sets"><div class="goal-sets-h">내 코디</div><div class="goal-sets-n">${mine.map(esc).join(" · ")}</div></div>` : "";
+  return `<div class="goal-sets"><div class="goal-sets-h">추천 세트</div>${sets.map(([id, ns]) => `<div class="goal-sets-n"><small>세트 ${id}</small>${ns.map(esc).join(" · ")}</div>`).join("")}</div>`;
+}
 function goalPanel(){
   const bts = DATA.battles.map((b, i) => ({i, b, v: b.site?.values || [], done: btDone(i)})).filter(x => x.v.length);
   const fcs = DATA.checks.map((c, oi) => ({oi, c, cv: c.site?.req?.cv, done: fcDone(oi)})).filter(x => x.cv != null);
   const left = a => a.filter(x => !x.done);
-  const mx = (a, f) => a.reduce((m, x) => f(x) != null && (!m || f(x) > f(m)) ? x : m, null);
-  const stats = [...new Set(bts.map(x => x.b.stat).filter(Boolean))];
   const row = (k, x, val, who) => `<div class="goal-row"><span class="k">${k}</span><b>${val != null ? nf0(val) : "-"}</b><span class="w">${x ? esc(who(x)) : "모두 끝"}</span></div>`;
-  const block = (title, B, F) => `<div class="goal-b"><div class="sublbl" style="margin:0 0 4px">${title}</div>
-    ${row("품질 합계", mx(B, x => x.v[0]), mx(B, x => x.v[0])?.v[0], x => bShort(x.i))}
-    ${row("매력 합계", mx(B, x => x.v[1]), mx(B, x => x.v[1])?.v[1], x => bShort(x.i))}
-    ${row("코디 점수", mx(F, x => x.cv), mx(F, x => x.cv)?.cv, x => `패션 체크 ${x.oi+1}`)}
-    ${row("시설 점수", mx(F, x => x.c.site?.req?.facN), mx(F, x => x.c.site?.req?.facN)?.c.site.req.facN, x => `패션 체크 ${x.oi+1}`)}
-    ${stats.map(st => { const a = B.filter(x => x.b.stat === st), m = mx(a, x => x.v[2]); return row(st === "-" ? "직원 특기" : `직원 ${st}`, m, m?.v[2], x => bShort(x.i)); }).join("")}</div>`;
-  const nb = left(bts)[0], nf = left(fcs)[0];
-  const next = `<div class="goal-b"><div class="sublbl" style="margin:0 0 4px">바로 다음</div>
-    ${nb ? `<div class="goal-row"><span class="k">${esc(bShort(nb.i))}</span><span class="w">품질 <b>${nf0(nb.v[0])}</b> · 매력 <b>${nf0(nb.v[1])}</b> · ${esc(!nb.b.stat || nb.b.stat === "-" ? "특기 능력" : nb.b.stat)} <b>${nf0(nb.v[2])}</b></span></div>` : ""}
-    ${nf ? `<div class="goal-row"><span class="k">패션 체크 ${nf.oi+1}</span><span class="w">코디 점수 <b>${nf0(nf.cv)}</b>${nf.c.site?.req?.facN != null ? ` · 시설 점수 <b>${nf0(nf.c.site.req.facN)}</b>` : ""}${(nf.c.site?.req?.conds||[]).length ? ` · ${esc(nf.c.site.req.conds.map(x => x.replace(/^[^:]+:\s*/, "")).join(" + "))}` : ""}</span></div>` : ""}
-    ${!nb && !nf ? `<div class="hint">챌린지와 패션 체크를 모두 끝냈어요</div>` : ""}</div>`;
   /* 점원별(제제 2026-11-10): 점원 장르의 챌린지 배틀 + 같은 큰 장르 조건의 패션 체크 */
   const staff = DATA.up.staff.map((x, i) => { const m = x.match(/^(.*) \((.*)\)$/); return {i, name: m ? m[1] : x, g: m ? m[2] : ""}; });
   const chips = `<div class="chips goal-st"><button class="chip sm ${S.goalSt == null ? "on" : ""}" data-goalst="" aria-pressed="${S.goalSt == null}">전체</button>${staff.map(x => `<button class="chip sm ${S.goalSt === x.i ? "on" : ""} ${btDone(x.i) ? "fcdone" : ""}" data-goalst="${x.i}" aria-pressed="${S.goalSt === x.i}">${esc(x.name)}<small>${esc(x.g)}</small></button>`).join("")}</div>`;
@@ -3046,14 +3043,16 @@ function goalPanel(){
       <div class="goal-b"><div class="sublbl" style="margin:0 0 4px">${esc(st.name)} · ${esc(st.g)}${main ? ` <span class="hint">${esc(layGName(main))}</span>` : ""}</div>
         ${bt ? `<div class="goal-row"><span class="k">${esc(bShort(bt.i))} 챌린지</span><span class="w">${bt.done ? "승리 ✓" : "아직"}</span></div>
           ${row("품질 합계", bt, bt.v[0], () => "입은 옷 합계")}${row("매력 합계", bt, bt.v[1], () => "입은 옷 합계")}${row(`직원 ${sn}`, bt, bt.v[2], () => "출전 직원 한 명")}
-          ${bt.b.note ? `<div class="hint" style="margin-top:4px">${esc(bt.b.note)}</div>` : ""}` : `<div class="hint">이 점원 장르의 챌린지가 없어요</div>`}</div>
+          ${bt.b.note ? `<div class="hint" style="margin-top:4px">${esc(bt.b.note)}</div>` : ""}${goalSets(bt.i)}` : `<div class="hint">이 점원 장르의 챌린지가 없어요</div>`}</div>
       <div class="goal-b"><div class="sublbl" style="margin:0 0 4px">${esc(layGName(main) || "같은 장르")} 패션 체크</div>
         ${fl.length ? fl.map(x => `<div class="goal-row"><span class="k">패션 체크 ${x.oi+1}</span><b>${nf0(x.cv)}</b><span class="w">${esc(x.c.site.req.conds.map(c => c.replace(/^[^:]+:\s*/, "")).join(" + "))}${x.c.site.req.facN != null ? ` · 시설 점수 ${nf0(x.c.site.req.facN)}` : ""}${x.done ? " · 완료 ✓" : ""}</span></div>`).join("") : `<div class="hint">장르 조건이 이 장르인 패션 체크가 없어요</div>`}</div>
       <div class="hint">품질·매력·코디 점수는 입은 옷 합계 · 출처: KairoHistory 배틀·패션 체크</div></div>`;
   }
   return `<div class="goalpanel"><div class="sublbl" style="margin:0 0 8px">목표치 <span class="hint">챌린지 ${bts.filter(x => x.done).length}/${bts.length} · 패션 체크 ${fcs.filter(x => x.done).length}/${fcs.length} · 합계 기준</span></div>
-    ${chips}${next}${block("남은 것 전부 깨려면(최대값)", left(bts), left(fcs))}${bts.some(x => x.done) || fcs.some(x => x.done) ? block("전체 기준(끝낸 것 포함)", bts, fcs) : ""}
-    <div class="hint">품질·매력·코디 점수는 입은 옷 합계, 직원 능력은 출전 직원 한 명 기준 · 출처: KairoHistory 배틀·패션 체크</div></div>`;
+    ${chips}<div class="goal-b goal-gl">${staff.map(st => { const bt = bts.find(x => x.i === st.i); if (!bt) return "";
+      const sn = !bt.b.stat || bt.b.stat === "-" ? "특기" : bt.b.stat;
+      return `<button type="button" class="goal-gr ${bt.done ? "done" : ""}" data-goalst="${st.i}"><span class="k">${esc(st.g)}</span><span class="w"><span>품질&nbsp;<b>${nf0(bt.v[0])}</b></span> · <span>매력&nbsp;<b>${nf0(bt.v[1])}</b></span> · <span>${esc(sn)}&nbsp;<b>${nf0(bt.v[2])}</b></span></span>${bt.done ? `<span class="goal-ok" aria-label="승리">${ICON.ok}</span>` : ""}</button>`; }).join("")}</div>
+    <div class="hint">장르를 누르면 그 점원 챌린지 자세히 · 품질·매력은 입은 옷 합계, 직원 능력은 출전 직원 한 명 기준 · 출처: KairoHistory 배틀</div></div>`;
 }
 /* 스크롤 위치 기억(제제 2026-11-10): 폰에서 게임과 오가면 페이지가 다시 열려 맨 위로 가던 문제.
    탭별 위치를 이 기기에 저장해 두고, 다시 열렸을 때(2시간 안) 같은 탭이면 데이터가 다 그려진 뒤 그 위치로 */
