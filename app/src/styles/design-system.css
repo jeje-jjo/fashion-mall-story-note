@@ -622,3 +622,10 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root .goal-win.on { background: var(--blue-soft); color: var(--blue-ink); border-color: color-mix(in srgb, var(--blue) 40%, transparent); }
 :root:root .goalpanel .goal-sp { font-size: var(--t-meta); }
 :root:root .goalpanel .goal-b > .sublbl .tag { margin-left: 4px; vertical-align: 1px; }
+:root:root .goal-ttl { display: flex; align-items: center; gap: 6px; }
+:root:root .goal-ttl > span { flex: 1 1 auto; min-width: 0; }
+:root:root .goal-ttl .goal-win { flex: none; margin-left: auto; }
+/* 보상 특수옵션: 숫자 칸과 오른쪽 끝을 맞추고, 길면 왼쪽으로 넘침 */
+:root:root .goalpanel .goal-rw { grid-template-columns: 88px 52px 1fr; }
+:root:root .goalpanel .goal-rw > b.goal-sp { direction: rtl; text-align: right; white-space: nowrap; min-width: 0; overflow: visible; font-size: inherit; }
+:root:root .goalpanel .goal-rw > b.goal-sp > span { direction: ltr; unicode-bidi: isolate; display: inline-block; }
