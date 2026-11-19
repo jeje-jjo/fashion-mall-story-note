@@ -101,7 +101,7 @@ function autoSaveSel(){
   selTimer = setTimeout(() => { const all = curSel(); S.cloSlot = {...S.cloSlot, all, ...all};
     writeSerial("ui/slots", {slot:S.cloSlot}).catch(() => showNotice("선택을 저장하지 못했어요. 도구 > 저장에서 수동 저장해 주세요.")).finally(() => { selPending = false; }); }, 400);
 }
-const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,facMode:S.facMode,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,coModal:S.coModal,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloAllShow:S.cloAllShow,spFold:S.spFold,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
+const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,facMode:S.facMode,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,coModal:S.coModal,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpV2:S.cloExpV2,cloMulti:S.cloMulti,cloAllShow:S.cloAllShow,spFold:S.spFold,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
 if (S.facType!=="전체" && S.facType!=="우선개량" && !(S.facType in TYPE_COLOR)) S.facType = "전체";
 if (!Array.isArray(S.cloCat)) S.cloCat = S.cloCat && S.cloCat!=="전체" ? [S.cloCat] : [];
 if (!Array.isArray(S.cloPat)) S.cloPat = S.cloPat && S.cloPat!=="전체" ? [S.cloPat] : [];
@@ -110,7 +110,9 @@ if (!Array.isArray(S.upStaffs)) S.upStaffs = [];
 /* 2026-11-06 제제 결정: 의류 칩 줄은 모두 다중 선택이 기본(한 번만 켬, 이후엔 고른 대로) */
 try{ if (localStorage.getItem("fms-v2-multi") !== "1"){ S.cloMulti = true; localStorage.setItem("fms-v2-multi", "1"); } }catch(e){}
 /* 의류 필터는 열 때마다 전부 접힌 상태로 시작(선택은 유지) */
-S.cloExp = {}; S.btOpen = false;
+/* 의류 장르·옷본·재료·옵션 줄: 기본은 전체 펼침, 접으면 그 상태를 기억(제제 2026-11-19). 예전엔 열 때마다 접혔음 → 한 번만 펼침으로 바꿔 줌 */
+if (!S.cloExpV2 || !S.cloExp || typeof S.cloExp !== "object"){ S.cloExp = {cat:true, pat:true, mat:true, opt:true}; S.cloExpV2 = true; }
+S.btOpen = false;
 if (S.facSort==="타입순") S.facSort = "장르순";
 if (S.facSort==="필요 적은순") S.facSort = "좋음 적은순";
 const tabFromHash = location.hash.replace("#","");
