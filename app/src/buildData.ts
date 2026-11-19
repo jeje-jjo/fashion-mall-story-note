@@ -358,6 +358,42 @@ export function buildData(t: Tables) {
       flow: runs.map(([g, a]) => [g, Math.round(a / T * 100)]),
       deciles: chunk(10).map((c, k) => { const s = Object.values(c).reduce((x, y) => x + y, 0); return Object.entries(c).sort((a, b) => b[1] - a[1]).map(([g, a]) => [g, Math.round(a / s * 100), names10[k]?.[g] || []]); }),
       raw: raw.map(([g, a]) => [g, pc(a)]) };
+    /* 랭크별 장르 해금률(2026-11-19 제제): unlock_order에 랭크가 없어 여는 옷의 옷본·재료·옵션이 풀리는 랭크로 추정.
+       게임 랭크 = 사이트 랭크 − 1. 새 옷 베이스·새 스터디는 그 랭크, 처음부터 있는 것은 0,
+       패션 체크 보상 옵션은 등장 조건의 만든 옷 수를 랭크 기준(만든 옷 개수)과 비교한 대략값.
+       시설 랭크 = 세 값 중 최댓값, 줄 순서대로 앞보다 작아지지 않게(누적 최대) → "이때 이상" 최소 추정 */
+    {
+      const nk = (x: unknown) => String(x ?? "").replace(/\s/g, "").replace("꽃·식물", "식물");
+      const pick = (s: string, k: string) => (s.match(new RegExp(`${k}:\\s*([^/]+)`)) || [])[1]?.trim() || "";
+      const made = (s: unknown) => +((String(s ?? "").match(/만든 옷 (?:개수|수)\s*:?\s*(\d+)/) || [])[1] || 0);
+      const studyBy = new Map<string, string[]>(t.site_studies.map((r) => [String(r.c0 ?? "").trim(), String(r.c2 ?? "").split(",").map((x) => x.trim()).filter(Boolean)]));
+      const RK = new Map<string, number>();
+      ["컷앤소", "팬츠", "재킷", "라운드넥", "스트레이트", ...(studyBy.get("접객 매너 강습") || [])].forEach((v) => RK.set(nk(v), 0));
+      const ranks = [...t.site_ranks].sort((a, b) => (+a.c0) - (+b.c0));
+      const th = ranks.map((r) => [made(r.c1), +r.c0 - 1] as [number, number]);
+      ranks.forEach((r) => { const g = +r.c0 - 1, s = String(r.c2 ?? ""), b = pick(s, "새 옷 베이스");
+        if (b && !RK.has(nk(b))) RK.set(nk(b), g);
+        (studyBy.get(pick(s, "새 스터디")) || []).forEach((v) => { if (!RK.has(nk(v))) RK.set(nk(v), g); }); });
+      const m2r = (m: number) => Math.max(0, ...th.filter(([n]) => n <= m).map(([, g]) => g));
+      t.fashion_checks.forEach((f) => { const rw = String(f.rewardOption || String(f.reward ?? "").split("&")[0] || "").trim(); if (rw && !RK.has(nk(rw))) RK.set(nk(rw), m2r(made(f.appear))); });
+      const cloBy = new Map<string, Row>(); t.clothes.forEach((c) => [c.name, c.siteName].forEach((n) => { if (n && !cloBy.has(nk(n))) cloBy.set(nk(n), c); }));
+      const miss = new Set<string>(); let cur = 0;
+      const rk = new Map<Row, number>();
+      un.forEach((r: Row) => { const c = cloBy.get(nk(r.clothes)); let v = 0;
+        if (!c) miss.add(`옷 ${r.clothes}`);
+        else ["pattern", "material", "option"].forEach((k) => { const x = c[k]; if (!x || x === "없음") return; const g = RK.get(nk(x)); if (g == null) miss.add(String(x)); else v = Math.max(v, g); });
+        cur = Math.max(cur, v); rk.set(r, cur); });
+      const GO = ["내추럴", "쿨", "큐트", "성숙", "레트로", "하드", "서브컬쳐"];
+      const genres = [...GO.filter((g) => inc.some((r: Row) => r.genre === g)), ...[...new Set(inc.map((r: Row) => r.genre))].filter((g) => !GO.includes(g as string))] as string[];
+      const tot = Object.fromEntries(genres.map((g) => [g, inc.filter((r: Row) => r.genre === g).reduce((a: number, r: Row) => a + ar(r), 0) || 1]));
+      const rows = Array.from({ length: 11 }, (_, k) => [k, genres.map((g) => {
+        const L2 = inc.filter((r: Row) => r.genre === g);
+        const pct = Math.round(L2.filter((r: Row) => (rk.get(r) ?? 0) <= k).reduce((a: number, r: Row) => a + ar(r), 0) / tot[g] * 100);
+        return [pct, L2.filter((r: Row) => rk.get(r) === k).map((r: Row) => [r.name, r.facId])];
+      })]);
+      const full = Object.fromEntries(genres.map((g, i) => [g, (rows.find(([, cs]: any) => cs[i][0] >= 100) || [null])[0]]));
+      L.unlockFlow.rankGrid = { genres, rows, full, miss: [...miss] };
+    }
   }
   L.refTables = L.refTables.filter((x: any) => x.rows.length);
   L.alias = alias;

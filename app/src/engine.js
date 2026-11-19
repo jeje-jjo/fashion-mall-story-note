@@ -2861,9 +2861,28 @@ function unlockFlowCard(F){
     <div class="ufl-flow">${F.flow.map(([g, p], i) => `${i ? `<span class="ufl-arr">→</span>` : ""}<span class="ufl-step">${dot(g)}${esc(g)} <b>${p}%</b></span>`).join("")}</div>
     <div class="sublbl" style="margin:12px 0 6px">10% 구간별 장르 비중</div>
     <div class="ufl-dec">${F.deciles.map((d, k) => `<div class="ufl-row ${k === curDec ? "cur" : ""} ${decDone[k][0] === decDone[k][1] ? "done" : ""}"><span class="ufl-k">${k * 10}~${k * 10 + 10}%<small>${decDone[k][0]}/${decDone[k][1]}</small></span><span class="ufl-bar">${d.map(([g, p]) => `<span style="flex:${p};background:${TYPE_COLOR[g] || "var(--fg3)"}" title="${esc(g)} ${p}%"></span>`).join("")}</span><span class="ufl-v">${d.map(([g, p]) => { const key = `${k}|${g}`, on = S.uflOpen === key; return `<button type="button" class="ufl-g ${on?"on":""}" data-ufl="${esc(key)}" aria-expanded="${on}">${esc(g)} ${p}% <span class="ufl-tri" aria-hidden="true">${on ? "▴" : "▾"}</span></button>`; }).join("")}</span>${(() => { const hit = d.find(([g]) => S.uflOpen === `${k}|${g}`); return hit ? `<div class="ufl-names">${dot(hit[0])}${(hit[2] || []).map(([n, id]) => `<span class="${isOpen(id) ? "op" : ""}">${isOpen(id) ? ICON.ok : ""}${esc(n)}</span>`).join("")}</div>` : ""; })()}</div>`).join("")}</div>
+    ${F.rankGrid ? uflRankGrid(F.rankGrid, dot, isOpen) : ""}
     <button type="button" class="linkbtn" data-act="unlockraw" style="margin-top:10px" aria-expanded="${open}">${open ? "자세한 순서 접기" : "자세한 순서(묶지 않은 그대로) 보기"}</button>
     ${open ? `<div class="ufl-flow ufl-raw">${F.raw.map(([g, p], i) => `${i ? `<span class="ufl-arr">→</span>` : ""}<span class="ufl-step">${esc(g)} ${p}%</span>`).join("")}</div>` : ""}
   </section>`;
+}
+/* 랭크별 장르 해금률(제제 2026-11-19): 랭크 0~10 × 장르, 누적 크기 비율. 100%가 된 다음 줄부터 ✓. 칸을 누르면 그 랭크에 새로 열린 시설 */
+const UFL_SHORT = {"서브컬쳐":"서브"};
+function uflRankGrid(G, dot, isOpen){
+  const n = G.genres.length, op = S.uflRk;
+  const cell = (k, i, [p, names]) => { const prev = k ? G.rows[k - 1][1][i][0] : -1;
+    if (prev >= 100) return `<span class="ufr-c ufr-ok" aria-label="완성">✓</span>`;
+    const key = `${k}|${i}`, on = op === key, has = names.length > 0;
+    return has ? `<button type="button" class="ufr-c ${on?"on":""} ${p>=100?"full":""}" data-uflrk="${key}" aria-expanded="${on}" aria-label="랭크 ${k} ${esc(G.genres[i])} ${p}%, 새로 열린 시설 ${names.length}곳">${p}<i class="ufr-new" aria-hidden="true"></i></button>`
+      : `<span class="ufr-c ${p?"":"zero"} ${p>=100?"full":""}">${p}</span>`; };
+  const hit = op ? (() => { const [k, i] = op.split("|").map(Number); const c = G.rows[k]?.[1]?.[i]; return c && c[1].length ? [k, i, c[1]] : null; })() : null;
+  return `<div class="sublbl" style="margin:14px 0 6px">랭크별 장르 해금률 <span class="hint" style="margin:0">누적 %</span></div>
+    <div class="ufr" style="--n:${n}">
+      <div class="ufr-r ufr-h"><span class="ufr-k">랭크</span>${G.genres.map(g => `<span class="ufr-c">${dot(g)}<span class="ufr-g">${esc(UFL_SHORT[g] || g)}</span></span>`).join("")}</div>
+      ${G.rows.map(([k, cs]) => `<div class="ufr-r"><span class="ufr-k">${k}</span>${cs.map((c, i) => cell(k, i, c)).join("")}</div>${hit && hit[0] === k ? `<div class="ufl-names ufr-names">${dot(G.genres[hit[1]])}<b>랭크 ${k} · ${esc(G.genres[hit[1]])}</b>${hit[2].map(([nm, id]) => `<span class="${isOpen(id) ? "op" : ""}">${isOpen(id) ? ICON.ok : ""}${esc(nm)}</span>`).join("")}</div>` : ""}`).join("")}
+      <div class="ufr-r ufr-f"><span class="ufr-k">완성</span>${G.genres.map(g => `<span class="ufr-c">${G.full[g] ?? "—"}</span>`).join("")}</div>
+    </div>
+    <p class="hint" style="margin:6px 0 0">9회차 기록 기준 추정이에요. 옷 레시피가 풀리는 랭크로 계산했고, 패션 체크 보상 옵션은 만든 옷 수로 대략 맞췄어요. 일찍 만들 수 있는 옷을 늦게 만들면 그 랭크로 잡혀요.${G.miss?.length ? ` 풀리는 랭크를 못 찾은 값(${G.miss.map(esc).join(", ")})은 계산에서 뺐어요.` : ""} 점 찍힌 칸을 누르면 그 랭크에 새로 열린 시설이 나와요.</p>`;
 }
 function viewRef(){
   const all = DATA.refTables || [];
@@ -3352,6 +3371,7 @@ document.addEventListener("click", e => {
   if (d.cfpart){ return; }
   if (d.cfxreset){ const c = DATA.coord.find(x => x.id===+d.cfxreset); const from = cTitle(c); delete S.optDraft["cfx-"+c.id]; saveCfix(c, {title:""}, {kind:"coordreq", from, to:c.r, synced:false}); toast("원래 제목으로 되돌렸어요"); return; }
   if (d.slotmenu){ S.slotOpen = S.slotOpen===d.slotmenu ? null : d.slotmenu; render(); return; }
+  if (d.uflrk != null){ S.uflRk = S.uflRk === d.uflrk ? null : d.uflrk; render(); return; }
   if (d.act==="spfold"){ S.spFold = !S.spFold; remember(); render(); return; }
   if (d.act==="allpickshow"){ S.cloAllShow = !S.cloAllShow; remember(); render(); return; }
   if (d.act==="csp"){ S.cloSp = !S.cloSp; remember(); render(); return; }

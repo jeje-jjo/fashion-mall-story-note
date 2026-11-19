@@ -509,3 +509,22 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root .allpick-t { flex: 1 1 auto; min-width: 0; }
 :root:root .allpick .chip { flex: none; }
 :root:root .optsp.is-folded .optsp-h { margin-bottom: 0; }
+
+/* 해금 흐름: 랭크별 장르 해금률 표(제제 2026-11-19). 8칸이 폰 폭에 들어가게 숫자만, 가로 스크롤 없음 */
+:root:root .ufr { display: grid; gap: 2px; font-size: 12px; font-variant-numeric: tabular-nums; }
+:root:root .ufr-r { display: grid; grid-template-columns: 2.6em repeat(var(--n), minmax(0, 1fr)); gap: 2px; align-items: stretch; }
+:root:root .ufr-k { display: flex; align-items: center; color: var(--fg3); font-size: 11px; }
+:root:root .ufr-c { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 26px; padding: 0; border: 0; border-radius: 6px; background: var(--soft); color: var(--fg); font: inherit; font-size: 12px; }
+:root:root .ufr-c.zero { color: var(--fg3); background: transparent; }
+:root:root .ufr-c.full { background: var(--blue-soft); color: var(--blue-ink); font-weight: 700; }
+:root:root .ufr-c.ufr-ok { background: transparent; color: var(--blue-ink); font-size: 11px; }
+:root:root button.ufr-c { cursor: pointer; }
+:root:root button.ufr-c.on { outline: 2px solid var(--blue); outline-offset: -2px; }
+:root:root .ufr-new { position: absolute; top: 3px; right: 3px; width: 4px; height: 4px; border-radius: 50%; background: var(--blue); }
+:root:root .ufr-h .ufr-c { flex-direction: column; gap: 2px; min-height: 34px; background: transparent; font-size: 11px; color: var(--fg2); }
+:root:root .ufr-g { max-width: 100%; overflow: hidden; text-overflow: clip; white-space: nowrap; letter-spacing: -.02em; }
+:root:root .ufr-f { margin-top: 4px; padding-top: 4px; border-top: 1px dashed var(--line); }
+:root:root .ufr-f .ufr-c { background: transparent; font-weight: 700; color: var(--blue-ink); }
+:root:root .ufr-names { margin: 2px 0 4px; }
+:root:root .ufr-names b { font-size: var(--t-meta); margin-right: 4px; }
+@media (min-width: 740px) { :root:root .ufr { font-size: 13px; max-width: 640px; } :root:root .ufr-c { min-height: 30px; font-size: 13px; } }
