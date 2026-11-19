@@ -498,7 +498,7 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root .optsp { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
 :root:root .optsp-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
 :root:root .optsp-h .hint { font-size: var(--t-meta); color: var(--fg3); }
-:root:root .optsp-h .spchip { margin-left: auto; }
+:root:root .optsp-h .fold { margin-left: auto; }
 :root:root .filter-row > .optsp:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
 :root:root .allpick { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 4px 0 10px; padding: 9px 12px; border-radius: 12px; background: var(--blue-soft); color: var(--blue-ink); }
 :root:root .allpick-t { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: var(--t-body); font-weight: 650; }
@@ -508,3 +508,4 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root .allpick { flex-wrap: nowrap; }
 :root:root .allpick-t { flex: 1 1 auto; min-width: 0; }
 :root:root .allpick .chip { flex: none; }
+:root:root .optsp.is-folded .optsp-h { margin-bottom: 0; }

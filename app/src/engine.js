@@ -101,7 +101,7 @@ function autoSaveSel(){
   selTimer = setTimeout(() => { const all = curSel(); S.cloSlot = {...S.cloSlot, all, ...all};
     writeSerial("ui/slots", {slot:S.cloSlot}).catch(() => showNotice("선택을 저장하지 못했어요. 도구 > 화면에서 수동 저장해 주세요.")).finally(() => { selPending = false; }); }, 400);
 }
-const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,coModal:S.coModal,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloAllShow:S.cloAllShow,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
+const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,coModal:S.coModal,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpInit:S.cloExpInit,cloMulti:S.cloMulti,cloAllShow:S.cloAllShow,spFold:S.spFold,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
 if (S.facType!=="전체" && S.facType!=="우선개량" && !(S.facType in TYPE_COLOR)) S.facType = "전체";
 if (!Array.isArray(S.cloCat)) S.cloCat = S.cloCat && S.cloCat!=="전체" ? [S.cloCat] : [];
 if (!Array.isArray(S.cloPat)) S.cloPat = S.cloPat && S.cloPat!=="전체" ? [S.cloPat] : [];
@@ -441,14 +441,15 @@ async function saveChipOrder(order){
 }
 const foldChips = (list, cur, attr, key) => {
   if (S.orderEdit && ORDER_KEYS.includes(key)) return `<div class="chips cfoldchips dragwrap" data-dwrap="${key}">${list.filter(([k]) => k!=="전체").map(([k,label]) => `<span class="chip dragchip" data-dk="${key}" data-dv="${esc(k)}"><i aria-hidden="true">⋮⋮</i>${label}</span>`).join("")}</div>`;
-  const L = list.filter(([k]) => k!=="전체" && !(key==="opt" && SP_OPTS.includes(k)));
+  const L = list.filter(([k]) => k!=="전체" && !(key==="opt" && S.cloExp.opt && SP_OPTS.includes(k)));  /* 접힌 띠에는 특수옵션도 맨 뒤에 같이 */
   return `<div class="chips cfoldchips ${S.cloExp[key]?"is-expanded":"is-strip"}" aria-label="${({cat:"장르",pat:"옷본",mat:"재료",opt:"옵션"})[key]} 선택">${L.map(x => chipBtn(x, cur, attr, key)).join("")}</div>`;
 };
 const chipBtn = ([k,label,meta], cur, attr, key) => `<button class="chip ${isOn(k,cur)?"on":""} ${attr==="copt" && SP_OPTS.includes(k)?"spchip":""} ${meta===0?"zero":""}" data-${attr}="${esc(k)}" aria-pressed="${isOn(k,cur)}" ${S.nextTgt?.[key]?.includes(k)&&!isOn(k,cur)?'data-next="1" title="다음 랭크에서 열려요"':""}>${label}${meta!==""&&meta!=null?`<b>${meta}</b>`:""}</button>`;
 /* 특수옵션은 옵션 줄 안에서 따로 묶음(제제 2026-11-19). 몇 개 안 돼서 늘 펼쳐 둔다 */
 const spBlock = (list, cur) => { const sp = list.filter(([k]) => SP_OPTS.includes(k)); if (!sp.length) return "";
   const all = sp.every(([k]) => cur.includes(k)), n = sp.filter(([k]) => cur.includes(k)).length;
-  return `<div class="optsp"><div class="optsp-h"><span class="sublbl" style="margin:0">★ 특수옵션</span><span class="hint">${n}/${sp.length} 선택</span><button class="chip sm spchip ${all?"on":""}" data-act="spall" aria-pressed="${all}">${all?"특수 해제":"특수 전체"}</button></div><div class="chips cfoldchips is-expanded" aria-label="특수옵션 선택">${sp.map(x => chipBtn(x, cur, "copt", "opt")).join("")}</div></div>`; };
+  const fo = !!S.spFold;
+  return `<div class="optsp ${fo?"is-folded":""}"><div class="optsp-h"><span class="sublbl" style="margin:0">★ 특수옵션</span><span class="hint">${n}/${sp.length} 선택</span><button class="chip sm fold" data-act="spfold" aria-expanded="${!fo}">${fo?`<span class="ph-x">펼치기 </span>▾`:`<span class="ph-x">접기 </span>▴`}</button><button class="chip sm spchip ${all?"on":""}" data-act="spall" aria-pressed="${all}">${all?"특수 해제":"특수 전체"}</button></div>${fo ? "" : `<div class="chips cfoldchips is-expanded" aria-label="특수옵션 선택">${sp.map(x => chipBtn(x, cur, "copt", "opt")).join("")}</div>`}</div>`; };
 
 const cloName = c => S.names.clo[c.id] || c.n;
 const cloRenamed = () => { const m = {}; DATA.clo.forEach(c => { const nn = S.names.clo[c.id]; if (nn && nn !== c.n) m[c.n] = nn; }); return m; };
@@ -1474,7 +1475,7 @@ function viewClo(){
     <div class="filter-row">${rowHead("장르","cat","ccat",S.cloCat)}${foldChips(catChips, S.cloCat, "ccat", "cat")}</div>
     <div class="filter-row">${rowHead("옷본","pat","cpat",S.cloPat,rows.length)}${foldChips(patChips, S.cloPat, "cpat", "pat")}</div>
     <div class="filter-row">${rowHead("재료","mat","cmat",S.cloMat)}${foldChips(matChips, S.cloMat, "cmat", "mat")}</div>
-    <div class="filter-row">${rowHead("옵션","opt","copt",S.cloOpt)}${foldChips(optChips, S.cloOpt, "copt", "opt")}${spBlock(optChips, S.cloOpt)}</div>
+    <div class="filter-row">${rowHead("옵션","opt","copt",S.cloOpt)}${foldChips(optChips, S.cloOpt, "copt", "opt")}${S.cloExp.opt ? spBlock(optChips, S.cloOpt) : ""}</div>
     </div>`; })()}
     ${rankStep ? `<div class="ranknext"><button type="button" class="rn-k" data-act="quick" data-q="rank" title="현재 랭크 고르기">${curRank()!=null?`현재 ${curRank()} · `:""}다음 랭크 ${gRank(rankStep.rank)} <span class="rn-tri" aria-hidden="true">▾</span></button><span class="rn-v">배틀 ${esc(rankStep.battle)} → ${esc(rankStep.char)} → <b>${esc(rankStep.genre)}</b>${rankStep.base?` · 옷본 <b>${esc(rankStep.base)}</b>`:""}${rankStep.study?` · 스터디 ${esc(rankStep.study)}${rankStep.studyItems?.length?`(<b>${rankStep.studyItems.map(esc).join("·")}</b>)`:""}`:""}</span><span class="rn-h">'다음' 점선 칩이 다음에 열리는 것 · 모두 고르면 다음 단계</span></div>` : ""}
     ${cntBox}
@@ -3351,6 +3352,7 @@ document.addEventListener("click", e => {
   if (d.cfpart){ return; }
   if (d.cfxreset){ const c = DATA.coord.find(x => x.id===+d.cfxreset); const from = cTitle(c); delete S.optDraft["cfx-"+c.id]; saveCfix(c, {title:""}, {kind:"coordreq", from, to:c.r, synced:false}); toast("원래 제목으로 되돌렸어요"); return; }
   if (d.slotmenu){ S.slotOpen = S.slotOpen===d.slotmenu ? null : d.slotmenu; render(); return; }
+  if (d.act==="spfold"){ S.spFold = !S.spFold; remember(); render(); return; }
   if (d.act==="allpickshow"){ S.cloAllShow = !S.cloAllShow; remember(); render(); return; }
   if (d.act==="csp"){ S.cloSp = !S.cloSp; remember(); render(); return; }
   if (d.oclo){ S.cloOpen = S.cloOpen===+d.oclo ? null : +d.oclo; render(); return; }
