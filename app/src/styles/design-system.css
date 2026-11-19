@@ -614,3 +614,11 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root #quick .qpanel:has(> .gutabs-wrap) { padding-top: 0; }
 :root:root #quick .qpanel > .gutabs-wrap { position: sticky; top: 0; z-index: 2; margin: 0 -16px 10px; padding: 12px 16px 10px; background: var(--card); border-bottom: 1px solid var(--line); }
 :root:root #quick .gutabs-wrap .gutabs { margin: 0 !important; }
+/* 목표치 점원 상세 정리(제제 2026-11-19): 챌린지·보상 값을 '입은 옷 합계' 칸에 맞춤, 승리 버튼 작게, 장르 태그 */
+:root:root .goalpanel .goal-row .k { white-space: nowrap; }
+:root:root .goalpanel .goal-btd, :root:root .goalpanel .goal-rw { align-items: center; }
+:root:root .goal-win { display: inline-flex; align-items: center; gap: 3px; height: 22px; padding: 0 8px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); color: var(--fg2); font: inherit; font-size: var(--t-meta); font-weight: 600; cursor: pointer; }
+:root:root .goal-win .ui-icon { width: 11px; height: 11px; }
+:root:root .goal-win.on { background: var(--blue-soft); color: var(--blue-ink); border-color: color-mix(in srgb, var(--blue) 40%, transparent); }
+:root:root .goalpanel .goal-sp { font-size: var(--t-meta); }
+:root:root .goalpanel .goal-b > .sublbl .tag { margin-left: 4px; vertical-align: 1px; }
