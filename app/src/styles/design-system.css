@@ -629,3 +629,4 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root .goalpanel .goal-rw { grid-template-columns: 88px 52px 1fr; }
 :root:root .goalpanel .goal-rw > b.goal-sp { direction: rtl; text-align: right; white-space: nowrap; min-width: 0; overflow: visible; font-size: inherit; }
 :root:root .goalpanel .goal-rw > b.goal-sp > span { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+:root:root .goalpanel .goal-b > .sublbl { margin-bottom: 10px !important; }
