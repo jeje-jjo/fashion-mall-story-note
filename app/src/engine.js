@@ -991,7 +991,9 @@ async function toggleFcDone(oi){
   if (on) rec.doneRun = RUN; else delete rec.doneRun;
   const rw = applyFcReward(oi, on);
   /* 완료하면 시설 탭에서 골라 둔 그 패션 체크를 빼고 번호판을 접는다(제제 2026-11-18) */
-  if (on && (S.facFcSel || []).includes(oi + 1)){ S.facFcSel = S.facFcSel.filter(n => n !== oi + 1); remember(); }  /* 목록(1~20)은 접지 않음(제제 2026-11-19) */
+  /* 완료하면 다음 번호(아직 안 한 것)를 골라 둠(제제 2026-11-19) */
+  if (on && (S.facFcSel || []).includes(oi + 1)){ let nx = null; for (let n = oi + 2; n <= FC_MAX; n++) if (!fcDone(n-1)){ nx = n; break; }
+    S.facFcSel = [...S.facFcSel.filter(n => n !== oi + 1), ...(nx && !S.facFcSel.includes(nx) ? [nx] : [])]; remember(); }  /* 목록(1~20)은 접지 않음(제제 2026-11-19) */
   S.chkscore = {...S.chkscore, [oi]:rec}; render(); toast(on ? `패션 체크 ${oi+1} 완료${rw ? ` · 의류 필터에 ${rw} 선택` : ""}` : `패션 체크 ${oi+1} 완료 취소${rw ? ` · ${rw} 선택 해제` : ""}`, on ? () => { if (fcDone(oi)) toggleFcDone(oi); } : null);
   if (on && rw) goCloSoon(() => fcDone(oi)); else clearTimeout(goCloT);
   if (db) try{ await writeSerial(`chkscore/k${oi}`, {...rec, t:Date.now(), by:"app"}); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
