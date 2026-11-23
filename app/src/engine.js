@@ -3115,7 +3115,7 @@ function goalPanel(){
       <div class="hint">품질·매력·코디 점수는 입은 옷 합계 · 출처: KairoHistory 배틀·패션 체크</div></div>`;
   }
   return `<div class="goalpanel"><div class="sublbl" style="margin:0 0 8px">목표치 <span class="hint">챌린지 ${bts.filter(x => x.done).length}/${bts.length} · 패션 체크 ${fcs.filter(x => x.done).length}/${fcs.length} · 합계 기준</span></div>
-    ${chips}<div class="goal-b goal-gl">${staff.map(st => { const bt = bts.find(x => x.i === st.i); if (!bt) return "";
+    ${chips}<div class="goal-b goal-gl">${[...staff].sort((a, b) => (btDone(a.i) ? 1 : 0) - (btDone(b.i) ? 1 : 0)).map(st => {  /* 이긴 장르는 아래로(제제 2026-11-23) */ const bt = bts.find(x => x.i === st.i); if (!bt) return "";
       const sn = !bt.b.stat || bt.b.stat === "-" ? "특기" : bt.b.stat;
       return `<button type="button" class="goal-gr ${bt.done ? "done" : ""}" data-goalst="${st.i}"><span class="k">${esc(st.g)}</span><span class="w"><span>품질&nbsp;<b>${nf0(bt.v[0])}</b></span> · <span>매력&nbsp;<b>${nf0(bt.v[1])}</b></span> · <span>${esc(sn)}&nbsp;<b>${nf0(bt.v[2])}</b></span></span>${bt.done ? `<span class="goal-ok" aria-label="승리">${ICON.ok}</span>` : ""}</button>`; }).join("")}</div>
     <div class="hint">장르를 누르면 그 점원 챌린지 자세히 · 품질·매력은 입은 옷 합계, 직원 능력은 출전 직원 한 명 기준 · 출처: KairoHistory 배틀</div></div>`;
