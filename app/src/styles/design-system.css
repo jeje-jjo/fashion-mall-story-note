@@ -644,3 +644,6 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root .seg.wide.facmode { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 /* 아래 탭: 버튼 누르는 범위를 위로 8px 넓힘 */
 @media (max-width: 739px) { :root:root nav.tabs button::before { content: ""; position: absolute; left: 0; right: 0; top: -8px; height: 8px; } }
+/* 코디 팝업 스크롤(아이폰 사파리): 세로 flex 안에서 내용 칸이 줄어들 수 있게(min-height 0), 화면 높이는 dvh 기준 */
+:root:root .comodal { max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); }
+:root:root .comodal-b { flex: 1 1 auto; min-height: 0; touch-action: pan-y; }

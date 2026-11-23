@@ -3154,6 +3154,11 @@ function render(){
   const ae = document.activeElement;
   const html = `<div class="stack">${({fac:viewFac,clo:viewClo,coord:viewCoord,tool:viewTool})[S.tab]()}</div>`;
   const view = $("#view");
+  /* 코디 팝업(제제 2026-11-23: 아이폰에서 스크롤이 안 내려감): 저장·동기화로 다시 그릴 때마다 팝업 안 스크롤이 맨 위로 돌아가던 것.
+     내용이 같으면 다시 그리지 않고, 바뀌면 스크롤 위치를 이어 줌 */
+  const mb0 = view.querySelector(".comodal-b"), mbTop = mb0 ? mb0.scrollTop : 0, mbKey = mb0 ? S.coModal : null;
+  if (mb0 && html === render._last){ renderSheet(); return; }
+  render._last = html;
   if (ae && ae.classList?.contains("search") && ae.id && view.contains(ae)){
     const tmp = document.createElement("div"); tmp.innerHTML = html;
     if (!patchKeep(view, tmp, ae)) view.innerHTML = html;
@@ -3162,6 +3167,7 @@ function render(){
     view.innerHTML = html;
     if (focusId){ const el=document.getElementById(focusId); if(el){ el.focus({preventScroll:true}); try{el.setSelectionRange(caret,caret)}catch(e){} } }
   }
+  if (mbKey && mbKey === S.coModal){ const mb1 = view.querySelector(".comodal-b"); if (mb1) mb1.scrollTop = mbTop; }
   renderSheet();
   document.documentElement.classList.toggle("modal-open", S.tab === "coord" && S.coordSub === "req" && !!S.coModal && !!document.querySelector(".comodal"));
   if (scrPending) requestAnimationFrame(scrRestore);
