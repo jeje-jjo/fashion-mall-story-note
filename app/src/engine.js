@@ -1708,7 +1708,10 @@ function viewCoordReq(){
         <button type="button" class="chip sm" data-act="comodal-unsel">선택 취소</button>
         ${coDoneBtn(n, groups[n].length)}
         <button type="button" class="iconbtn" data-act="comodal-x" aria-label="창 닫기">${ICON.x}</button></div>
-      <div class="comodal-b"><div class="request-grid">${groups[n].map(c => entry(c, true)).join("")}</div></div>
+      ${(() => { /* 완료한 요청은 아래로(제제 2026-11-24): 완료는 ①부터 순서대로 쌓인다고 보고, 앞의 N개를 흐리게 아래로 */
+        const L = groups[n], st = dn ? L.length : Math.min(S.coordStep?.[n] || 0, L.length);
+        const todo = L.slice(st).map(c => entry(c, true)), got = L.slice(0, st).map(c => entry(c, true).replace('class="coord sub request-entry', 'class="coord sub request-entry req-got'));
+        return `<div class="comodal-b"><div class="request-grid">${todo.join("")}${got.length ? `<div class="req-got-h">완료한 요청 ${got.length}</div>${got.join("")}` : ""}</div></div>`; })()}
     </div></div>`; }
 }
 
