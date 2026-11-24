@@ -685,3 +685,6 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 /* 코디 요청 단계 완료(제제 2026-11-24) */
 :root:root .codone.costep b { font-weight: 700; margin-left: 2px; font-variant-numeric: tabular-nums; }
 :root:root .cochips .chip .co-st { font-size: var(--t-meta); color: var(--blue-ink); margin-left: 2px; font-variant-numeric: tabular-nums; }
+/* 골라 둔(진한) 손님 칩 안 단계 숫자는 칩 글자색을 따라감(제제 2026-11-24) */
+:root:root .cochips .chip.on .co-st { color: inherit; opacity: .8; }
+:root:root .cochips .chip.done .co-st { color: inherit; }
