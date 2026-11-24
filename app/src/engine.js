@@ -3185,7 +3185,10 @@ function render(){
   window.__prefsApply?.();
   renderSum();
   const pc = pendingList().length;
-  $("#tabs").style.setProperty("--tabn", TABS.length); $("#tabs").innerHTML = TABS.map(([k,l,ic]) => `<button class="${S.tab===k?"on":""}" data-tab="${k}" aria-current="${S.tab===k?"page":"false"}"><span class="tic">${ic}</span><span>${l}</span></button>`).join("");
+  /* 탭 줄 맨 끝 '다음 달'(제제 2026-11-24): 탭을 바꾸지 않고 누르면 게임 달만 한 칸 넘김. 지금 달을 같이 보여 줌 */
+  { const gd = gameDate(), mLab = gd ? `${gd.y}년 ${gd.m || 3}월` : "날짜";
+    $("#tabs").style.setProperty("--tabn", TABS.length + 1); $("#tabs").innerHTML = TABS.map(([k,l,ic]) => `<button class="${S.tab===k?"on":""}" data-tab="${k}" aria-current="${S.tab===k?"page":"false"}"><span class="tic">${ic}</span><span>${l}</span></button>`).join("")
+      + `<button type="button" class="tab-month" data-act="gdnext" aria-label="${esc(mLab)}, 누르면 다음 달로"><span class="tic tm-ic">${ICON.cal}</span><span class="tm-l">${esc(gd ? `${gd.m || 3}월` : "날짜")} <b>▸</b></span></button>`; }
 }
 
 /* 내려 볼 때 위에 붙는 요약줄(2026-11-06 제제: 고른 칩 요약만). 의류 = 고른 칩, 시설 = 장르·패션 체크(이전·다음)·아이템 */
