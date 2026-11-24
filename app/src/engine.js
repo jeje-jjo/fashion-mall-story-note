@@ -3459,6 +3459,9 @@ document.addEventListener("click", e => {
     if (add.length){ S.cloPat = [...(S.cloPat || []), ...add]; if (S.cloPat.length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, pat:true}; remember(); }
     toast(`현재 랭크 ${n}${add.length ? ` · 옷본 ${add.join("·")} 선택` : ""}`); render(); return; }
   if (d.rankclr){ mqNowSave({rank: null}); toast("랭크를 지웠어요"); render(); return; }
+  /* 맨 위·맨 아래로(제제 2026-11-24): 오른쪽 아래 버튼 */
+  if (d.act==="scrolltop"){ scrollTo({top:0, behavior:"smooth"}); return; }
+  if (d.act==="scrollbot"){ scrollTo({top:document.documentElement.scrollHeight, behavior:"smooth"}); return; }
   if (d.act==="quick"){
     if (d.q==="memo" || d.q==="goal" || d.q==="rank"){ const tgt = d.q==="memo" ? "date" : d.q==="rank" ? "rank" : (S.guLast || "goal");
       if (S.quick==="gu" && (d.q==="goal" || S.guTab===tgt)) S.quick = null; else { S.quick = "gu"; S.guTab = tgt; }

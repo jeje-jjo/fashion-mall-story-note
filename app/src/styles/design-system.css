@@ -688,3 +688,7 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 /* 골라 둔(진한) 손님 칩 안 단계 숫자는 칩 글자색을 따라감(제제 2026-11-24) */
 :root:root .cochips .chip.on .co-st { color: inherit; opacity: .8; }
 :root:root .cochips .chip.done .co-st { color: inherit; }
+/* 맨 위·맨 아래 버튼: 조금 작게, 빠른 보기 창이 열리면 숨김 */
+:root:root #fab .fab-sc { width: 38px !important; height: 38px !important; min-height: 0 !important; align-self: center; opacity: .92; }
+:root:root #fab .fab-sc svg { width: 16px; height: 16px; }
+html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
