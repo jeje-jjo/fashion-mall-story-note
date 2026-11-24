@@ -1388,7 +1388,7 @@ function nextRankStep(avail){
 }
 function rankPanel(){
   const R = curRank();
-  return `<div class="rankpick"><div class="sublbl" style="margin:0 0 8px">현재 랭크 <span class="hint">${R != null ? `${R}랭크` : "아직 안 정함"} · 게임 화면 숫자(0~10) · 10을 고르면 이 버튼은 사라져요</span></div>
+  return `<div class="rankpick"><div class="sublbl" style="margin:0 0 8px">현재 랭크 <span class="hint">${R != null ? `${R}랭크` : "아직 안 정함"} · 게임 화면 숫자(0~10)</span></div>
     <div class="numpad rankpad">${Array.from({length: RANK_MAX + 1}, (_, i) => i).map(n => `<button type="button" class="${n===R?"on":""}" data-rankset="${n}" aria-pressed="${n===R}">${n}</button>`).join("")}</div>
     ${R != null ? `<button type="button" class="linkbtn" data-rankclr="1" style="margin-top:8px">랭크 지우기</button>` : ""}</div>`;
 }
@@ -3042,7 +3042,7 @@ function viewSet(){
     ${row("기기", segB("device", [["auto","자동"],["phone","핸드폰"],["desk","PC·패드"]]))}
     ${row("테마", segB("mode", [["system","시스템"],["light","라이트"],["dark","다크"]]))}
     ${row("메인 색상", `<div class="pals">${[["rose","#955F64","빈티지 로즈"],["red","#994F53","뮤트 레드"],["taupe","#8E706E","로즈 토프"],["blue","#3182F6","기존 블루"]].map(([k,c,l]) => `<button type="button" class="pal" data-pal="${k}" style="--p:${c}"><i aria-hidden="true"></i>${l}</button>`).join("")}</div>`)}
-  </section><section class="card prefs-card"><div class="sec-h"><h2>현재 랭크</h2><span>오른쪽 아래 R 버튼과 같아요 · 10이면 버튼이 사라지니 여기서 고쳐요</span></div>${rankPanel()}</section>${homeLegend()}`;
+  </section><section class="card prefs-card"><div class="sec-h"><h2>현재 랭크</h2><span>오른쪽 아래 빠른 보기의 랭크 탭과 같아요</span></div>${rankPanel()}</section>${homeLegend()}`;
 }
 function viewMore(){
   const cur = MORE_SUBS.some(([k]) => k===S.moreSub) ? S.moreSub : "todo";
@@ -3176,10 +3176,12 @@ function render(){
   /* 목표치·개량 옵션은 한 버튼 안의 탭으로(제제 2026-11-18: 둘을 계속 오감). 마지막에 본 탭을 기억 */
   { const ub = document.querySelector('#fab [data-q="up"]'); if (ub) ub.hidden = true; if (S.quick === "up"){ S.quick = "goal"; S.guTab = "up"; } }
   /* 날짜·목표치·개량 옵션을 한 창의 탭으로(제제 2026-11-19: 달 바꾸고 바로 목표치·개량 옵션을 봄). 달력 버튼 = 날짜 탭, 과녁 버튼 = 목표치/개량 옵션 */
-  if (S.quick === "memo"){ S.quick = "gu"; S.guTab = "date"; } else if (S.quick === "goal"){ S.quick = "gu"; if (S.guTab === "date" || !S.guTab) S.guTab = S.guLast || "goal"; }
-  const guTabs = () => `<div class="gutabs-wrap"><div class="seg wide gutabs">${[["date","날짜"],["goal","목표치"],["up","개량 옵션"]].map(([k, l]) => `<button type="button" class="${(S.guTab || "goal") === k ? "on" : ""}" data-gutab="${k}" aria-pressed="${(S.guTab || "goal") === k}">${l}</button>`).join("")}</div></div>`;
-  if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="rank" ? rankPanel() : guTabs() + (S.guTab === "date" ? gameDatePanel() + homeMemo(true) : (S.guTab || "goal") === "up" ? upFinder(true, true) : goalPanel())}</div>` : ""; qk.hidden = !S.quick; }
-  document.querySelectorAll("#fab [data-q]").forEach(b => { const q = b.dataset.q, on = S.quick==="gu" ? (q==="memo" ? S.guTab==="date" : q==="goal" && S.guTab!=="date") : S.quick===q; b.classList.toggle("on", on); b.setAttribute("aria-expanded", on); });
+  /* 오른쪽 아래 버튼은 하나만(제제 2026-11-24): 날짜·랭크·목표치·개량 옵션을 한 창의 탭으로 */
+  if (S.quick === "memo"){ S.quick = "gu"; S.guTab = "date"; } else if (S.quick === "rank"){ S.quick = "gu"; S.guTab = "rank"; } else if (S.quick === "goal"){ S.quick = "gu"; S.guTab = S.guTab || S.guLast || "goal"; }
+  document.querySelectorAll('#fab [data-q="memo"], #fab [data-q="rank"]').forEach(b => { b.hidden = true; });
+  const guTabs = () => `<div class="gutabs-wrap"><div class="seg wide gutabs">${[["date","날짜"],["rank", curRank() != null ? `랭크 ${curRank()}` : "랭크"],["goal","목표치"],["up","개량<span class=\"ph-x\"> 옵션</span>"]].map(([k, l]) => `<button type="button" class="${(S.guTab || "goal") === k ? "on" : ""}" data-gutab="${k}" aria-pressed="${(S.guTab || "goal") === k}">${l}</button>`).join("")}</div></div>`;
+  if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="rank" ? rankPanel() : guTabs() + (S.guTab === "rank" ? rankPanel() : S.guTab === "date" ? gameDatePanel() + homeMemo(true) : (S.guTab || "goal") === "up" ? upFinder(true, true) : goalPanel())}</div>` : ""; qk.hidden = !S.quick; }
+  document.querySelectorAll("#fab [data-q]").forEach(b => { const q = b.dataset.q, on = S.quick==="gu" ? q==="goal" : S.quick===q; b.classList.toggle("on", on); b.setAttribute("aria-expanded", on); });
   const rp = $("#recentPanel"); if (rp){ rp.innerHTML = S.recentOpen ? recentPanel() : ""; rp.hidden = !S.recentOpen; }
   $("#recentBtn")?.classList.toggle("on", !!S.recentOpen); $("#recentBtn")?.setAttribute("aria-expanded", !!S.recentOpen);
   window.__prefsApply?.();
@@ -3397,8 +3399,8 @@ document.addEventListener("click", e => {
     toast(`현재 랭크 ${n}${add.length ? ` · 옷본 ${add.join("·")} 선택` : ""}`); render(); return; }
   if (d.rankclr){ mqNowSave({rank: null}); toast("랭크를 지웠어요"); render(); return; }
   if (d.act==="quick"){
-    if (d.q==="memo" || d.q==="goal"){ const tgt = d.q==="memo" ? "date" : (S.guLast || "goal");
-      if (S.quick==="gu" && (d.q==="memo" ? S.guTab==="date" : S.guTab!=="date")) S.quick = null; else { S.quick = "gu"; S.guTab = tgt; }
+    if (d.q==="memo" || d.q==="goal" || d.q==="rank"){ const tgt = d.q==="memo" ? "date" : d.q==="rank" ? "rank" : (S.guLast || "goal");
+      if (S.quick==="gu" && (d.q==="goal" || S.guTab===tgt)) S.quick = null; else { S.quick = "gu"; S.guTab = tgt; }
       remember(); render(); return; }
     S.quick = S.quick===d.q ? null : d.q; render(); return; }
   if (d.gdy){ const y = +d.gdy, g = gameDate(); mqNowSave({year:y, ...(g?.m ? {month:g.m} : {})}); toast(`${y}년${g?.m ? ` ${g.m}월` : ""}`); return; }
@@ -3412,7 +3414,7 @@ document.addEventListener("click", e => {
     toast(`${y}년 ${m}월${pk || gs ? ` · 다음 달 ${[pk && "펌프킨 숍", gs && "손님 활동 목록"].filter(Boolean).join("·")} 리셋` : ""}`);
     if (pk || gs){ S.mFlash = {pk: pk ? nm : 0, gs: gs ? nm : 0}; render(); clearTimeout(window.__mFlashT); window.__mFlashT = setTimeout(() => { S.mFlash = null; render(); }, 3600); }
     return; }
-  if (d.gutab){ S.guTab = d.gutab; if (d.gutab !== "date") S.guLast = d.gutab; remember(); render(); return; }
+  if (d.gutab){ S.guTab = d.gutab; S.guLast = d.gutab; remember(); render(); return; }
   if (d.act==="memoedit"){ S.memoEdit = !S.memoEdit; render(); return; }
   if (d.mpk){ const n = +d.mpk, cur = memoNow().pumpkin; memoSave({pumpkin: pumpkinMonths(cur).includes(n) ? null : n}); return; }
   if (d.mgs){ const n = +d.mgs, g = memoNow().guest || []; memoSave({guest: g.includes(n) ? g.filter(x => x!==n) : [...g, n].sort((a,b)=>a-b)}); return; }

@@ -59,9 +59,9 @@ test("네 탭·시설 체크·빠른 보기·테마가 유지된다", async ({ p
   await page.getByRole("button", { name: "다크", exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.locator('[data-tab="clo"]').click();
-  await page.locator('#fab [data-q="memo"]').click();
+  await page.locator('#fab [data-q="goal"]').click();
   await expect(page.locator("#quick")).toBeVisible();
-  await page.locator('#fab [data-q="memo"]').click();
+  await page.locator('#fab [data-q="goal"]').click();
   await expect(page.locator("#quick")).toBeHidden();
   await page.locator("#recentBtn").click();
   await expect(page.locator("#recentPanel")).toBeVisible();

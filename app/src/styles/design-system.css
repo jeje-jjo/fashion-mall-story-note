@@ -654,3 +654,10 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 /* 아틀리에·페이퍼 스킨은 탭 줄 바탕이 달라서 그 스킨의 탭 글자색을 씀(제제 2026-11-24) */
 :root:root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs .tab-month { color: var(--skin-nav-ink); }
 :root:root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs .tab-month:hover { background: color-mix(in srgb, var(--skin-nav-muted) 9%, transparent); }
+/* 빠른 보기 창 크게(제제 2026-11-24). 폰은 버튼 위에 거의 화면 폭으로 */
+:root:root #quick { width: min(560px, calc(100vw - 90px)); max-height: min(80vh, 760px); }
+@media (max-width: 739px) {
+  :root:root #quick { right: 12px; left: 12px; width: auto; bottom: calc(84px + 52px + env(safe-area-inset-bottom, 0px)); max-height: calc(100dvh - 84px - 52px - 90px - env(safe-area-inset-bottom, 0px)); }
+}
+:root:root #quick .gutabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+:root:root #quick .gutabs button { min-width: 0; padding: 0 4px; white-space: nowrap; }
