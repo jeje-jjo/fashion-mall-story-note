@@ -3570,7 +3570,9 @@ document.addEventListener("click", e => {
   if (d.act==="sumtop"){ const el = document.querySelector("#view .card"); scrollTo({top:0, behavior:"smooth"}); return; }
   if (d.fcn !== undefined){ const n = +d.fcn; S.facMode="fc"; if (S.fcMode==="multi") S.facFcSel = S.facFcSel.includes(n) ? S.facFcSel.filter(x => x!==n) : [...S.facFcSel, n].sort((a,b)=>a-b); else { S.facFcSel = S.facFcSel.includes(n) && S.facFcSel.length===1 ? [] : [n]; } if (!S.facFcSel.length) S.facFcOpen = false; S.fcNoteOpen = false; remember(); render(); return; }
   if (d.act==="fcopen"){ S.facFcOpen = !S.facFcOpen; remember(); render(); return; }
-  if (d.cstep !== undefined){ const n = d.cstep, st = (S.coordStep?.[n] || 0) + 1; S.coordStep = {...(S.coordStep || {}), [n]: st}; render(); saveCoord();
+  if (d.cstep !== undefined){ const n = d.cstep, st = (S.coordStep?.[n] || 0) + 1; S.coordStep = {...(S.coordStep || {}), [n]: st};
+    if (S.coModal === n){ S.coModal = null; remember(); }  /* 완료 누르면 팝업 닫기(제제 2026-11-24: 코디를 끝냈을 때 누름) */
+    render(); saveCoord();
     toast(`${n} 요청 ${st}개 완료`, () => { S.coordStep = {...S.coordStep, [n]: Math.max(0, (S.coordStep[n] || 1) - 1)}; render(); saveCoord(); }); return; }
   if (d.cdone !== undefined){ const n = d.cdone, wasDone = S.coordDone.includes(n); S.coordDone = wasDone ? S.coordDone.filter(x => x!==n) : [...S.coordDone, n];
     { const st = {...(S.coordStep || {})}; if (wasDone){ const len = DATA.coord.filter(r => curPerson(r.pb) === n).length || 4; st[n] = Math.max(0, len - 1); } else delete st[n]; S.coordStep = st; } S.coordOpen = S.coordOpen.filter(x => x!==n); saveCoordOpen(); if (S.coModal === n){ S.coModal = null; remember(); } render(); toast(S.coordDone.includes(n) ? `${n} 코디 완료` : `${n} 완료 취소`); saveCoord(); return; }
