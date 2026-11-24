@@ -661,3 +661,24 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 }
 :root:root #quick .gutabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
 :root:root #quick .gutabs button { min-width: 0; padding: 0 4px; white-space: nowrap; }
+/* 도구 > 진행(제제 2026-11-24) */
+:root:root .prog .gd-bar { margin: 4px 0 12px; }
+:root:root .pg-cmp { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+:root:root .pg-c { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; background: var(--soft); min-width: 0; }
+:root:root .pg-k { font-size: var(--t-meta); color: var(--fg3); }
+:root:root .pg-c > b { font-size: calc(var(--t-sec) + 2px); font-weight: 700; font-variant-numeric: tabular-nums; }
+:root:root .pg-p { font-size: var(--t-meta); color: var(--fg3); }
+:root:root .pg-d { margin-left: 3px; font-size: var(--t-meta); color: var(--fg3); font-variant-numeric: tabular-nums; }
+:root:root .pg-d.up { color: #4C6E56; }
+:root:root .pg-d.down { color: #C2410C; }
+:root:root .pg-tw { overflow-x: auto; }
+:root:root .pg-t { width: 100%; border-collapse: collapse; font-size: var(--t-body); font-variant-numeric: tabular-nums; }
+:root:root .pg-t th, :root:root .pg-t td { padding: 6px 6px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+:root:root .pg-t thead th { font-size: var(--t-meta); color: var(--fg3); font-weight: 500; }
+:root:root .pg-t tbody th { text-align: left; font-weight: 650; }
+:root:root .pg-t tbody th small { margin-left: 4px; color: var(--fg3); font-weight: 400; font-size: var(--t-meta); }
+:root:root .pg-t td small { display: block; margin: 0; }
+:root:root .pg-r { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+:root:root .pg-r li { display: grid; grid-template-columns: 5.5em minmax(0, 1fr); gap: 8px; font-size: var(--t-body); }
+:root:root .pg-r li span { color: var(--fg2); }
+@media (max-width: 739px) { :root:root .pg-cmp { gap: 6px; } :root:root .pg-c { padding: 8px 10px; } :root:root .pg-c > b { font-size: var(--t-sec); } :root:root .pg-t th, :root:root .pg-t td { padding: 6px 3px; } }

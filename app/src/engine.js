@@ -232,7 +232,7 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
       if (!gotMeta){ gotMeta = true; keepRun(md);
         /* 5초 안에 못 받아 기억한 경로로 먼저 열었는데 실제 회차가 다르면, 바로 새로 고쳐 맞는 회차로 */
         if (!first && md?.run && md.run !== RUN){ location.reload(); return; }
-        if (md?.run) RUN = md.run; if (md?.n) S.roundNo = +md.n; runReady = true; fin(); render(); return; }
+        if (md?.run) RUN = md.run; if (md?.n) S.roundNo = +md.n; S.prevRun = md?.prevRun || null; runReady = true; fin(); render(); return; }
       keepRun(md);
       if (runReady && md?.run && md.run !== RUN){ location.reload(); return; }
       if (md?.n){ S.roundNo = +md.n; render(); } }, () => fin());
@@ -276,6 +276,9 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   db.doc(`${RUN}/ui/goals`).onSnapshot(s => { S.goals = (s.exists && s.data()) || null; render(); }, () => {});
   db.doc(`${RUN}/ui/now`).onSnapshot(s => { S.now = (s.exists && s.data()) || null; render(); }, () => {});
   db.doc(`${RUN}/ui/mqcfg`).onSnapshot(s => { S.mqCfg = (s.exists && s.data()) || null; render(); }, () => {});
+  /* 달별 진행 기록(제제 2026-11-24): 달을 넘길 때마다 그때 상태를 남김. 지난 회차 기록과 비교 */
+  db.doc(`${RUN}/ui/months`).onSnapshot(s => { S.months = ((s.exists && s.data()) || {}).m || {}; render(); }, () => {});
+  if (S.prevRun) db.doc(`${S.prevRun}/ui/months`).onSnapshot(s => { S.monthsPrev = ((s.exists && s.data()) || {}).m || {}; render(); }, () => {});
   db.doc(`${RUN}/ui/mqacc`).onSnapshot(s => { S.mqAcc = ((s.exists && s.data()) || {}).ids || []; render(); }, () => {});
   db.doc(`${RUN}/ui/sppath`).onSnapshot(s => { S.spDone = ((s.exists && s.data()) || {}).done || []; render(); }, () => {});
   db.doc(`${RUN}/misc/coord`).onSnapshot(s => { S.coordDone = (s.exists && s.data().list) || []; render(); }, fail);
@@ -2979,14 +2982,14 @@ function viewRec(){
 }
 
 /* ---------- 도구 탭(2026-11-06 개편): 콘테스트 · 계산기 · 자료 · 관리 · 화면 · 더 보기 ---------- */
-const TOOL_SUBS = [["contest","콘테스트"],["calc","계산기"],["ref","자료"],["save","저장"],["log","관리"],["set","화면"],["more","더 보기"]];
+const TOOL_SUBS = [["prog","진행"],["contest","콘테스트"],["calc","계산기"],["ref","자료"],["save","저장"],["log","관리"],["set","화면"],["more","더 보기"]];
 const MORE_SUBS = [["todo","할 일·검색"],["goal","목표"],["layout","배치"],["up","개량 옵션 표"]];
 function viewTool(){
   if (["goal","layout","up","home"].includes(S.recSub)){ S.moreSub = S.recSub==="home" ? "todo" : S.recSub; S.recSub = "more"; }
   const cur = TOOL_SUBS.some(([k]) => k===S.recSub) ? S.recSub : "contest";
   const pc = pendingList().length;
   return `<section class="card subnav"><div class="seg wide toolnav">${TOOL_SUBS.map(([k,l]) => `<button class="${cur===k?"on":""}" data-rsub="${k}" aria-pressed="${cur===k}">${l}</button>`).join("")}</div></section>
-  ${({contest:viewContest, calc:viewCalc, ref:viewRef, save:viewSave, log:viewLog, set:viewSet, more:viewMore})[cur]()}`;
+  ${({prog:viewProg, contest:viewContest, calc:viewCalc, ref:viewRef, save:viewSave, log:viewLog, set:viewSet, more:viewMore})[cur]()}`;
 }
 /* 저장(제제 2026-11-19): 흩어져 있던 저장 기능을 한곳에. 진행 백업 파일 · 클릭 기록 · 의류 선택 · 서버에 지금 저장 */
 function viewSave(){
@@ -2997,6 +3000,50 @@ function saveNowCard(){
     <div class="sec-h"><h2>서버에 지금 저장</h2><span>Firebase</span></div>
     <p class="hint" style="margin:0 0 10px">체크는 누를 때마다 자동으로 서버에 올라가요. 혹시 빠진 게 있을까 걱정될 때만 눌러서 이 기기 상태(시설·옷·패션 체크·코디·이름)를 서버에 전부 다시 써요.</p>
     <button type="button" class="btn ghost sm" data-act="saveall" ${db ? "" : "disabled"}>지금 저장</button>
+  </section>`;
+}
+/* ---------- 진행 기록(제제 2026-11-24) ----------
+   달을 넘길 때(아래 탭 '다음 달'·달력) 그 순간 상태를 ${RUN}/ui/months {m:{"년-월":{...}}}에 남긴다 = 그 달 시작 상태.
+   랭크·패션 체크 완료 수·챌린지 승리 수·시설 완료 %·신규 손님 옷 %·코디 손님 완료 수 */
+const mKey = (y, m) => `${y}-${m}`, mOrd = k => { const [y, m] = k.split("-").map(Number); return (y - 1) * 12 + (m - 4); };
+function progNow(){
+  const fd = DATA.fac.filter(facDone).length, tr = DATA.clo.filter(c => c.done !== null), cd = tr.filter(cloDone).length;
+  let fc = 0; for (let n = 1; n <= FC_MAX; n++) if (fcDone(n-1)) fc++;
+  return { rank: curRank(), fc, bt: DATA.battles.filter((b, i) => btDone(i)).length, fac: Math.round(fd / (DATA.fac.length || 1) * 100), clo: Math.round(cd / (tr.length || 1) * 100), co: (S.coordDone || []).length };
+}
+function monthSnap(y, m){
+  if (!y || !m) return;
+  S.months = {...(S.months || {}), [mKey(y, m)]: {...progNow(), t: Date.now()}};
+  if (db) writeSerial(`${RUN}/ui/months`, {m: S.months, t: Date.now()}).catch(() => {});
+}
+/* 지난 회차에서 같은 달(없으면 그 전 가장 가까운 달) 기록 */
+const prevAt = k => { const P = S.monthsPrev || {}, o = mOrd(k); const ks = Object.keys(P).filter(x => mOrd(x) <= o).sort((a, b) => mOrd(b) - mOrd(a)); return ks.length ? P[ks[0]] : null; };
+function viewProg(){
+  const g = gameDate(), pct = gamePct(g), now = progNow(), M = S.months || {};
+  const keys = Object.keys(M).sort((a, b) => mOrd(a) - mOrd(b));
+  const cur = g ? mKey(g.y, g.m || 4) : null, pv = cur ? prevAt(cur) : null;
+  const F = [["rank","랭크","",""],["fc","패션 체크","","체크"],["bt","챌린지","","챌린지"],["fac","시설","%","시설"],["clo","신규 손님 옷","%","옷"],["co","코디 손님","","코디"]];
+  const dv = (a, b, unit, zero = true) => { if (a == null || b == null) return ""; const d = a - b; return d ? `<small class="pg-d ${d > 0 ? "up" : "down"}">${d > 0 ? "+" : ""}${d}${unit}</small>` : zero ? `<small class="pg-d">±0</small>` : ""; };
+  const cmp = `<div class="pg-cmp">${F.map(([k, l, u]) => `<div class="pg-c"><span class="pg-k">${l}</span><b>${now[k] ?? "-"}${now[k] != null ? u : ""}</b>${pv ? `<span class="pg-p">지난 회차 ${pv[k] ?? "-"}${pv[k] != null ? u : ""} ${dv(now[k], pv[k], u)}</span>` : ""}</div>`).join("")}</div>`;
+  /* 해마다 마지막 기록 */
+  const years = {}; keys.forEach(k => { years[k.split("-")[0]] = k; });
+  const yrows = Object.entries(years).map(([y, k], i, arr) => { const v = M[k], b = i ? M[arr[i-1][1]] : null;
+    return `<tr><th>${y}년<small>${k.split("-")[1]}월</small></th>${F.map(([f, , u]) => `<td>${v[f] ?? "-"}${v[f] != null ? u : ""}${b ? dv(v[f], b[f], u, false) : ""}</td>`).join("")}</tr>`; }).join("");
+  const recent = keys.slice(-6).reverse().map(k => { const v = M[k], i = keys.indexOf(k), b = i ? M[keys[i-1]] : null, ch = b ? F.filter(([f]) => v[f] != null && b[f] != null && v[f] !== b[f]).map(([f, l, u]) => `${l} ${v[f] - b[f] > 0 ? "+" : ""}${v[f] - b[f]}${u}`) : [];
+    const [yy, mm] = k.split("-"); return `<li><b>${yy}년 ${mm}월</b><span>${ch.length ? ch.join(" · ") : b ? "변화 없음" : "첫 기록"}</span></li>`; }).join("");
+  return `<section class="card prog">
+    <div class="sec-h"><h2>지금 진행</h2><span>${g ? `${g.y}년 ${g.m || 4}월 · 진행 ${pct}%` : "날짜를 아직 안 정했어요"}</span></div>
+    ${g ? `<div class="gd-bar"><span style="width:${pct}%"></span></div>` : ""}
+    ${cmp}
+    <p class="hint" style="margin:8px 0 0">${S.prevRun ? (Object.keys(S.monthsPrev || {}).length ? "지난 회차 값은 같은 달(없으면 그 전 달) 기록이에요." : "지난 회차 달별 기록은 없어요(이번 회차부터 쌓여요).") : ""} 아래 탭 줄 '다음 달'이나 달력으로 달을 넘길 때마다 자동으로 기록돼요.</p>
+  </section>
+  <section class="card prog">
+    <div class="sec-h"><h2>해마다</h2><span>그해 마지막 기록 · 작은 숫자는 전년 대비</span></div>
+    ${yrows ? `<div class="pg-tw"><table class="pg-t"><thead><tr><th></th>${F.map(([, l, , sh]) => `<th title="${l}">${sh || l}</th>`).join("")}</tr></thead><tbody>${yrows}</tbody></table></div>` : `<div class="hint">아직 기록이 없어요</div>`}
+  </section>
+  <section class="card prog">
+    <div class="sec-h"><h2>최근 달</h2><span>지난달보다 바뀐 것</span></div>
+    ${recent ? `<ul class="pg-r">${recent}</ul>` : `<div class="hint">아직 기록이 없어요</div>`}
   </section>`;
 }
 function viewCalc(){ return homeClear() + homeCarry() + homeCarryNow(); }
@@ -3408,7 +3455,7 @@ document.addEventListener("click", e => {
     /* 다음 달(제제 2026-11-19): 12월 다음은 다음 해 1월. 10년 3월이 끝 */
     if (d.act==="gdnext"){ m = g ? (g.m || 4) + 1 : 4; if (m > 12){ m = 1; y = Math.min(10, y + 1); } if (y >= 10 && m > 3 && g?.y >= 10){ toast("10년 3월이 마지막이에요"); return; } }
     else m = +d.gdm;
-    mqNowSave({year:y, month:m});
+    mqNowSave({year:y, month:m}); monthSnap(y, m);
     /* 다음 달이 리셋 달이면 그 줄 테두리를 천천히 반짝(제제 2026-11-19): 이번 달 안에 미리 끝내라는 알림 */
     const nm = m % 12 + 1, mm = memoNow(), pk = pumpkinMonths(mm.pumpkin).includes(nm), gs = (mm.guest || []).includes(nm);
     toast(`${y}년 ${m}월${pk || gs ? ` · 다음 달 ${[pk && "펌프킨 숍", gs && "손님 활동 목록"].filter(Boolean).join("·")} 리셋` : ""}`);
