@@ -2314,14 +2314,14 @@ async function resetAll(){
   Object.entries(ROWF).forEach(([k,f]) => { S[f] = [...selInit[k]]; if (S[f].length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, [k]:true}; });
   selSig = JSON.stringify(curSel()); S.cloSlot = {...S.cloSlot, all:selInit, ...selInit}; remember();
   S.cloKind = [...CLOVIEW_DEFAULT.kind]; S.cloSt = CLOVIEW_DEFAULT.st; remember();
-  if (!db){ S.now = {rank:0, year:1, month:3, t:Date.now()}; S.fac = {}; S.clo = Object.fromEntries(carry); S.coordDone = []; S.battleRec = {...S.battleRec, ...btNew}; S.roundNo = nextRound; render(); toast("새 회차를 시작했어요"); return; }
+  if (!db){ S.now = {rank:0, year:1, month:4, t:Date.now()}; S.fac = {}; S.clo = Object.fromEntries(carry); S.coordDone = []; S.battleRec = {...S.battleRec, ...btNew}; S.roundNo = nextRound; render(); toast("새 회차를 시작했어요"); return; }
   try{
     for (const [id, v] of carry) await writeSerial(`${newRun}/clo/c${id}`, v);
     for (const [i, v] of Object.entries(btNew)) await writeSerial(`battles/b${i}`, v);
     await writeSerial("ui/slots", {slot:S.cloSlot});
     await writeSerial("ui/cloview", {...CLOVIEW_DEFAULT, t:Date.now()});
     /* 새 회차는 0랭크부터(제제 2026-11-17) */
-    await writeSerial(`${newRun}/ui/now`, {rank:0, year:1, month:3, t:Date.now()});
+    await writeSerial(`${newRun}/ui/now`, {rank:0, year:1, month:4, t:Date.now()});
     await db.collection("log").add({kind:"reset", id:"all", name:"회차 초기화", from:`${roundNo()}회차 (${RUN})`, to:`${nextRound}회차 (${newRun})`, t:Date.now(), synced:false, by:"app"});
     await writeSerial("meta/round", {n: nextRound, run: newRun, prevRun: RUN, t: Date.now(), by: "app"});
     toast("새 회차를 시작했어요"); setTimeout(() => location.reload(), 600);
@@ -2533,14 +2533,14 @@ const memoNow = () => ({...MEMO_DEF, ...(S.memo||{})});
 const pumpkinMonths = m => m ? [0,1,2].map(i => (m - 1 + i*4) % 12 + 1).sort((a,b)=>a-b) : [];
 const monthsText = (ms, hot) => ms.length ? ms.map(m => `<span class="mchip ${m===hot?"hot":""}">${m}월</span>`).join("") : "";
 function memoSave(patch){ S.memo = {...memoNow(), ...patch}; render(); if (db) writeSerial("memo/reset", S.memo).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); }
-/* 게임 날짜(제제 2026-11-18, 월은 2026-11-19 다시 넣음): 1년 3월 ~ 10년 3월. runs/rN/ui/now 의 year·month.
-   진행도 = 지난 달 수 / 108. 회차 중간에 넣어서 월을 아직 안 고른 경우는 3월로 셈 */
-const GAME_MONTHS = 108;
+/* 게임 날짜(제제 2026-11-18, 월은 2026-11-19 다시 넣음): 1년 4월 ~ 10년 3월(시작 달은 2026-11-24 제제 확인). runs/rN/ui/now 의 year·month.
+   진행도 = 지난 달 수 / 107. 월을 아직 안 고른 경우는 4월로 셈 */
+const GAME_MONTHS = 107;
 const gameDate = () => { const n = S.now || {}; return n.year ? { y:+n.year, m:n.month ? +n.month : null } : null; };
-const gamePct = d => d ? Math.max(0, Math.min(100, Math.round(((d.y - 1) * 12 + ((d.m || 3) - 3)) / GAME_MONTHS * 100))) : null;
+const gamePct = d => d ? Math.max(0, Math.min(100, Math.round(((d.y - 1) * 12 + ((d.m || 4) - 4)) / GAME_MONTHS * 100))) : null;
 function gameDatePanel(){
   const d = gameDate() || { y:null, m:null }, pct = gamePct(gameDate());
-  return `<div class="gdate"><div class="sublbl gd-ttl" style="margin:0 0 6px"><span>지금 게임 날짜 <span class="hint">${d.y ? `${d.y}년${d.m ? ` ${d.m}월` : ""} · 진행 ${pct}%` : "아직 안 정함"}</span></span><button type="button" class="chip sm gd-next" title="1년 3월 ~ 10년 3월" data-act="gdnext">다음 달 ▸</button></div>
+  return `<div class="gdate"><div class="sublbl gd-ttl" style="margin:0 0 6px"><span>지금 게임 날짜 <span class="hint">${d.y ? `${d.y}년${d.m ? ` ${d.m}월` : ""} · 진행 ${pct}%` : "아직 안 정함"}</span></span><button type="button" class="chip sm gd-next" title="1년 4월 ~ 10년 3월" data-act="gdnext">다음 달 ▸</button></div>
     <div class="gd-row"><span class="gd-k">년</span><div class="numpad gd-pad">${Array.from({length:10}, (_, i) => i + 1).map(n => `<button type="button" class="${d.y===n?"on":""}" data-gdy="${n}" aria-pressed="${d.y===n}">${n}</button>`).join("")}</div></div>
     <div class="gd-row"><span class="gd-k">월</span><div class="numpad gd-pad">${Array.from({length:12}, (_, i) => i + 1).map(n => `<button type="button" class="${d.m===n?"on":""}" data-gdm="${n}" aria-pressed="${d.m===n}">${n}</button>`).join("")}</div></div>
     ${d.y ? `<div class="gd-bar"><span style="width:${pct}%"></span></div>` : ""}</div>`;
@@ -3186,9 +3186,9 @@ function render(){
   renderSum();
   const pc = pendingList().length;
   /* 탭 줄 맨 끝 '다음 달'(제제 2026-11-24): 탭을 바꾸지 않고 누르면 게임 달만 한 칸 넘김. 지금 달을 같이 보여 줌 */
-  { const gd = gameDate(), mLab = gd ? `${gd.y}년 ${gd.m || 3}월` : "날짜";
+  { const gd = gameDate(), mLab = gd ? `${gd.y}년 ${gd.m || 4}월` : "날짜";
     $("#tabs").style.setProperty("--tabn", TABS.length + 1); $("#tabs").innerHTML = TABS.map(([k,l,ic]) => `<button class="${S.tab===k?"on":""}" data-tab="${k}" aria-current="${S.tab===k?"page":"false"}"><span class="tic">${ic}</span><span>${l}</span></button>`).join("")
-      + `<button type="button" class="tab-month" data-act="gdnext" aria-label="${esc(mLab)}, 누르면 다음 달로"><span class="tic tm-ic">${ICON.cal}</span><span class="tm-l">${esc(gd ? `${gd.m || 3}월` : "날짜")} <b>▸</b></span></button>`; }
+      + `<button type="button" class="tab-month" data-act="gdnext" aria-label="${esc(mLab)}, 누르면 다음 달로"><span class="tic tm-ic">${ICON.cal}</span><span class="tm-l">${esc(gd ? `${gd.m || 4}월` : "날짜")} <b>▸</b></span></button>`; }
 }
 
 /* 내려 볼 때 위에 붙는 요약줄(2026-11-06 제제: 고른 칩 요약만). 의류 = 고른 칩, 시설 = 장르·패션 체크(이전·다음)·아이템 */
@@ -3404,7 +3404,7 @@ document.addEventListener("click", e => {
   if (d.gdy){ const y = +d.gdy, g = gameDate(); mqNowSave({year:y, ...(g?.m ? {month:g.m} : {})}); toast(`${y}년${g?.m ? ` ${g.m}월` : ""}`); return; }
   if (d.act==="gdnext" || d.gdm){ const g = gameDate(); let y = g?.y || 1, m;
     /* 다음 달(제제 2026-11-19): 12월 다음은 다음 해 1월. 10년 3월이 끝 */
-    if (d.act==="gdnext"){ m = g ? (g.m || 3) + 1 : 3; if (m > 12){ m = 1; y = Math.min(10, y + 1); } if (y >= 10 && m > 3 && g?.y >= 10){ toast("10년 3월이 마지막이에요"); return; } }
+    if (d.act==="gdnext"){ m = g ? (g.m || 4) + 1 : 4; if (m > 12){ m = 1; y = Math.min(10, y + 1); } if (y >= 10 && m > 3 && g?.y >= 10){ toast("10년 3월이 마지막이에요"); return; } }
     else m = +d.gdm;
     mqNowSave({year:y, month:m});
     /* 다음 달이 리셋 달이면 그 줄 테두리를 천천히 반짝(제제 2026-11-19): 이번 달 안에 미리 끝내라는 알림 */
