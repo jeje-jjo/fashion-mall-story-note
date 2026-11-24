@@ -1325,7 +1325,10 @@ function optSources(o){
 /* 경로 칩 상태: 패션 체크·챌린지·다른 가게 직원은 완료/승리를 따라 자동, 콘테스트·찐빵 등은 직접 체크(${RUN}/ui/sppath) */
 function spSrcAuto(src){
   let m = src.match(/^패션 체크 (\d+)$/); if (m) return fcDone(+m[1] - 1);
-  m = src.match(/^(.+) 챌린지 승리$/); if (m){ const i = DATA.battles.findIndex((_, j) => bShort(j) === m[1]); return i >= 0 ? btDone(i) : null; }
+  m = src.match(/^(.+) 챌린지 승리$/); if (m){ const i = DATA.battles.findIndex((_, j) => bShort(j) === m[1]);
+    /* '자신 있는' 챌린지는 목표치에 없어 승리 체크할 곳이 없음 → 여기서 직접 체크(제제 2026-11-24). 승리 체크돼 있으면 자동 완료 */
+    if (m[1] === "자신 있는") return i >= 0 && btDone(i) ? true : null;
+    return i >= 0 ? btDone(i) : null; }
   m = src.match(/^다른 가게 (.+) 승리$/); if (m){ const b = (DATA.battlesExtra || []).find(x => x.name === m[1]); return b ? btDone(btKeyX(b)) : null; }
   return null;
 }
