@@ -651,3 +651,6 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 :root:root nav.tabs .tab-month { color: var(--blue-ink); }
 :root:root nav.tabs .tab-month .tm-l b { font-weight: 700; margin-left: 1px; }
 :root:root nav.tabs .tab-month:active { background: var(--blue-soft); }
+/* 아틀리에·페이퍼 스킨은 탭 줄 바탕이 달라서 그 스킨의 탭 글자색을 씀(제제 2026-11-24) */
+:root:root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs .tab-month { color: var(--skin-nav-ink); }
+:root:root:is([data-skin="atelier"],[data-skin="paper"]) nav.tabs .tab-month:hover { background: color-mix(in srgb, var(--skin-nav-muted) 9%, transparent); }
