@@ -281,7 +281,7 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   if (S.prevRun) db.doc(`${S.prevRun}/ui/months`).onSnapshot(s => { S.monthsPrev = ((s.exists && s.data()) || {}).m || {}; render(); }, () => {});
   db.doc(`${RUN}/ui/mqacc`).onSnapshot(s => { S.mqAcc = ((s.exists && s.data()) || {}).ids || []; render(); }, () => {});
   db.doc(`${RUN}/ui/sppath`).onSnapshot(s => { S.spDone = ((s.exists && s.data()) || {}).done || []; render(); }, () => {});
-  db.doc(`${RUN}/misc/coord`).onSnapshot(s => { S.coordDone = (s.exists && s.data().list) || []; render(); }, fail);
+  db.doc(`${RUN}/misc/coord`).onSnapshot(s => { S.coordDone = (s.exists && s.data().list) || []; S.coordStep = (s.exists && s.data().step) || {}; render(); }, fail);
   db.collection("coordfix").onSnapshot(s => { S.cfix = Object.fromEntries(s.docs.map(d => { const v = {...d.data()}; ["pt","pb","po","pa"].forEach(k => { if (v[k]) v[k] = alSlash("clo", v[k]); }); return [+d.id.slice(1), v]; })); render(); }, fail);
   db.collection("chkscore").onSnapshot(s => { S.chkscore = Object.fromEntries(s.docs.map(d => [+d.id.slice(1), d.data()])); render(); }, fail);
   db.collection("checks").onSnapshot(s => { S.chkname = Object.fromEntries(s.docs.map(d => [+d.id.slice(1), d.data()])); render(); }, fail);
@@ -350,7 +350,7 @@ async function saveAll(){
   Object.entries(S.chkscore).forEach(([id,v]) => put(`chkscore/k${id}`, v));
   Object.entries(S.cbattle).forEach(([id,v]) => put(`cbattle/c${id}`, v));
   Object.entries(S.cfix).forEach(([id,v]) => put(`coordfix/k${id}`, v));
-  put(`${RUN}/misc/coord`, {list:S.coordDone}); put("names/all", S.names);
+  put(`${RUN}/misc/coord`, {list:S.coordDone, step:S.coordStep || {}}); put("names/all", S.names);
   /* 기기에는 바로 저장되고(Firestore 기기 캐시), 서버 확인은 네트워크에 따라 늦을 수 있다 → 6초 넘으면 안내하고 버튼을 풀어 준다 */
   let slow = setTimeout(() => { slow = null; btn.disabled = false; btn.textContent = "지금 저장"; toast("이 기기에는 저장됐어요. 서버로 보내는 중이라 조금 걸려요(연결되면 자동으로 올라가요)"); }, 6000);
   const r = await Promise.allSettled(w); const bad = r.filter(x => x.status==="rejected").length;
@@ -1684,7 +1684,7 @@ function viewCoordReq(){
     <div class="fc-h"><b class="fc-n">${esc(n)}</b>
       <span class="fc-c">${groups[n].length}건</span>
       <span class="fc-gap" aria-hidden="true"></span>
-      <button class="chip sm codone ${dn?"on":""}" data-cdone="${esc(n)}" aria-label="${esc(n)} ${dn?"완료 취소":"최종 완료"}" aria-pressed="${dn}">${ICON.ok}${dn?"완료됨":"최종 완료"}</button>
+      ${coDoneBtn(n, groups[n].length)}
       <button class="iconbtn" data-coordp="${esc(n)}" aria-label="닫기">${ICON.x}</button></div>
     <div class="request-grid">${groups[n].map(c => entry(c)).join("")}</div>${!hybrid() && fo ? coordFixBox(n, groups[n]) : ""}
   </div>`; };
@@ -1692,7 +1692,7 @@ function viewCoordReq(){
     <div class="tools toolsgap"><input class="search" id="coordQ" placeholder="인물, 요청, 옷 이름 검색" value="${esc(q)}" aria-label="코디 검색"></div>
     <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">손님</span><span class="hint">${all.length}명 · 완료 ${all.filter(cdone).length}명</span></span>
       <span class="fh-act">${S.coordOpen.length?`<button class="chip sm ${S.coordUnsel?"on":""}" data-act="coord-unsel" aria-pressed="${!!S.coordUnsel}" title="켜고 손님을 누르면 그 손님만 닫혀요">${S.coordUnsel?"선택 해제 끝":"선택 해제"}</button><button class="chip sm" data-act="coord-close">전체 해제</button>`:""}<button class="chip sm ${S.coordHideDone?"on":""}" data-act="coord-hidedone" aria-pressed="${!!S.coordHideDone}">완료 숨기기</button></span></div>
-    <div class="chips cfoldchips cochips">${all.filter(n => !S.coordHideDone || !cdone(n) || S.coordOpen.includes(n)).map(n => `<button class="chip ${S.coordOpen.includes(n)?"on":""} ${cdone(n)?"done":""}" data-cochip="${esc(n)}" aria-pressed="${S.coordOpen.includes(n)}">${cdone(n)?ICON.ok:""}${esc(n)}${S.coordUnsel && S.coordOpen.includes(n)?` <span class="cox" aria-hidden="true">×</span>`:""}</button>`).join("") || `<span class="hint">검색 결과가 없어요</span>`}</div>
+    <div class="chips cfoldchips cochips">${all.filter(n => !S.coordHideDone || !cdone(n) || S.coordOpen.includes(n)).map(n => `<button class="chip ${S.coordOpen.includes(n)?"on":""} ${cdone(n)?"done":""}" data-cochip="${esc(n)}" aria-pressed="${S.coordOpen.includes(n)}">${cdone(n)?ICON.ok:""}${esc(n)}${!cdone(n) && S.coordStep?.[n] ? ` <small class="co-st">${S.coordStep[n]}/${(groups[n] || []).length}</small>` : ""}${S.coordUnsel && S.coordOpen.includes(n)?` <span class="cox" aria-hidden="true">×</span>`:""}</button>`).join("") || `<span class="hint">검색 결과가 없어요</span>`}</div>
 
   </section>
   ${q ? (shownCards.length ? `<div class="cogrid">${shownCards.map(card).join("")}</div>` : `<section class="card"><div class="empty">검색 결과가 없어요</div></section>`)
@@ -1703,13 +1703,21 @@ function viewCoordReq(){
     return `<div class="comodal-back" data-comodal-back="1"><div class="comodal" role="dialog" aria-modal="true" aria-label="${esc(n)} 요청">
       <div class="comodal-h"><b class="fc-n">${esc(n)}</b><span class="fc-c">${groups[n].length}건${dn ? " · 완료" : ""}</span><span class="fc-gap" aria-hidden="true"></span>
         <button type="button" class="chip sm" data-act="comodal-unsel">선택 취소</button>
-        <button type="button" class="chip sm codone ${dn?"on":""}" data-cdone="${esc(n)}" aria-pressed="${dn}">${ICON.ok}${dn?"완료됨":"최종 완료"}</button>
+        ${coDoneBtn(n, groups[n].length)}
         <button type="button" class="iconbtn" data-act="comodal-x" aria-label="창 닫기">${ICON.x}</button></div>
       <div class="comodal-b"><div class="request-grid">${groups[n].map(c => entry(c, true)).join("")}</div></div>
     </div></div>`; }
 }
 
 /* ---------- 코디 탭: [손님 요청 | 코디 세트] ---------- */
+/* 코디 요청 하나씩 완료(제제 2026-11-24): 버튼을 누를 때마다 완료 1/4 → 2/4 → 3/4, 마지막 하나는 '최종 완료'. 회차별 runs/rN/misc/coord.step */
+function coDoneBtn(n, len){
+  const dn = (S.coordDone || []).includes(n), st = Math.min(S.coordStep?.[n] || 0, Math.max(0, len - 1));
+  if (dn) return `<button type="button" class="chip sm codone on" data-cdone="${esc(n)}" aria-pressed="true" aria-label="${esc(n)} 완료 취소">${ICON.ok}완료됨</button>`;
+  if (len <= 1 || st >= len - 1) return `<button type="button" class="chip sm codone" data-cdone="${esc(n)}" aria-pressed="false" aria-label="${esc(n)} 최종 완료">${ICON.ok}최종 완료</button>`;
+  return `<button type="button" class="chip sm codone costep" data-cstep="${esc(n)}" aria-label="${esc(n)} 요청 하나 완료(지금 ${st}/${len})">${ICON.ok}완료 <b>${st}/${len}</b></button>`;
+}
+function saveCoord(){ if (db) writeSerial(`${RUN}/misc/coord`, {list:S.coordDone, step:S.coordStep || {}}).catch(()=>{}); }
 function viewCoord(){
   const subs = [["req","손님 요청"],["set","코디 세트"],["mq","마네킹"]];
   return `<section class="card subnav"><div class="seg wide">${subs.map(([k,l]) => `<button class="${S.coordSub===k?"on":""}" data-csub="${k}" aria-pressed="${S.coordSub===k}">${l}</button>`).join("")}</div></section>
@@ -3009,8 +3017,11 @@ const mKey = (y, m) => `${y}-${m}`, mOrd = k => { const [y, m] = k.split("-").ma
 function progNow(){
   const fd = DATA.fac.filter(facDone).length, tr = DATA.clo.filter(c => c.done !== null), cd = tr.filter(cloDone).length;
   let fc = 0; for (let n = 1; n <= FC_MAX; n++) if (fcDone(n-1)) fc++;
-  return { rank: curRank(), fc, bt: DATA.battles.filter((b, i) => btDone(i)).length, fac: Math.round(fd / (DATA.fac.length || 1) * 100), clo: Math.round(cd / (tr.length || 1) * 100), co: (S.coordDone || []).length };
+  return { rank: curRank(), fc, bt: DATA.battles.filter((b, i) => btDone(i)).length, fac: Math.round(fd / (DATA.fac.length || 1) * 100), clo: Math.round(cd / (tr.length || 1) * 100), co: (S.coordDone || []).length, cq: coordReqDone() };
 }
+/* 코디 요청 완료 수 = 최종 완료한 손님의 요청 전부 + 진행 중인 손님의 단계 수 */
+function coordReqDone(){ const per = {}; DATA.coord.forEach(r => { const n = curPerson(r.pb); per[n] = (per[n] || 0) + 1; });
+  return Object.entries(per).reduce((t, [n, k]) => t + ((S.coordDone || []).includes(n) ? k : Math.min(S.coordStep?.[n] || 0, k)), 0); }
 function monthSnap(y, m){
   if (!y || !m) return;
   S.months = {...(S.months || {}), [mKey(y, m)]: {...progNow(), t: Date.now()}};
@@ -3022,7 +3033,7 @@ function viewProg(){
   const g = gameDate(), pct = gamePct(g), now = progNow(), M = S.months || {};
   const keys = Object.keys(M).sort((a, b) => mOrd(a) - mOrd(b));
   const cur = g ? mKey(g.y, g.m || 4) : null, pv = cur ? prevAt(cur) : null;
-  const F = [["rank","랭크","",""],["fc","패션 체크","","체크"],["bt","챌린지","","챌린지"],["fac","시설","%","시설"],["clo","신규 손님 옷","%","옷"],["co","코디 손님","","코디"]];
+  const F = [["rank","랭크","",""],["fc","패션 체크","","체크"],["bt","챌린지","","챌린지"],["fac","시설","%","시설"],["clo","신규 손님 옷","%","옷"],["co","코디 손님","","코디"],["cq","코디 요청","","요청"]];
   const dv = (a, b, unit, zero = true) => { if (a == null || b == null) return ""; const d = a - b; return d ? `<small class="pg-d ${d > 0 ? "up" : "down"}">${d > 0 ? "+" : ""}${d}${unit}</small>` : zero ? `<small class="pg-d">±0</small>` : ""; };
   const cmp = `<div class="pg-cmp">${F.map(([k, l, u]) => `<div class="pg-c"><span class="pg-k">${l}</span><b>${now[k] ?? "-"}${now[k] != null ? u : ""}</b>${pv ? `<span class="pg-p">지난 회차 ${pv[k] ?? "-"}${pv[k] != null ? u : ""} ${dv(now[k], pv[k], u)}</span>` : ""}</div>`).join("")}</div>`;
   /* 해마다 마지막 기록 */
@@ -3556,7 +3567,10 @@ document.addEventListener("click", e => {
   if (d.act==="sumtop"){ const el = document.querySelector("#view .card"); scrollTo({top:0, behavior:"smooth"}); return; }
   if (d.fcn !== undefined){ const n = +d.fcn; S.facMode="fc"; if (S.fcMode==="multi") S.facFcSel = S.facFcSel.includes(n) ? S.facFcSel.filter(x => x!==n) : [...S.facFcSel, n].sort((a,b)=>a-b); else { S.facFcSel = S.facFcSel.includes(n) && S.facFcSel.length===1 ? [] : [n]; } if (!S.facFcSel.length) S.facFcOpen = false; S.fcNoteOpen = false; remember(); render(); return; }
   if (d.act==="fcopen"){ S.facFcOpen = !S.facFcOpen; remember(); render(); return; }
-  if (d.cdone !== undefined){ const n = d.cdone; S.coordDone = S.coordDone.includes(n) ? S.coordDone.filter(x => x!==n) : [...S.coordDone, n]; S.coordOpen = S.coordOpen.filter(x => x!==n); saveCoordOpen(); if (S.coModal === n){ S.coModal = null; remember(); } render(); toast(S.coordDone.includes(n) ? `${n} 코디 완료` : `${n} 완료 취소`); if (db) writeSerial(`${RUN}/misc/coord`, {list:S.coordDone}).catch(()=>{}); return; }
+  if (d.cstep !== undefined){ const n = d.cstep, st = (S.coordStep?.[n] || 0) + 1; S.coordStep = {...(S.coordStep || {}), [n]: st}; render(); saveCoord();
+    toast(`${n} 요청 ${st}개 완료`, () => { S.coordStep = {...S.coordStep, [n]: Math.max(0, (S.coordStep[n] || 1) - 1)}; render(); saveCoord(); }); return; }
+  if (d.cdone !== undefined){ const n = d.cdone, wasDone = S.coordDone.includes(n); S.coordDone = wasDone ? S.coordDone.filter(x => x!==n) : [...S.coordDone, n];
+    { const st = {...(S.coordStep || {})}; if (wasDone){ const len = DATA.coord.filter(r => curPerson(r.pb) === n).length || 4; st[n] = Math.max(0, len - 1); } else delete st[n]; S.coordStep = st; } S.coordOpen = S.coordOpen.filter(x => x!==n); saveCoordOpen(); if (S.coModal === n){ S.coModal = null; remember(); } render(); toast(S.coordDone.includes(n) ? `${n} 코디 완료` : `${n} 완료 취소`); saveCoord(); return; }
   if (d.cled){ const [id,k] = d.cled.split("|"); S.cloEdit[+id] = S.cloEdit[+id]===k ? "" : k; render(); return; }
   if (d.ptog){ const k = d.ptog, id = +k.slice(3); const o = optOf(DATA.clo.find(x=>x.id===id)); const cur = S.optDraft[k] ?? !!(k.startsWith("gx")?o.guest:o.like); S.optDraft[k] = !cur; render(); return; }
   if (d.btog){ const id = +d.btog; const cur = S.optDraft["bo-"+id] ?? !!S.cbattle[id]?.on; S.optDraft["bo-"+id] = !cur; render(); return; }
