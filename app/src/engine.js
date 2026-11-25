@@ -1201,7 +1201,7 @@ function btSiteBlock(st, o = {}){
   const sets = (st.sets || []).map(x => { const set = (DATA.sets || []).find(s => s.id===x.setId), inf = set && setInfo(set);
     if (!inf) return `<li>세트 ${x.setId} · ${esc(x.result || "")}</li>`;
     return `<li class="btset ${inf.left?"":"is-done"}"><button type="button" class="btset-h" data-gset="${x.setId}" title="코디 세트에서 보기"><strong>세트 ${x.setId}</strong><span>${esc([set.genre, set.sub].filter(Boolean).join(" · "))}</span><span>${esc(x.result || "")}</span><span class="btset-c">${inf.left?`${inf.done}/${inf.total} 완료`:"완성"} ›</span></button>
-      <ul class="btset-items">${inf.items.map(it => it.c ? `<li><span class="inline-state ${cloDone(it.c)?"is-done":""}">${cloDone(it.c)?"✓":"○"}</span>${esc(cloName(it.c))}</li>` : `<li><span class="inline-state">·</span>${esc(it.name || "#"+it.id)}</li>`).join("")}</ul></li>`; });
+      <ul class="btset-items">${inf.items.map(it => it.c ? `<li><span class="inline-state ${cloHave(it.c)?"is-done":""}">${cloHave(it.c)?"✓":"○"}</span>${esc(cloName(it.c))}</li>` : `<li><span class="inline-state">·</span>${esc(it.name || "#"+it.id)}</li>`).join("")}</ul></li>`; });
   return `<div class="battle-detail"><div class="detail-layout"><div class="detail-column">${infoSection("조건과 보상", facts)}${comparisons?`<div class="btcompare">${infoSection(rec?"상대 기준과 내 기록":"상대 기준",`<div class="comparison-table ${rec?"":"norec"}"><div class="comparison-label ${rec?"":"norec"}"><span>항목</span><span>상대</span>${rec?"<span>내 기록</span><span>차이</span><span>결과</span>":""}</div>${comparisons}</div>`)}</div>`:""}</div><div class="detail-column">${clothes.length?infoSection(`조건에 맞는 의류 · ${clothes.filter(x=>cloDone(x.c)).length}/${clothes.length} 완료`,`<ul class="info-list">${clothes.map(({c})=>`<li><span class="inline-state ${cloDone(c)?"is-done":""}">${cloDone(c)?"✓":"○"}</span>${esc(cloName(c))}</li>`).join("")}</ul>`):""}${(() => { const rq = st.req; if (!rq?.rec?.length) return ""; const {recOk, alt} = recAlt(rq); const li = id => { const x = CLO_BY_ID.get(id), d = x && cloDone(x); return `<li><span class="inline-state ${d?"is-done":""}">${d?"✓":"○"}</span>${esc(x ? cloName(x) : "#" + id)}</li>`; };
       return recOk ? infoSection("사이트 추천 코디", `<ul class="btset-items">${rq.rec.map(li).join("")}</ul>`) : alt.length ? `<div class="reqmatch-g alt">${infoSection("대체 추천", `<ul class="btset-items">${alt.map(li).join("")}</ul>${recAltNote(rq)}`)}</div>` : ""; })()}${sets.length ? (() => { const k = String(i ?? st.id ?? st.name ?? ""), op = !!S.btSetOpen?.[k];
       /* 추천 세트는 처음엔 접힘(제제 2026-11-11): 제목 줄을 눌러 펼친다 */
@@ -1733,9 +1733,13 @@ function viewCoord(){
    세트 상태 = 노트에 있는 구성 옷의 완료 체크로 계산(따로 저장하지 않음). 노트에 없는 옷은 회색 표시, 계산에서는 남은 옷으로 셈 */
 const SET_GENRES = ["내추럴","큐트","쿨","성숙","레트로","하드","서브컬쳐"];
 const CLO_BY_ID = new Map(DATA.clo.map(c => [c.id, c]));
+/* 코디 세트·마네킹에서 '있는 옷'(제제 2026-11-25): 체크하는 옷은 완료 체크, 일반 옷은 장르·옷본·재료·옵션이 의류 필터에서 전부 골라져 있으면 만든 걸로 */
+const recipeOwned = c => { const has = (v, L) => !v || v === "없음" || v === "???" || (L || []).includes(v);
+  return (S.cloCat || []).includes(c.c) && has(c.p, S.cloPat) && has(c.m, S.cloMat) && has(c.o, S.cloOpt); };
+const cloHave = c => !!c && (cloDone(c) || (!tracked(c) && recipeOwned(c)));
 function setInfo(s){
   const items = (s.clothes || []).map((id, i) => ({ id, c: CLO_BY_ID.get(id) || null, name: s.names?.[i] }));
-  const done = items.filter(x => x.c && cloDone(x.c)).length;
+  const done = items.filter(x => x.c && cloHave(x.c)).length;
   return { s, items, done, total: items.length, left: items.length - done };
 }
 function viewSets(){
@@ -1751,7 +1755,7 @@ function viewSets(){
   const groups = {};
   rows.forEach(x => { const k = `${x.s.genre} · ${x.s.sub}`; (groups[k] = groups[k] || []).push(x); });
   const pill = (x, it) => {
-    const key = `${x.s.id}:${it.id}`, d = it.c && cloDone(it.c);
+    const key = `${x.s.id}:${it.id}`, d = it.c && cloHave(it.c);
     if (!it.c) return `<span class="pill off" title="노트에 없는 옷">${esc(it.name || "#"+it.id)}</span>`;
     return `<button type="button" class="pill ${d?"must":""}" data-setpill="${key}" aria-expanded="${S.setOpen===key}">${d?"✓ ":""}${esc(cloName(it.c))}</button>`;
   };
@@ -1963,7 +1967,7 @@ function mqSetCard(p, m){
   const pcs = o => MQ_SLOTS.map(([k, l]) => { const c = o && o[k] != null ? CLO_BY_ID.get(o[k]) : null; if (!c) return "";
     const lab = `<small>${c.site?.kind==="셋업"?"셋업":l}</small>${esc(cloName(c))}`;
     if (k === "a"){ const own = (S.mqAcc || []).includes(c.id); return `<button type="button" class="mq-pc mq-acc ${own?"":"dim"}" data-mqacc="${c.id}" aria-pressed="${own}" title="${own?"샀음 · 누르면 취소":"누르면 산 걸로"}">${lab}</button>`; }
-    return `<span class="mq-pc ${cloDone(c)?"":"dim"}">${lab}</span>`; }).join("");
+    return `<span class="mq-pc ${cloHave(c)?"":"dim"}">${lab}</span>`; }).join("");
   return `<div class="fccard mqset ${m.built?"built":""}">
     <div class="fc-h"><b class="fc-n">마네킹 ${m.k+1}</b>${m.outfits ? `<button class="iconbtn act ${m.built?"on":""}" data-mqbuilt="${p.gi}|${m.k}" aria-label="마네킹 ${m.k+1} ${m.built?"만듦 취소":"만듦"}" aria-pressed="${!!m.built}">${ICON.ok}</button>` : ""}<span class="fc-c">${m.built ? "만듦" : m.outfits ? "추천" : "못 만듦"}</span></div>
     ${m.outfits ? MQ_SK.map(([sk, se]) => `<div class="mqset-row"><span class="mqset-s">${se}</span><div class="mq-pcs">${pcs(m.outfits[sk])}</div></div>`).join("") : `<div class="empty">${esc(p.reason)}</div>`}
@@ -1976,9 +1980,9 @@ function viewMannequin(){
   return `<section class="card">
     <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">마네킹</span><span class="hint">장르마다 ${MQ_PER}개 · 만듦 ${plans.reduce((a, q) => a + q.builtN, 0)}/${MQ_PER * LAY_G.length}</span></span></div>
     <div class="chips">${plans.map(chip).join("")}</div>
-    <div class="hint" style="margin-top:10px">마네킹 하나에 봄·가을·여름·겨울 풀세트(상의+하의 또는 셋업, 아우터, 액세서리)를 입혀요. 세 계절끼리는 옷이 안 겹치고, 옷은 그 장르 옷 전부에서 골라요. <b>회색</b>은 아직 완료 체크 안 한 옷·안 산 액세서리예요(액세서리는 눌러서 산 걸로). 다른 마네킹과는 덜 쓴 옷부터 골라요. ✓를 누르면 그 조합으로 고정돼요. 계절 궁합·판매 점수는 사이트 추정값 · 출처: KairoHistory</div>
+    <div class="hint" style="margin-top:10px">마네킹 하나에 봄·가을·여름·겨울 풀세트(상의+하의 또는 셋업, 아우터, 액세서리)를 입혀요. 세 계절끼리는 옷이 안 겹치고, 옷은 그 장르 옷 전부에서 골라요. <b>회색</b>은 아직 없는 옷이에요(체크하는 옷은 완료 전, 일반 옷은 의류 필터에서 장르·옷본·재료·옵션을 다 고르기 전)·안 산 액세서리(액세서리는 눌러서 산 걸로). 다른 마네킹과는 덜 쓴 옷부터 골라요. ✓를 누르면 그 조합으로 고정돼요. 계절 궁합·판매 점수는 사이트 추정값 · 출처: KairoHistory</div>
   </section>
-  <section class="card"><div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${esc(layGName(p.g))}</span><span class="hint">옷 ${p.poolN}벌 · 완료 ${DATA.clo.filter(c => c.site?.genre === p.g && MQ_KIND[c.site?.kind] && cloDone(c)).length}벌${p.okN ? ` · 다른 마네킹과 겹치는 옷 ${sameN}벌` : ""}</span></span></div>
+  <section class="card"><div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${esc(layGName(p.g))}</span><span class="hint">옷 ${p.poolN}벌 · 만든 옷 ${DATA.clo.filter(c => c.site?.genre === p.g && MQ_KIND[c.site?.kind] && cloHave(c)).length}벌${p.okN ? ` · 다른 마네킹과 겹치는 옷 ${sameN}벌` : ""}</span></span></div>
     ${p.okN ? "" : `<div class="mq-warn">${ICON.warn}지금은 만들 수 없어요 · ${esc(p.reason)}</div>`}
     ${p.okN ? `<div class="cardgrid mqgrid">${p.list.map(m => mqSetCard(p, m)).join("")}</div>` : ""}</section>`;
 }
