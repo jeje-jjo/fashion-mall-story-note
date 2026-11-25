@@ -23,7 +23,7 @@ export const pixelIcon = (name: string) => flatIcon(name, 16);
 
 /** 머리줄·로그인 화면 로고: 앱 대표 아이콘(라이트·다크 두 벌, CSS로 하나만 보인다) */
 const appMark = (px: number) =>
-  ["light", "dark"].map(t => `<img class="app-mark app-${t}" src="${BASE}icons/${t}/app-128.png?v=${V}" width="${px}" height="${px}" alt="" aria-hidden="true" draggable="false">`).join("");
+  ["light", "dark", "green"].map(t => `<img class="app-mark app-${t}" src="${BASE}icons/${t}/app-128.png?v=${V}" width="${px}" height="${px}" alt="" aria-hidden="true" draggable="false">`).join("");
 
 export function installPixelIcons() {
   /* 체크 칸(.ck) 안 표시는 색이 찬 동그라미 위에 올라가므로 칸 모양 없이 체크만(흰 선) 쓴다 */

@@ -3697,6 +3697,9 @@ async function markSynced(){
   function apply(){
     if (pref.mode==="system") root.removeAttribute("data-theme"); else root.setAttribute("data-theme", pref.mode);
     if (pref.pal==="blue") root.removeAttribute("data-pal"); else root.setAttribute("data-pal", pref.pal);
+    /* 세이지 그린이면 파비콘도 초록(제제 2026-11-25) */
+    document.querySelectorAll('link[rel~="icon"], link[rel="apple-touch-icon"]').forEach(l => { const h = l.dataset.h0 || (l.dataset.h0 = l.getAttribute("href"));
+      l.setAttribute("href", pref.pal === "green" ? h.replace(/icons\/(favicon|apple-touch-icon)[^?]*/, m => m.includes("apple") ? "icons/green/app-180.png" : m.includes(".svg") ? "icons/green/favicon.svg" : "icons/green/favicon-32.png") : h); });
     root.setAttribute("data-design", "hybrid");
     pref.skin = validSkin(pref.skin);
     root.setAttribute("data-skin", pref.skin);

@@ -705,3 +705,25 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
 :root:root[data-pal="green"]:not([data-skin="atelier"]):not([data-skin="paper"]) { --bg: #f4f5f1; --card: #fffffd; --soft: #f0f2ed; --soft2: #e3e7df; --fg: #28302b; --fg2: #566158; --fg3: #6c776e; --line: #dce1d8; }
 :root:root[data-pal="green"][data-theme="dark"]:not([data-skin="atelier"]):not([data-skin="paper"]) { --bg: #181c19; --card: #222823; --soft: #2b332c; --soft2: #38473a; --fg: #edf1e8; --fg2: #c4cebf; --fg3: #a7b5a3; --line: #3a473a; }
 @media (prefers-color-scheme: dark) { :root:root[data-pal="green"]:not([data-theme="light"]):not([data-skin="atelier"]):not([data-skin="paper"]) { --bg: #181c19; --card: #222823; --soft: #2b332c; --soft2: #38473a; --fg: #edf1e8; --fg2: #c4cebf; --fg3: #a7b5a3; --line: #3a473a; } }
+/* 세이지 그린: 앱 아이콘도 초록 */
+.app-mark.app-green { display: none !important; }
+:root[data-pal="green"] .app-mark.app-light, :root[data-pal="green"] .app-mark.app-dark { display: none !important; }
+:root[data-pal="green"] .app-mark.app-green { display: block !important; }
+
+/* 아래 안내창(제제 2026-11-25): 검정 대신 테마 색, 글과 되돌리기를 양끝에 가지런히 */
+:root:root .toast { background: var(--card); color: var(--fg); border: 1px solid color-mix(in srgb, var(--blue) 35%, var(--line)); box-shadow: 0 10px 30px #1a141520, 0 2px 6px #1a141510;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: min(320px, calc(100vw - 32px)); max-width: calc(100vw - 32px); padding: 11px 12px 11px 16px; box-sizing: border-box; font-size: var(--t-body); line-height: 1.45; border-radius: 12px; }
+:root:root .toast #toastMsg { flex: 1 1 auto; min-width: 0; text-align: left; }
+:root:root .toast button { flex: none; color: var(--blue-ink) !important; background: var(--blue-soft); border-radius: 8px; padding: 6px 12px; font-size: var(--t-meta); font-weight: 700; }
+:root:root .toast button[hidden] { display: none; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .toast { border-radius: var(--skin-radius); }
+
+/* 보기 고르는 알약 줄: 바깥과 안쪽 둥글기 맞춤(바깥 - 안쪽 여백) */
+:root:root .pillseg { --pr: 999px; border-radius: var(--pr); }
+:root:root .pillseg button { border-radius: max(0px, calc(var(--pr) - 2px)) !important; }
+:root[data-skin="paper"] .pillseg { --pr: 8px; }
+:root[data-skin="atelier"] .pillseg { --pr: calc(var(--skin-small) + 2px); }
+@media (max-width: 739px) {
+  :root:root .toast { left: 16px; right: 68px; width: auto; min-width: 0; max-width: none; transform: translateY(20px); }
+  :root:root .toast.show { transform: none; }
+}
