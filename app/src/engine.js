@@ -3241,9 +3241,10 @@ function render(){
   { const ub = document.querySelector('#fab [data-q="up"]'); if (ub) ub.hidden = true; if (S.quick === "up"){ S.quick = "goal"; S.guTab = "up"; } }
   /* 날짜·목표치·개량 옵션을 한 창의 탭으로(제제 2026-11-19: 달 바꾸고 바로 목표치·개량 옵션을 봄). 달력 버튼 = 날짜 탭, 과녁 버튼 = 목표치/개량 옵션 */
   /* 오른쪽 아래 버튼은 하나만(제제 2026-11-24): 날짜·랭크·목표치·개량 옵션을 한 창의 탭으로 */
-  if (S.quick === "memo"){ S.quick = "gu"; S.guTab = "date"; } else if (S.quick === "rank"){ S.quick = "gu"; S.guTab = "rank"; } else if (S.quick === "goal"){ S.quick = "gu"; S.guTab = S.guTab || S.guLast || "goal"; }
+  if (S.quick === "memo"){ S.quick = "gu"; S.guTab = "date"; } else if (S.quick === "rank"){ S.quick = "rank"; } else if (S.quick === "goal"){ S.quick = "gu"; S.guTab = S.guTab || S.guLast || "goal"; }
+  if (S.guTab === "rank") S.guTab = "goal";
   document.querySelectorAll('#fab [data-q="memo"], #fab [data-q="rank"]').forEach(b => { b.hidden = true; });
-  const guTabs = () => `<div class="gutabs-wrap"><div class="seg wide gutabs">${[["date","날짜"],["rank", curRank() != null ? `랭크 ${curRank()}` : "랭크"],["goal","목표치"],["up","개량<span class=\"ph-x\"> 옵션</span>"]].map(([k, l]) => `<button type="button" class="${(S.guTab || "goal") === k ? "on" : ""}" data-gutab="${k}" aria-pressed="${(S.guTab || "goal") === k}">${l}</button>`).join("")}</div></div>`;
+  const guTabs = () => `<div class="gutabs-wrap"><div class="seg wide gutabs">${[["date","날짜"],["goal","목표치"],["up","개량<span class=\"ph-x\"> 옵션</span>"]].map(([k, l]) => `<button type="button" class="${(S.guTab || "goal") === k ? "on" : ""}" data-gutab="${k}" aria-pressed="${(S.guTab || "goal") === k}">${l}</button>`).join("")}</div></div>`;
   if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="rank" ? rankPanel() : guTabs() + (S.guTab === "rank" ? rankPanel() : S.guTab === "date" ? gameDatePanel() + homeMemo(true) : (S.guTab || "goal") === "up" ? upFinder(true, true) : goalPanel())}</div>` : ""; qk.hidden = !S.quick; }
   document.querySelectorAll("#fab [data-q]").forEach(b => { const q = b.dataset.q, on = S.quick==="gu" ? q==="goal" : S.quick===q; b.classList.toggle("on", on); b.setAttribute("aria-expanded", on); });
   const rp = $("#recentPanel"); if (rp){ rp.innerHTML = S.recentOpen ? recentPanel() : ""; rp.hidden = !S.recentOpen; }
@@ -3253,7 +3254,11 @@ function render(){
   const pc = pendingList().length;
   /* 탭 줄 맨 끝 '다음 달'(제제 2026-11-24): 탭을 바꾸지 않고 누르면 게임 달만 한 칸 넘김. 지금 달을 같이 보여 줌 */
   { const gd = gameDate(), mLab = gd ? `${gd.y}년 ${gd.m || 4}월` : "날짜";
-    $("#tabs").style.setProperty("--tabn", TABS.length + 1); $("#tabs").innerHTML = TABS.map(([k,l,ic]) => `<button class="${S.tab===k?"on":""}" data-tab="${k}" aria-current="${S.tab===k?"page":"false"}"><span class="tic">${ic}</span><span>${l}</span></button>`).join("")
+    $("#tabs").style.setProperty("--tabn", TABS.length + 1 + (curRank() != null && curRank() >= RANK_MAX ? 0 : 1)); $("#tabs").innerHTML = TABS.map(([k,l,ic]) => `<button class="${S.tab===k?"on":""}" data-tab="${k}" aria-current="${S.tab===k?"page":"false"}"><span class="tic">${ic}</span><span>${l}</span></button>`).join("")
+      + (() => { const Rk = curRank(); if (Rk != null && Rk >= RANK_MAX) return "";
+        /* 탭 줄 '다음 랭크'(제제 2026-11-24): 누르면 랭크 +1(그 랭크 옷본도 자동 선택), 10이 되면 사라짐 */
+        const nx = Rk == null ? 0 : Rk + 1;
+        return `<button type="button" class="tab-month tab-rank" data-rankset="${nx}" aria-label="지금 랭크 ${Rk ?? "안 정함"}, 누르면 랭크 ${nx}로"><span class="tic tm-ic"><b class="tr-k">R</b></span><span class="tm-l">${Rk == null ? "랭크" : `랭크 ${Rk}`} <b>▸</b></span></button>`; })()
       + `<button type="button" class="tab-month" data-act="gdnext" aria-label="${esc(mLab)}, 누르면 다음 달로"><span class="tic tm-ic">${ICON.cal}</span><span class="tm-l">${esc(gd ? `${gd.m || 4}월` : "날짜")} <b>▸</b></span></button>`; }
 }
 
@@ -3466,7 +3471,7 @@ document.addEventListener("click", e => {
   if (d.act==="scrolltop"){ scrollTo({top:0, behavior:"smooth"}); return; }
   if (d.act==="scrollbot"){ scrollTo({top:document.documentElement.scrollHeight, behavior:"smooth"}); return; }
   if (d.act==="quick"){
-    if (d.q==="memo" || d.q==="goal" || d.q==="rank"){ const tgt = d.q==="memo" ? "date" : d.q==="rank" ? "rank" : (S.guLast || "goal");
+    if (d.q==="memo" || d.q==="goal"){ const tgt = d.q==="memo" ? "date" : (S.guLast && S.guLast !== "rank" ? S.guLast : "goal");
       if (S.quick==="gu" && (d.q==="goal" || S.guTab===tgt)) S.quick = null; else { S.quick = "gu"; S.guTab = tgt; }
       remember(); render(); return; }
     S.quick = S.quick===d.q ? null : d.q; render(); return; }

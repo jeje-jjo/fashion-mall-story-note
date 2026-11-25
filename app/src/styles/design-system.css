@@ -659,7 +659,7 @@ html.modal-open, html.modal-open body { overflow: hidden; }
 @media (max-width: 739px) {
   :root:root #quick { right: 12px; left: 12px; width: auto; bottom: calc(84px + 52px + env(safe-area-inset-bottom, 0px)); max-height: calc(100dvh - 84px - 52px - 90px - env(safe-area-inset-bottom, 0px)); }
 }
-:root:root #quick .gutabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+:root:root #quick .gutabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 :root:root #quick .gutabs button { min-width: 0; padding: 0 4px; white-space: nowrap; }
 /* 도구 > 진행(제제 2026-11-24) */
 :root:root .prog .gd-bar { margin: 4px 0 12px; }
@@ -727,3 +727,5 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
   :root:root .toast { left: 16px; right: 68px; width: auto; min-width: 0; max-width: none; transform: translateY(20px); }
   :root:root .toast.show { transform: none; }
 }
+/* 탭 줄 '다음 랭크' 버튼: R 글자를 아이콘처럼 */
+:root:root nav.tabs .tab-rank .tr-k { display: inline-grid; place-items: center; width: 22px; height: 22px; border: 1.8px solid currentColor; border-radius: 6px; font-size: 12px; font-weight: 800; line-height: 1; }
