@@ -729,3 +729,12 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
 }
 /* 탭 줄 '다음 랭크' 버튼: R 글자를 아이콘처럼 */
 :root:root nav.tabs .tab-rank .tr-k { display: inline-grid; place-items: center; width: 22px; height: 22px; border: 1.8px solid currentColor; border-radius: 6px; font-size: 12px; font-weight: 800; line-height: 1; }
+/* 되돌리기 없는 한 줄 안내: 글 길이에 맞춘 가운데 알약 + 강조색 점(제제 2026-11-25) */
+:root:root .toast.solo { min-width: 0; width: max-content; max-width: calc(100vw - 32px); justify-content: center; padding: 10px 18px 10px 14px; border-radius: 999px; gap: 8px; }
+:root:root .toast.solo #toastMsg { flex: 0 1 auto; text-align: center; }
+:root:root .toast.solo::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--blue); }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .toast.solo { border-radius: calc(var(--skin-radius) + 12px); }
+@media (max-width: 739px) {
+  :root:root .toast.solo { left: 50%; right: auto; max-width: calc(100vw - 100px); transform: translate(-50%, 20px); }
+  :root:root .toast.solo.show { transform: translate(-50%, 0); }
+}

@@ -367,7 +367,7 @@ function toast(msg, undo){
   if (S.sheet && S.sheet.kind!=="fc" && S.sheet.kind!=="clo" && S.sheet.kind!=="coord"){ S.sheet = null; render(); }
   $("#toastMsg").textContent = msg; undoFn = undo;
   $("#toastUndo").hidden = !undo;
-  const t=$("#toast"); t.classList.add("show");
+  const t=$("#toast"); t.classList.toggle("solo", !undo); t.classList.add("show");  /* 되돌리기 없는 안내는 글 길이에 맞춘 작은 알약(제제 2026-11-25) */
   /* 되돌리기가 있는 안내는 10초(제제 2026-11-19). 새 안내가 오면 앞 것은 바로 바뀜 */
   clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove("show"), undo ? 10000 : 3200);
 }
