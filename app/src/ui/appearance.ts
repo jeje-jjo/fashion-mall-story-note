@@ -22,7 +22,7 @@ export function restoreAppearance() {
     const pref = JSON.parse(localStorage.getItem("fms-theme") || "{}");
     document.documentElement.dataset.skin = validSkin(pref.skin);
     if (pref.mode === "light" || pref.mode === "dark") document.documentElement.dataset.theme = pref.mode;
-    if (["rose", "red", "taupe"].includes(pref.pal)) document.documentElement.dataset.pal = pref.pal;
+    if (["rose", "red", "taupe", "green"].includes(pref.pal)) document.documentElement.dataset.pal = pref.pal;
     else if (pref.pal === "blue") document.documentElement.removeAttribute("data-pal");
   } catch {
     document.documentElement.dataset.skin = "classic";

@@ -3105,7 +3105,7 @@ function viewSet(){
     ${appearancePicker()}
     ${row("기기", segB("device", [["auto","자동"],["phone","핸드폰"],["desk","PC·패드"]]))}
     ${row("테마", segB("mode", [["system","시스템"],["light","라이트"],["dark","다크"]]))}
-    ${row("메인 색상", `<div class="pals">${[["rose","#955F64","빈티지 로즈"],["red","#994F53","뮤트 레드"],["taupe","#8E706E","로즈 토프"],["blue","#3182F6","기존 블루"]].map(([k,c,l]) => `<button type="button" class="pal" data-pal="${k}" style="--p:${c}"><i aria-hidden="true"></i>${l}</button>`).join("")}</div>`)}
+    ${row("메인 색상", `<div class="pals">${[["rose","#955F64","빈티지 로즈"],["red","#994F53","뮤트 레드"],["taupe","#8E706E","로즈 토프"],["green","#3D6E53","세이지 그린"],["blue","#3182F6","기존 블루"]].map(([k,c,l]) => `<button type="button" class="pal" data-pal="${k}" style="--p:${c}"><i aria-hidden="true"></i>${l}</button>`).join("")}</div>`)}
   </section><section class="card prefs-card"><div class="sec-h"><h2>현재 랭크</h2><span>오른쪽 아래 빠른 보기의 랭크 탭과 같아요</span></div>${rankPanel()}</section>${homeLegend()}`;
 }
 function viewMore(){

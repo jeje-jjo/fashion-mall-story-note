@@ -696,3 +696,12 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
 :root:root .comodal-b .req-got-h { grid-column: 1 / -1; margin: 6px 2px 0; font-size: var(--t-meta); color: var(--fg3); font-weight: 600; }
 :root:root .comodal-b .request-entry.req-got { opacity: .55; }
 :root:root .comodal-b .request-entry.req-got .request-heading h3::after { content: " ✓"; color: var(--blue-ink); }
+
+/* 메인 색상: 세이지 그린(제제 2026-11-25: 페이퍼 디자인·초록 화면과 나란히 켜도 어울리게). 강조색만 바꾸고 바탕은 디자인 것을 씀 */
+:root:root[data-pal="green"] { --blue: #3d6e53; --blue-soft: #e4eee6; --blue-ink: #2e5a43; --press: #3d6e5308; --on-accent: #fff; --toastbtn: #a9cdb5; }
+:root:root[data-pal="green"][data-theme="dark"] { --blue: #8fc0a2; --blue-soft: #2c3d31; --blue-ink: #bfe0c9; --on-accent: #142019; --toastbtn: #3d6e53; }
+@media (prefers-color-scheme: dark) { :root:root[data-pal="green"]:not([data-theme="light"]) { --blue: #8fc0a2; --blue-soft: #2c3d31; --blue-ink: #bfe0c9; --on-accent: #142019; --toastbtn: #3d6e53; } }
+/* 클래식 디자인에서 초록을 고르면 바탕도 초록빛 종이색으로 */
+:root:root[data-pal="green"]:not([data-skin="atelier"]):not([data-skin="paper"]) { --bg: #f4f5f1; --card: #fffffd; --soft: #f0f2ed; --soft2: #e3e7df; --fg: #28302b; --fg2: #566158; --fg3: #6c776e; --line: #dce1d8; }
+:root:root[data-pal="green"][data-theme="dark"]:not([data-skin="atelier"]):not([data-skin="paper"]) { --bg: #181c19; --card: #222823; --soft: #2b332c; --soft2: #38473a; --fg: #edf1e8; --fg2: #c4cebf; --fg3: #a7b5a3; --line: #3a473a; }
+@media (prefers-color-scheme: dark) { :root:root[data-pal="green"]:not([data-theme="light"]):not([data-skin="atelier"]):not([data-skin="paper"]) { --bg: #181c19; --card: #222823; --soft: #2b332c; --soft2: #38473a; --fg: #edf1e8; --fg2: #c4cebf; --fg3: #a7b5a3; --line: #3a473a; } }
