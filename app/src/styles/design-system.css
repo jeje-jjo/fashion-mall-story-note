@@ -741,3 +741,5 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
 /* 마네킹 상태(제제 2026-11-25): 완성 가능은 강조색 */
 :root:root .mq-st.ready { color: var(--blue-ink); font-weight: 700; }
 :root:root .mq-st.built { color: var(--fg3); }
+/* 마네킹 계절 줄의 호감 손님 수 */
+:root:root .mqset-s .mq-fav { display: block; margin-top: 2px; font-size: var(--t-meta); color: var(--fg3); font-weight: 500; }

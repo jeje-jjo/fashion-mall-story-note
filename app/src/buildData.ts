@@ -20,6 +20,8 @@ export const TABLES = [
   "req_site", "sales_avg",
   // 시설 해금 순서(제제 9회차 기록, 2026-11-17)
   "unlock_order",
+  // 마네킹 추천(제제 구글 시트 2026-11-26, 7장르 × 15)
+  "mannequin_recs",
   // 자료 탭에 보여 줄 전체 정보 xlsx 표(2026-11-10 제제: 묵히지 말고 자료에 다)
   "full_clothes", "full_outfit_sets", "full_coord_requests", "full_fashion_checks", "full_battles", "full_sales_guests", "full_codes", "full_faq",
 ] as const;
@@ -395,6 +397,7 @@ export function buildData(t: Tables) {
       L.unlockFlow.rankGrid = { genres, rows, full, miss: [...miss] };
     }
   }
+  L.mqRecs = ((t as any).mannequin_recs || []).map((r: Row) => ({ genre: r.genre, k: +r.k, outfits: r.outfits, fav: r.fav || {}, official: r.official || {}, favYear: r.favYear, favAll: r.favAll }));
   L.refTables = L.refTables.filter((x: any) => x.rows.length);
   L.alias = alias;
   // 자료 표 열 이름(ref 표의 columns, 2026-11-06 기준)

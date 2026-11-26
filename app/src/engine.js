@@ -272,7 +272,7 @@ function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg
   db.doc("ui/optcnt").onSnapshot(s => { const dd = (s.exists && s.data()) || {}, c = dd.counts || {}; S.optCnt = Object.fromEntries(Object.entries(c).map(([k, v]) => [al("recipe", k), v])); S.optPicks = (dd.picks || []).filter(id => CLO_BY_ID.has(id)); render(); }, () => {});
   db.doc("meta/verify").onSnapshot(s => { S.verifyDone = (s.exists && s.data().done) || {}; render(); }, () => {});
   db.doc(`${RUN}/ui/recipes`).onSnapshot(s => { const d = (s.exists && s.data()) || {}; S.own = {pat:alArr("recipe", d.pat||[]), mat:alArr("recipe", d.mat||[]), opt:alArr("recipe", d.opt||[])}; render(); }, () => {});
-  db.collection(`${RUN}/mannequins`).onSnapshot(s => { S.mq = Object.fromEntries(s.docs.filter(d => /^m\d+$/.test(d.id)).map(d => [+d.id.slice(1), d.data()])); S.mqBuilt = Object.fromEntries(s.docs.filter(d => /^g\d+k\d+$/.test(d.id)).map(d => [d.id, d.data()])); render(); }, () => {});
+  db.collection(`${RUN}/mannequins`).onSnapshot(s => { S.mq = Object.fromEntries(s.docs.filter(d => /^m\d+$/.test(d.id)).map(d => [+d.id.slice(1), d.data()])); S.mqBuilt = Object.fromEntries(s.docs.filter(d => /^r\d+k\d+$/.test(d.id)).map(d => [d.id, d.data()])); render(); }, () => {});
   db.doc(`${RUN}/ui/goals`).onSnapshot(s => { S.goals = (s.exists && s.data()) || null; render(); }, () => {});
   db.doc(`${RUN}/ui/now`).onSnapshot(s => { S.now = (s.exists && s.data()) || null; render(); }, () => {});
   db.doc(`${RUN}/ui/mqcfg`).onSnapshot(s => { S.mqCfg = (s.exists && s.data()) || null; render(); }, () => {});
@@ -1893,13 +1893,20 @@ const catTagG = g => `<span class="tag cat" style="--c:${TYPE_COLOR[g]||"#6B7280
    장르마다 10개, 옷은 전부 그 장르의 완료한 옷. 다른 마네킹끼리는 겹쳐도 되지만 덜 쓴 옷을 먼저 고름.
    계절에 맞는 옷(그 계절 > 봄·가을) > 판매 점수 평균(full_sales, 추정) > 확률 식 순으로 고름.
    저장: 만든 마네킹만 runs/rN/mannequins/g{장르 순번}k{0~9} {built, genre, outfits:{sa|su|wi:{t,b,o,a}}, t} → 만든 것은 조합 고정 */
-const MQ_PER = 10, MQ_SK = [["sa","봄·가을"],["su","여름"],["wi","겨울"]];
-const mqBKey = (gi, k) => `g${gi}k${k}`;
+/* 마네킹: 제제 시트 추천(장르마다 15개, 2026-11-26)이 있으면 그것을 쓴다. 만듦 체크는 새 키(r)로 저장해서 예전 체크(g)는 다 비워짐 */
+const MQ_PER = (DATA.mqRecs || []).length ? 15 : 10, MQ_SK = [["sa","봄·가을"],["su","여름"],["wi","겨울"]];
+const mqBKey = (gi, k) => `r${gi}k${k}`;
 const mqBuiltOf = (gi, k) => { const v = S.mqBuilt?.[mqBKey(gi, k)]; return v && v.built ? v : null; };
 const mqBuiltIds = () => { const s = new Set(); Object.values(S.mqBuilt || {}).forEach(v => { if (v?.built) Object.values(v.outfits || {}).forEach(o => Object.values(o || {}).forEach(id => s.add(id))); }); return s; };
 let _mqPlanCache = {};
 function mqPlan(gi){
   const g = LAY_G[gi];
+  const recs = (DATA.mqRecs || []).filter(r => r.genre === g).sort((a, b) => a.k - b.k);
+  if (recs.length){
+    const list = recs.map(r => { const b = mqBuiltOf(gi, r.k); return { k: r.k, outfits: r.outfits, built: !!b, rec: r }; });
+    const pool = new Set(); recs.forEach(r => Object.values(r.outfits).forEach(o => Object.values(o).forEach(id => pool.add(id))));
+    return { g, gi, list, reason: "", poolN: pool.size, builtN: list.filter(m => m.built).length, okN: list.length };
+  }
   /* 만든 옷만이 아니라 그 장르 옷 전부로 짠다(제제 2026-11-19): 체크할 옷을 미리 알 수 있게. 체크해도 구성이 바뀌지 않게 완료 여부는 점수에 안 넣음 */
   const doneKey = JSON.stringify(S.mqBuilt || {});
   const ck = gi + "|" + doneKey; if (_mqPlanCache[ck]) return _mqPlanCache[ck];
@@ -1970,7 +1977,7 @@ function mqSetCard(p, m){
     return `<span class="mq-pc ${cloHave(c)?"":"dim"}">${lab}</span>`; }).join("");
   return `<div class="fccard mqset ${m.built?"built":""}">
     <div class="fc-h"><b class="fc-n">마네킹 ${m.k+1}</b>${m.outfits ? `<button class="iconbtn act ${m.built?"on":""}" data-mqbuilt="${p.gi}|${m.k}" aria-label="마네킹 ${m.k+1} ${m.built?"만듦 취소":"만듦"}" aria-pressed="${!!m.built}">${ICON.ok}</button>` : ""}<span class="fc-c mq-st ${m.built ? "built" : mqReady(m) ? "ready" : ""}">${m.built ? "만듦" : !m.outfits ? "못 만듦" : mqReady(m) ? "완성 가능" : "옷 모자람"}</span></div>
-    ${m.outfits ? MQ_SK.map(([sk, se]) => `<div class="mqset-row"><span class="mqset-s">${se}</span><div class="mq-pcs">${pcs(m.outfits[sk])}</div></div>`).join("") : `<div class="empty">${esc(p.reason)}</div>`}
+    ${m.outfits ? MQ_SK.map(([sk, se]) => `<div class="mqset-row"><span class="mqset-s">${se}${m.rec?.fav?.[sk] != null ? `<small class="mq-fav" title="호감 손님(72명 중)">호감 ${m.rec.fav[sk]}</small>` : ""}</span><div class="mq-pcs">${pcs(m.outfits[sk])}</div></div>`).join("") : `<div class="empty">${esc(p.reason)}</div>`}
   </div>`;
 }
 /* 마네킹이 '완성 가능'인지(제제 2026-11-25): 액세서리 빼고 세 계절 옷이 전부 있는 옷 */
@@ -1984,7 +1991,7 @@ function viewMannequin(){
   return `<section class="card">
     <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">마네킹</span><span class="hint">장르마다 ${MQ_PER}개 · 만듦 ${plans.reduce((a, q) => a + q.builtN, 0)} / 완성 가능 ${plans.reduce((a, q) => a + rdy(q), 0)}(액세서리 제외)</span></span></div>
     <div class="chips">${plans.map(chip).join("")}</div>
-    <div class="hint" style="margin-top:10px">마네킹 하나에 봄·가을·여름·겨울 풀세트(상의+하의 또는 셋업, 아우터, 액세서리)를 입혀요. 세 계절끼리는 옷이 안 겹치고, 옷은 그 장르 옷 전부에서 골라요. <b>회색</b>은 아직 없는 옷이에요(체크하는 옷은 완료 전, 일반 옷은 의류 필터에서 장르·옷본·재료·옵션을 다 고르기 전)·안 산 액세서리(액세서리는 눌러서 산 걸로). 다른 마네킹과는 덜 쓴 옷부터 골라요. ✓를 누르면 그 조합으로 고정돼요. 계절 궁합·판매 점수는 사이트 추정값 · 출처: KairoHistory</div>
+    <div class="hint" style="margin-top:10px">${(DATA.mqRecs || []).length ? `제제 시트 추천(장르마다 15개)이에요. 마네킹 하나에 봄·가을·여름·겨울 코디(상의+하의 또는 셋업, 아우터·액세서리는 있는 것만). 계절 옆 숫자는 호감 손님 수(72명 중, 선호 점수 100 이상). <b>회색</b>은 아직 없는 옷(체크하는 옷은 완료 전, 일반 옷은 의류 필터에서 장르~옵션을 다 고르기 전)·안 산 액세서리예요. 사이트 판매·빌더 공식 기반 추정 · 출처: KairoHistory` : "마네킹 하나에 봄·가을·여름·겨울 풀세트를 입혀요."}</div>
   </section>
   <section class="card"><div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${esc(layGName(p.g))}</span><span class="hint">옷 ${p.poolN}벌 · 만든 옷 ${DATA.clo.filter(c => c.site?.genre === p.g && MQ_KIND[c.site?.kind] && cloHave(c)).length}벌${p.okN ? ` · 다른 마네킹과 겹치는 옷 ${sameN}벌` : ""}</span></span></div>
     ${p.okN ? "" : `<div class="mq-warn">${ICON.warn}지금은 만들 수 없어요 · ${esc(p.reason)}</div>`}
