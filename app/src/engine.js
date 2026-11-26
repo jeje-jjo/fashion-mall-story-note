@@ -1738,7 +1738,11 @@ const CLO_BY_ID = new Map(DATA.clo.map(c => [c.id, c]));
 /* 코디 세트·마네킹에서 '있는 옷'(제제 2026-11-25): 체크하는 옷은 완료 체크, 일반 옷은 장르·옷본·재료·옵션이 의류 필터에서 전부 골라져 있으면 만든 걸로 */
 const recipeOwned = c => { const has = (v, L) => !v || v === "없음" || v === "???" || (L || []).includes(v);
   return (S.cloCat || []).includes(c.c) && has(c.p, S.cloPat) && has(c.m, S.cloMat) && has(c.o, S.cloOpt); };
-const cloHave = c => !!c && (cloDone(c) || (!tracked(c) && recipeOwned(c)));
+/* 일반 옷은 옵션 옷을 먼저 만든 뒤에 만든다(제제 2026-11-26): 장르~옵션이 열린 체크 대상 옷(옵션·전투·코디 추천 옷)을 전부 완료해야
+   열린 일반 옷을 만든 걸로 본다. 필요한 옵션 '만들 옷'에 골라 둔 일반 옷은 아직 안 만든 것(목록에서 빼면 만든 것) */
+let _optAll = null;
+const optAllDone = () => _optAll ?? (_optAll = DATA.clo.every(c => !tracked(c) || !recipeOwned(c) || cloDone(c)));
+const cloHave = c => !!c && (cloDone(c) || (!tracked(c) && recipeOwned(c) && optAllDone() && !(S.optPicks || []).includes(c.id)));
 function setInfo(s){
   const items = (s.clothes || []).map((id, i) => ({ id, c: CLO_BY_ID.get(id) || null, name: s.names?.[i] }));
   const done = items.filter(x => x.c && cloHave(x.c)).length;
@@ -1989,7 +1993,6 @@ const mqReady = m => !!m.outfits && Object.values(m.outfits).every(o => Object.e
 /* 옷 그림(마네킹용): 처음 마네킹을 열 때 한 번 받아 둠 */
 function needCloImg(){ if (S.cloImg || S._imgLoad || !window.__fmsLoadImgs) return; S._imgLoad = true;
   window.__fmsLoadImgs().then(t => { S.cloImg = Object.assign({}, ...((t.clo_img || []).map(r => r.imgs || {}))); render(); }).catch(() => { S._imgLoad = false; }); }
-/* 그림 시험(목업): localStorage fms-imgtry=1일 때만 의류 목록·목표치 추천 세트에 그림 */
 const CLO_BY_NAME = new Map(); DATA.clo.forEach(c => { [c.n, c.site?.name].filter(Boolean).forEach(n => { if (!CLO_BY_NAME.has(n)) CLO_BY_NAME.set(n, c); }); });
 const cloByName = n => CLO_BY_NAME.get(n) || DATA.clo.find(c => cloName(c) === n);
 /* 코디 팝업(2): 상의·하의 등 옷 이름 칸(dd) 앞에 그림. 없는 옷은 흑백 */
@@ -3246,7 +3249,27 @@ addEventListener("scroll", () => { const p = scrPending; if (p?.doneAt && p.mine
 { const iv = setInterval(() => { if (!scrPending){ clearInterval(iv); return; } scrRestore(); }, 300); }
 setTimeout(() => scrLog("boot", scrPending || {}), 0);  // 다시 열렸을 때 저장된 위치가 있었는지(클릭 기록에 남김)
 function scrLog(k, p){ try{ (window.__fmsClickPush || (() => {}))({ k, y:Math.round(scrollY), py:p?.y, an:p?.anchor || "", tab:S.tab }); }catch(e){} }
+/* 마네킹 완성 알림(제제 2026-11-26): 내가 누른 직후에 새로 '완성 가능'이 된 마네킹을 장르별로 아래 알림에.
+   불러오기·다른 기기 동기화로 바뀐 건 알리지 않고 기준만 맞춤. 되돌리기 알림이 떠 있으면 그 글 뒤에 붙임 */
+let _mqPrev = null, _lastTap = 0;
+document.addEventListener("click", () => { _lastTap = Date.now(); }, true);
+function mqNotify(){
+  if (!DATA.mqRecs?.length) return;
+  const cur = new Set(), gOf = {};
+  LAY_G.forEach((g, gi) => mqPlan(gi).list.forEach(m => { if (!m.built && mqReady(m)){ const k = mqBKey(gi, m.k); cur.add(k); gOf[k] = g; } }));
+  const prev = _mqPrev; _mqPrev = cur;
+  if (!prev || Date.now() - _lastTap > 3000) return;
+  const by = {}; cur.forEach(k => { if (!prev.has(k)) by[gOf[k]] = (by[gOf[k]] || 0) + 1; });
+  const msg = LAY_G.filter(g => by[g]).map(g => `${layGName(g)} 마네킹 ${by[g]}건`).join(" · ");
+  if (!msg) return;
+  const t = $("#toast");
+  if (undoFn && t.classList.contains("show")){ const el = $("#toastMsg"); if (!el.textContent.includes("마네킹")) el.textContent += ` · ${msg} 완성`; }
+  else toast(`${msg} 완성`);
+}
+let _mqNT = null;
 function render(){
+  _optAll = null;
+  clearTimeout(_mqNT); _mqNT = setTimeout(mqNotify, 0);
   counts();
   const ae = document.activeElement;
   const html = `<div class="stack">${({fac:viewFac,clo:viewClo,coord:viewCoord,tool:viewTool})[S.tab]()}</div>`;
