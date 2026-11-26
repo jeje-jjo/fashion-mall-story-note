@@ -3260,16 +3260,15 @@ let _mqPrev = null, _lastTap = 0;
 document.addEventListener("click", () => { _lastTap = Date.now(); }, true);
 function mqNotify(){
   if (!DATA.mqRecs?.length) return;
-  const cur = new Set(), gOf = {};
-  LAY_G.forEach((g, gi) => mqPlan(gi).list.forEach(m => { if (!m.built && mqReady(m)){ const k = mqBKey(gi, m.k); cur.add(k); gOf[k] = g; } }));
+  const cur = new Set();
+  LAY_G.forEach((g, gi) => mqPlan(gi).list.forEach(m => { if (!m.built && mqReady(m)) cur.add(mqBKey(gi, m.k)); }));
   const prev = _mqPrev; _mqPrev = cur;
   if (!prev || Date.now() - _lastTap > 3000) return;
-  const by = {}; cur.forEach(k => { if (!prev.has(k)) by[gOf[k]] = (by[gOf[k]] || 0) + 1; });
-  const msg = LAY_G.filter(g => by[g]).map(g => `${layGName(g)} 마네킹 ${by[g]}건`).join(" · ");
-  if (!msg) return;
+  /* 장르·개수 없이 '마네킹 완성'만(제제 2026-11-26) */
+  if (![...cur].some(k => !prev.has(k))) return;
   const t = $("#toast");
-  if (undoFn && t.classList.contains("show")){ const el = $("#toastMsg"); if (!el.textContent.includes("마네킹")) el.textContent += ` · ${msg} 완성`; }
-  else toast(`${msg} 완성`);
+  if (undoFn && t.classList.contains("show")){ const el = $("#toastMsg"); if (!el.textContent.includes("마네킹 완성")) el.textContent += " · 마네킹 완성"; }
+  else toast("마네킹 완성");
 }
 let _mqNT = null;
 function render(){
