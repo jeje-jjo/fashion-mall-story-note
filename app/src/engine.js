@@ -1969,22 +1969,26 @@ function mqSetCard(p, m){
     if (k === "a"){ const own = (S.mqAcc || []).includes(c.id); return `<button type="button" class="mq-pc mq-acc ${own?"":"dim"}" data-mqacc="${c.id}" aria-pressed="${own}" title="${own?"샀음 · 누르면 취소":"누르면 산 걸로"}">${lab}</button>`; }
     return `<span class="mq-pc ${cloHave(c)?"":"dim"}">${lab}</span>`; }).join("");
   return `<div class="fccard mqset ${m.built?"built":""}">
-    <div class="fc-h"><b class="fc-n">마네킹 ${m.k+1}</b>${m.outfits ? `<button class="iconbtn act ${m.built?"on":""}" data-mqbuilt="${p.gi}|${m.k}" aria-label="마네킹 ${m.k+1} ${m.built?"만듦 취소":"만듦"}" aria-pressed="${!!m.built}">${ICON.ok}</button>` : ""}<span class="fc-c">${m.built ? "만듦" : m.outfits ? "추천" : "못 만듦"}</span></div>
+    <div class="fc-h"><b class="fc-n">마네킹 ${m.k+1}</b>${m.outfits ? `<button class="iconbtn act ${m.built?"on":""}" data-mqbuilt="${p.gi}|${m.k}" aria-label="마네킹 ${m.k+1} ${m.built?"만듦 취소":"만듦"}" aria-pressed="${!!m.built}">${ICON.ok}</button>` : ""}<span class="fc-c mq-st ${m.built ? "built" : mqReady(m) ? "ready" : ""}">${m.built ? "만듦" : !m.outfits ? "못 만듦" : mqReady(m) ? "완성 가능" : "옷 모자람"}</span></div>
     ${m.outfits ? MQ_SK.map(([sk, se]) => `<div class="mqset-row"><span class="mqset-s">${se}</span><div class="mq-pcs">${pcs(m.outfits[sk])}</div></div>`).join("") : `<div class="empty">${esc(p.reason)}</div>`}
   </div>`;
 }
+/* 마네킹이 '완성 가능'인지(제제 2026-11-25): 액세서리 빼고 세 계절 옷이 전부 있는 옷 */
+const mqReady = m => !!m.outfits && Object.values(m.outfits).every(o => Object.entries(o || {}).every(([k, id]) => k === "a" || cloHave(CLO_BY_ID.get(id))));
 function viewMannequin(){
   const plans = LAY_G.map((_, gi) => mqPlan(gi)), gi = Math.max(0, LAY_G.indexOf(S.mqG)), p = plans[gi];
-  const chip = q => `<button class="chip ${q.gi===gi?"on":""}" data-mqg2="${esc(q.g)}" aria-pressed="${q.gi===gi}">${esc(layGName(q.g))} <span class="cnt">${q.okN ? `${q.builtN}/${MQ_PER}` : "✕"}</span></button>`;
+  /* 칩 숫자 = 만듦 체크 / 완성 가능(액세서리 제외). 전체 10개는 아는 값이라 분모로 안 씀 */
+  const rdy = q => q.list.filter(m => m.built || mqReady(m)).length;
+  const chip = q => `<button class="chip ${q.gi===gi?"on":""}" data-mqg2="${esc(q.g)}" aria-pressed="${q.gi===gi}">${esc(layGName(q.g))} <span class="cnt">${q.okN ? `${q.builtN}/${rdy(q)}` : "✕"}</span></button>`;
   const sameN = (() => { const c = new Map(); p.list.forEach(m => m.outfits && Object.values(m.outfits).forEach(o => Object.values(o).forEach(id => c.set(id, (c.get(id)||0) + 1)))); return [...c.values()].filter(v => v > 1).length; })();
   return `<section class="card">
-    <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">마네킹</span><span class="hint">장르마다 ${MQ_PER}개 · 만듦 ${plans.reduce((a, q) => a + q.builtN, 0)}/${MQ_PER * LAY_G.length}</span></span></div>
+    <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">마네킹</span><span class="hint">장르마다 ${MQ_PER}개 · 만듦 ${plans.reduce((a, q) => a + q.builtN, 0)} / 완성 가능 ${plans.reduce((a, q) => a + rdy(q), 0)}(액세서리 제외)</span></span></div>
     <div class="chips">${plans.map(chip).join("")}</div>
     <div class="hint" style="margin-top:10px">마네킹 하나에 봄·가을·여름·겨울 풀세트(상의+하의 또는 셋업, 아우터, 액세서리)를 입혀요. 세 계절끼리는 옷이 안 겹치고, 옷은 그 장르 옷 전부에서 골라요. <b>회색</b>은 아직 없는 옷이에요(체크하는 옷은 완료 전, 일반 옷은 의류 필터에서 장르·옷본·재료·옵션을 다 고르기 전)·안 산 액세서리(액세서리는 눌러서 산 걸로). 다른 마네킹과는 덜 쓴 옷부터 골라요. ✓를 누르면 그 조합으로 고정돼요. 계절 궁합·판매 점수는 사이트 추정값 · 출처: KairoHistory</div>
   </section>
   <section class="card"><div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${esc(layGName(p.g))}</span><span class="hint">옷 ${p.poolN}벌 · 만든 옷 ${DATA.clo.filter(c => c.site?.genre === p.g && MQ_KIND[c.site?.kind] && cloHave(c)).length}벌${p.okN ? ` · 다른 마네킹과 겹치는 옷 ${sameN}벌` : ""}</span></span></div>
     ${p.okN ? "" : `<div class="mq-warn">${ICON.warn}지금은 만들 수 없어요 · ${esc(p.reason)}</div>`}
-    ${p.okN ? `<div class="cardgrid mqgrid">${p.list.map(m => mqSetCard(p, m)).join("")}</div>` : ""}</section>`;
+    ${p.okN ? `<div class="cardgrid mqgrid">${[...p.list].sort((a, b) => { const r = m => m.built ? 1 : mqReady(m) ? 0 : 2; return r(a) - r(b) || a.k - b.k; }).map(m => mqSetCard(p, m)).join("")}</div>` : ""}</section>`;
 }
 
 /* ---------- 다음에 만들 옷 (의류 탭 맨 위) ----------

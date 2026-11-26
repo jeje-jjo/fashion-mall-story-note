@@ -738,3 +738,6 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
   :root:root .toast.solo { left: 50%; right: auto; max-width: calc(100vw - 100px); transform: translate(-50%, 20px); }
   :root:root .toast.solo.show { transform: translate(-50%, 0); }
 }
+/* 마네킹 상태(제제 2026-11-25): 완성 가능은 강조색 */
+:root:root .mq-st.ready { color: var(--blue-ink); font-weight: 700; }
+:root:root .mq-st.built { color: var(--fg3); }
