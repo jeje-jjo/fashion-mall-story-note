@@ -768,3 +768,5 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
 :root:root button.mq-name { border: 0; background: none; padding: 2px 4px; margin: -2px -4px; border-radius: 6px; font: inherit; font-weight: 700; color: var(--fg); cursor: copy; text-align: left; }
 :root:root button.mq-name:hover { background: var(--soft); }
 :root:root button.mq-name::after { content: "⧉"; margin-left: 5px; font-size: .8em; color: var(--fg3); font-weight: 400; }
+/* 진한(고른) 칩 안 숫자는 칩 글자색 따라감(제제 2026-11-26: 마네킹 장르 칩 0/9 안 보임) */
+:root:root .chip.on .cnt, :root:root .chip.on > small, :root:root .chip.on > b { color: inherit !important; opacity: .82; }
