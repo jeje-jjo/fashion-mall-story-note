@@ -1418,6 +1418,7 @@ function cloUseTags(c){
   return out.join("");
 }
 function viewClo(){
+  if (IMG_TRY) needCloImg();
   const cats = ["전체", ...new Set(DATA.clo.map(c => c.c))];
   const kinds = S.cloKind || [];
   const base = c => kinds.length ? ((kinds.includes("추가옵션") && isOptKind(c)) || (kinds.includes("전투 추천") && isBtKind(c)) || (kinds.includes("코디 추천") && isCoKind(c))) : (S.cloSt==="전체" ? true : tracked(c));
@@ -1548,7 +1549,7 @@ function viewClo(){
         <div class="row ${d?"done":""} ${btOn && btHits(c)===btCs.length && btCs.length ? "btfull" : ""}">
           ${tr ? `<button data-tclo="${c.id}" aria-pressed="${!!d}" aria-label="${esc(cloName(c))} 완료 바꾸기">${ck(d)}</button>` : `<span style="width:26px;flex:none"></span>`}
           <button class="body" data-oclo="${c.id}" aria-expanded="${opened}" style="text-align:left">
-            <div class="t"><span class="item-number">#${String(c.id).padStart(3,"0")}</span><span class="n">${esc(cloName(c))}</span>${catTag(c.c)}${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}${rowOptTags(c)}${isChal(c)?`<span class="tag chal">${btWorn(c) ? `챌린지 · ${ICON.sword}` : "챌린지"}</span>`:""}${btOn ? btMatchTag(c) : ""}${Object.keys(S.clofix[c.id]||{}).length?semTag("fix","수정됨"):""}${want?`<span class="tag blue">원함</span>`:shop?`<span class="tag amber">상점</span>`:""}</div>
+            <div class="t">${IMG_TRY && S.cloImg?.[String(c.id)] ? `<img class="li-img" src="${S.cloImg[String(c.id)]}" alt="" width="28" height="28" loading="lazy">` : ""}<span class="item-number">#${String(c.id).padStart(3,"0")}</span><span class="n">${esc(cloName(c))}</span>${catTag(c.c)}${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}${rowOptTags(c)}${isChal(c)?`<span class="tag chal">${btWorn(c) ? `챌린지 · ${ICON.sword}` : "챌린지"}</span>`:""}${btOn ? btMatchTag(c) : ""}${Object.keys(S.clofix[c.id]||{}).length?semTag("fix","수정됨"):""}${want?`<span class="tag blue">원함</span>`:shop?`<span class="tag amber">상점</span>`:""}</div>
             <div class="s"><span class="sspec">${[c.p,c.m,c.o].filter(Boolean).map(esc).join(" · ")}${X?` — ${esc(X)}`:""}</span>${cloUseTags(c)}</div>
           </button>
 
@@ -1710,7 +1711,8 @@ function viewCoordReq(){
         <button type="button" class="iconbtn" data-act="comodal-x" aria-label="창 닫기">${ICON.x}</button></div>
       ${(() => { /* 완료한 요청은 아래로(제제 2026-11-24): 완료는 ①부터 순서대로 쌓인다고 보고, 앞의 N개를 흐리게 아래로 */
         const L = groups[n], st = dn ? L.length : Math.min(S.coordStep?.[n] || 0, L.length);
-        const todo = L.slice(st).map(c => entry(c, true)), got = L.slice(0, st).map(c => entry(c, true).replace('class="coord sub request-entry', 'class="coord sub request-entry req-got'));
+        needCloImg();
+        const todo = L.slice(st).map(c => imgifyDD(entry(c, true))), got = L.slice(0, st).map(c => imgifyDD(entry(c, true)).replace('class="coord sub request-entry', 'class="coord sub request-entry req-got'));
         return `<div class="comodal-b"><div class="request-grid">${todo.join("")}${got.length ? `<div class="req-got-h">완료한 요청 ${got.length}</div>${got.join("")}` : ""}</div></div>`; })()}
     </div></div>`; }
 }
@@ -1987,6 +1989,12 @@ const mqReady = m => !!m.outfits && Object.values(m.outfits).every(o => Object.e
 /* 옷 그림(마네킹용): 처음 마네킹을 열 때 한 번 받아 둠 */
 function needCloImg(){ if (S.cloImg || S._imgLoad || !window.__fmsLoadImgs) return; S._imgLoad = true;
   window.__fmsLoadImgs().then(t => { S.cloImg = Object.assign({}, ...((t.clo_img || []).map(r => r.imgs || {}))); render(); }).catch(() => { S._imgLoad = false; }); }
+/* 그림 시험(목업): localStorage fms-imgtry=1일 때만 의류 목록·목표치 추천 세트에 그림 */
+const IMG_TRY = (() => { try{ return localStorage.getItem("fms-imgtry") === "1"; }catch(e){ return false; } })();
+const CLO_BY_NAME = new Map(); DATA.clo.forEach(c => { [c.n, c.site?.name].filter(Boolean).forEach(n => { if (!CLO_BY_NAME.has(n)) CLO_BY_NAME.set(n, c); }); });
+const cloByName = n => CLO_BY_NAME.get(n) || DATA.clo.find(c => cloName(c) === n);
+/* 코디 팝업(2): 상의·하의 등 옷 이름 칸(dd) 앞에 그림. 없는 옷은 흑백 */
+const imgifyDD = html => S.cloImg ? html.replace(/<dd>([^<]+)<\/dd>/g, (m, t) => { const c = cloByName(t.replace(/&amp;/g, "&")); const u = c && S.cloImg[String(c.id)]; return u ? `<dd class="dd-img ${cloHave(c) ? "" : "dim"}"><img class="mq-img" src="${u}" alt="" width="28" height="28" loading="lazy">${t}</dd>` : m; }) : html;
 const cloImgTag = c => { const u = S.cloImg?.[String(c.id)]; return u ? `<img class="mq-img" src="${u}" alt="" width="32" height="32" loading="lazy" decoding="async">` : ""; };
 function viewMannequin(){
   needCloImg();
@@ -3174,8 +3182,10 @@ function goalSets(i){
   const mine = btSlots(i).map(([k, , j]) => r.slots?.[k]?.n ?? (b.ex?.[j] || "")).filter(Boolean);
   if (btDone(i) && mine.length) return `<div class="goal-sets"><div class="goal-sets-h">클리어한 코디</div><div class="goal-sets-n">${mine.map(esc).join(" · ")}</div></div>`;
   const sets = (b.site?.sets || []).map(x => { const set = (DATA.sets || []).find(s => s.id === x.setId); if (!set) return null; const inf = setInfo(set);
-    return [x.setId, inf.items.map(it => it.c ? cloName(it.c) : (it.name || "#" + it.id))]; }).filter(Boolean);
+    return [x.setId, inf.items.map(it => it.c ? cloName(it.c) : (it.name || "#" + it.id)), inf.items]; }).filter(Boolean);
   if (!sets.length) return mine.length ? `<div class="goal-sets"><div class="goal-sets-h">내 코디</div><div class="goal-sets-n">${mine.map(esc).join(" · ")}</div></div>` : "";
+  if (IMG_TRY){ needCloImg(); const tile = it => { const u = it.c && S.cloImg?.[String(it.c.id)]; return `<span class="gs-it ${it.c && cloHave(it.c) ? "" : "dim"}">${u ? `<img class="mq-img" src="${u}" alt="" width="40" height="40">` : ""}<span>${esc(it.c ? cloName(it.c) : (it.name || ""))}</span></span>`; };
+    return `<div class="goal-sets"><div class="goal-sets-h">추천 세트</div>${sets.map(([id, , items]) => `<div class="gs-row"><small>세트 ${id}</small><div class="gs-items">${items.map(tile).join("")}</div></div>`).join("")}</div>`; }
   return `<div class="goal-sets"><div class="goal-sets-h">추천 세트</div>${sets.map(([id, ns]) => `<div class="goal-sets-n"><small>세트 ${id}</small>${ns.map(esc).join(" · ")}</div>`).join("")}</div>`;
 }
 function goalPanel(){
