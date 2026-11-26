@@ -1975,7 +1975,7 @@ function mqSetCard(p, m){
     const lab = `<small>${c.site?.kind==="셋업"?"셋업":l}</small>${esc(cloName(c))}`;
     if (k === "a"){ const own = (S.mqAcc || []).includes(c.id); return `<button type="button" class="mq-pc mq-acc ${own?"":"dim"}" data-mqacc="${c.id}" aria-pressed="${own}" title="${own?"샀음 · 누르면 취소":"누르면 산 걸로"}">${lab}</button>`; }
     return `<span class="mq-pc ${cloHave(c)?"":"dim"}">${lab}</span>`; }).join("");
-  return `<div class="fccard mqset ${m.built?"built":""}">
+  return `<div class="fccard mqset ${m.built ? "built" : mqReady(m) ? "ready" : "lack"}">
     <div class="fc-h"><b class="fc-n">마네킹 ${m.k+1}</b>${m.outfits ? `<button class="iconbtn act ${m.built?"on":""}" data-mqbuilt="${p.gi}|${m.k}" aria-label="마네킹 ${m.k+1} ${m.built?"만듦 취소":"만듦"}" aria-pressed="${!!m.built}">${ICON.ok}</button>` : ""}<span class="fc-c mq-st ${m.built ? "built" : mqReady(m) ? "ready" : ""}">${m.built ? "만듦" : !m.outfits ? "못 만듦" : mqReady(m) ? "완성 가능" : "옷 모자람"}</span></div>
     ${m.outfits ? MQ_SK.map(([sk, se]) => `<div class="mqset-row"><span class="mqset-s">${se}${m.rec?.fav?.[sk] != null ? `<small class="mq-fav" title="호감 손님(72명 중)">호감 ${m.rec.fav[sk]}</small>` : ""}</span><div class="mq-pcs">${pcs(m.outfits[sk])}</div></div>`).join("") : `<div class="empty">${esc(p.reason)}</div>`}
   </div>`;

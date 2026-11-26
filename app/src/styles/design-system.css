@@ -743,3 +743,11 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
 :root:root .mq-st.built { color: var(--fg3); }
 /* 마네킹 계절 줄의 호감 손님 수 */
 :root:root .mqset-s .mq-fav { display: block; margin-top: 2px; font-size: var(--t-meta); color: var(--fg3); font-weight: 500; }
+/* 마네킹 카드 세 상태 구분(제제 2026-11-26)
+   완성 가능: 강조색 두꺼운 테두리 + 옅은 강조 바탕 머리 / 만듦: 점선 테두리, 흐리게 / 옷 모자람: 기본 */
+:root:root .fccard.mqset { border: 1px solid var(--line); }
+:root:root .fccard.mqset.ready { border: 2px solid var(--blue); box-shadow: 0 2px 10px color-mix(in srgb, var(--blue) 14%, transparent); }
+:root:root .fccard.mqset.ready .mq-st.ready { background: var(--blue); color: var(--on-accent); padding: 2px 9px; border-radius: 999px; font-size: var(--t-meta); }
+:root:root .fccard.mqset.built { border: 1.5px dashed color-mix(in srgb, var(--blue) 45%, var(--line)); background: var(--soft); opacity: .72; }
+:root:root .fccard.mqset.lack { border-color: var(--line); }
+:root:root .mq-st.built::before { content: "✓ "; }
