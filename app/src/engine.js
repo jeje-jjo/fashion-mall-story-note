@@ -1972,7 +1972,7 @@ async function mqToggleBuilt(gi, k){
 function mqSetCard(p, m){
   /* 회색 = 아직 안 됨(제제 2026-11-19): 옷은 완료 체크 전, 액세서리는 산 걸 직접 눌러 표시(${RUN}/ui/mqacc) */
   const pcs = o => MQ_SLOTS.map(([k, l]) => { const c = o && o[k] != null ? CLO_BY_ID.get(o[k]) : null; if (!c) return "";
-    const lab = `<small>${c.site?.kind==="셋업"?"셋업":l}</small>${esc(cloName(c))}`;
+    const lab = `${cloImgTag(c)}<span class="mq-t"><small>${c.site?.kind==="셋업"?"셋업":l}</small>${esc(cloName(c))}</span>`;
     if (k === "a"){ const own = (S.mqAcc || []).includes(c.id); return `<button type="button" class="mq-pc mq-acc ${own?"":"dim"}" data-mqacc="${c.id}" aria-pressed="${own}" title="${own?"샀음 · 누르면 취소":"누르면 산 걸로"}">${lab}</button>`; }
     return `<span class="mq-pc ${cloHave(c)?"":"dim"}">${lab}</span>`; }).join("");
   return `<div class="fccard mqset ${m.built ? "built" : mqReady(m) ? "ready" : "lack"}">
@@ -1984,7 +1984,12 @@ function mqSetCard(p, m){
 }
 /* 마네킹이 '완성 가능'인지(제제 2026-11-25): 액세서리 빼고 세 계절 옷이 전부 있는 옷 */
 const mqReady = m => !!m.outfits && Object.values(m.outfits).every(o => Object.entries(o || {}).every(([k, id]) => k === "a" || cloHave(CLO_BY_ID.get(id))));
+/* 옷 그림(마네킹용): 처음 마네킹을 열 때 한 번 받아 둠 */
+function needCloImg(){ if (S.cloImg || S._imgLoad || !window.__fmsLoadImgs) return; S._imgLoad = true;
+  window.__fmsLoadImgs().then(t => { S.cloImg = Object.assign({}, ...((t.clo_img || []).map(r => r.imgs || {}))); render(); }).catch(() => { S._imgLoad = false; }); }
+const cloImgTag = c => { const u = S.cloImg?.[String(c.id)]; return u ? `<img class="mq-img" src="${u}" alt="" width="32" height="32" loading="lazy" decoding="async">` : ""; };
 function viewMannequin(){
+  needCloImg();
   const plans = LAY_G.map((_, gi) => mqPlan(gi)), gi = Math.max(0, LAY_G.indexOf(S.mqG)), p = plans[gi];
   /* 칩 숫자 = 만듦 체크 / 완성 가능(액세서리 제외). 전체 10개는 아는 값이라 분모로 안 씀 */
   const rdy = q => q.list.filter(m => m.built || mqReady(m)).length;

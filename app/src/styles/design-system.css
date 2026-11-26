@@ -759,3 +759,8 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
 :root:root .mq-btn.on { background: transparent; color: var(--fg3); box-shadow: inset 0 0 0 1px var(--line); }
 :root:root .mqset .fc-h .mq-st { margin-left: auto; }
 :root:is([data-skin="atelier"],[data-skin="paper"]) .mq-btn { border-radius: var(--skin-small); }
+/* 마네킹 옷 그림(제제 2026-11-26): 이름 앞 32px, 없는 옷은 흑백·흐리게 */
+:root:root .mq-pc { display: inline-flex; align-items: center; gap: 6px; }
+:root:root .mq-pc .mq-img { width: 32px; height: 32px; flex: none; image-rendering: pixelated; border-radius: 6px; background: var(--soft); }
+:root:root .mq-pc .mq-t { display: inline; }
+:root:root .mq-pc.dim .mq-img { filter: grayscale(1); opacity: .45; }

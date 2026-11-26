@@ -21,6 +21,8 @@ async function boot(store: unknown) {
   let t: Tables;
   try {
     t = await loadTables(TABLES);
+    /* 옷 그림은 마네킹을 열 때만 받는다(ref/clo_img, 제제 2026-11-26) */
+    (window as any).__fmsLoadImgs = () => loadTables(["clo_img"] as const);
   } catch (e: any) {
     /* 권한 거부 = 노트 주인이 아닌 구글 계정으로 로그인된 경우(다른 브라우저에 다른 계정이 남아 있을 때, 2026-11-17)
        → 지금 계정을 보여 주고 다른 계정으로 다시 로그인할 수 있게 */
