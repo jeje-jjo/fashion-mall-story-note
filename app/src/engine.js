@@ -3261,7 +3261,7 @@ document.addEventListener("click", () => { _lastTap = Date.now(); }, true);
 function mqNotify(){
   if (!DATA.mqRecs?.length) return;
   const cur = new Set();
-  LAY_G.forEach((g, gi) => mqPlan(gi).list.forEach(m => { if (!m.built && mqReady(m)) cur.add(mqBKey(gi, m.k)); }));
+  LAY_G.forEach((g, gi) => mqPlan(gi).list.forEach(m => { if (m.built || mqReady(m)) cur.add(mqBKey(gi, m.k)); /* 만듦도 같이 세서 만듦 취소로는 알림 안 뜨게 */ }));
   const prev = _mqPrev; _mqPrev = cur;
   if (!prev || Date.now() - _lastTap > 3000) return;
   /* 장르·개수 없이 '마네킹 완성'만(제제 2026-11-26) */
