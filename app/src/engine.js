@@ -1418,7 +1418,7 @@ function cloUseTags(c){
   return out.join("");
 }
 function viewClo(){
-  if (IMG_TRY) needCloImg();
+  needCloImg();  /* 의류 목록 옷 그림(제제 2026-11-26) */
   const cats = ["전체", ...new Set(DATA.clo.map(c => c.c))];
   const kinds = S.cloKind || [];
   const base = c => kinds.length ? ((kinds.includes("추가옵션") && isOptKind(c)) || (kinds.includes("전투 추천") && isBtKind(c)) || (kinds.includes("코디 추천") && isCoKind(c))) : (S.cloSt==="전체" ? true : tracked(c));
@@ -1549,7 +1549,7 @@ function viewClo(){
         <div class="row ${d?"done":""} ${btOn && btHits(c)===btCs.length && btCs.length ? "btfull" : ""}">
           ${tr ? `<button data-tclo="${c.id}" aria-pressed="${!!d}" aria-label="${esc(cloName(c))} 완료 바꾸기">${ck(d)}</button>` : `<span style="width:26px;flex:none"></span>`}
           <button class="body" data-oclo="${c.id}" aria-expanded="${opened}" style="text-align:left">
-            <div class="t">${IMG_TRY && S.cloImg?.[String(c.id)] ? `<img class="li-img" src="${S.cloImg[String(c.id)]}" alt="" width="28" height="28" loading="lazy">` : ""}<span class="item-number">#${String(c.id).padStart(3,"0")}</span><span class="n">${esc(cloName(c))}</span>${catTag(c.c)}${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}${rowOptTags(c)}${isChal(c)?`<span class="tag chal">${btWorn(c) ? `챌린지 · ${ICON.sword}` : "챌린지"}</span>`:""}${btOn ? btMatchTag(c) : ""}${Object.keys(S.clofix[c.id]||{}).length?semTag("fix","수정됨"):""}${want?`<span class="tag blue">원함</span>`:shop?`<span class="tag amber">상점</span>`:""}</div>
+            <div class="t">${S.cloImg?.[String(c.id)] ? `<img class="li-img" src="${S.cloImg[String(c.id)]}" alt="" width="28" height="28" loading="lazy">` : ""}<span class="item-number">#${String(c.id).padStart(3,"0")}</span><span class="n">${esc(cloName(c))}</span>${catTag(c.c)}${SP_OPTS.includes(c.o)?semTag("sp","★ "+esc(c.o)):""}${rowOptTags(c)}${isChal(c)?`<span class="tag chal">${btWorn(c) ? `챌린지 · ${ICON.sword}` : "챌린지"}</span>`:""}${btOn ? btMatchTag(c) : ""}${Object.keys(S.clofix[c.id]||{}).length?semTag("fix","수정됨"):""}${want?`<span class="tag blue">원함</span>`:shop?`<span class="tag amber">상점</span>`:""}</div>
             <div class="s"><span class="sspec">${[c.p,c.m,c.o].filter(Boolean).map(esc).join(" · ")}${X?` — ${esc(X)}`:""}</span>${cloUseTags(c)}</div>
           </button>
 
@@ -1990,7 +1990,6 @@ const mqReady = m => !!m.outfits && Object.values(m.outfits).every(o => Object.e
 function needCloImg(){ if (S.cloImg || S._imgLoad || !window.__fmsLoadImgs) return; S._imgLoad = true;
   window.__fmsLoadImgs().then(t => { S.cloImg = Object.assign({}, ...((t.clo_img || []).map(r => r.imgs || {}))); render(); }).catch(() => { S._imgLoad = false; }); }
 /* 그림 시험(목업): localStorage fms-imgtry=1일 때만 의류 목록·목표치 추천 세트에 그림 */
-const IMG_TRY = (() => { try{ return localStorage.getItem("fms-imgtry") === "1"; }catch(e){ return false; } })();
 const CLO_BY_NAME = new Map(); DATA.clo.forEach(c => { [c.n, c.site?.name].filter(Boolean).forEach(n => { if (!CLO_BY_NAME.has(n)) CLO_BY_NAME.set(n, c); }); });
 const cloByName = n => CLO_BY_NAME.get(n) || DATA.clo.find(c => cloName(c) === n);
 /* 코디 팝업(2): 상의·하의 등 옷 이름 칸(dd) 앞에 그림. 없는 옷은 흑백 */
@@ -3184,9 +3183,11 @@ function goalSets(i){
   const sets = (b.site?.sets || []).map(x => { const set = (DATA.sets || []).find(s => s.id === x.setId); if (!set) return null; const inf = setInfo(set);
     return [x.setId, inf.items.map(it => it.c ? cloName(it.c) : (it.name || "#" + it.id)), inf.items]; }).filter(Boolean);
   if (!sets.length) return mine.length ? `<div class="goal-sets"><div class="goal-sets-h">내 코디</div><div class="goal-sets-n">${mine.map(esc).join(" · ")}</div></div>` : "";
-  if (IMG_TRY){ needCloImg(); const tile = it => { const u = it.c && S.cloImg?.[String(it.c.id)]; return `<span class="gs-it ${it.c && cloHave(it.c) ? "" : "dim"}">${u ? `<img class="mq-img" src="${u}" alt="" width="40" height="40">` : ""}<span>${esc(it.c ? cloName(it.c) : (it.name || ""))}</span></span>`; };
-    return `<div class="goal-sets"><div class="goal-sets-h">추천 세트</div>${sets.map(([id, , items]) => `<div class="gs-row"><small>세트 ${id}</small><div class="gs-items">${items.map(tile).join("")}</div></div>`).join("")}</div>`; }
-  return `<div class="goal-sets"><div class="goal-sets-h">추천 세트</div>${sets.map(([id, ns]) => `<div class="goal-sets-n"><small>세트 ${id}</small>${ns.map(esc).join(" · ")}</div>`).join("")}</div>`;
+  /* 추천 세트(제제 2026-11-26): 글 목록 그대로, 줄을 누르면 아래에 그림 */
+  const tile = it => { const u = it.c && S.cloImg?.[String(it.c.id)]; return `<span class="gs-it ${it.c && cloHave(it.c) ? "" : "dim"}">${u ? `<img class="mq-img" src="${u}" alt="" width="40" height="40">` : ""}<span>${esc(it.c ? cloName(it.c) : (it.name || ""))}</span></span>`; };
+  return `<div class="goal-sets"><div class="goal-sets-h">추천 세트 <span class="hint">눌러서 그림 보기</span></div>${sets.map(([id, ns, items]) => { const on = S.gsOpen === `${i}|${id}`;
+    if (on) needCloImg();
+    return `<button type="button" class="goal-sets-n gs-tog ${on ? "on" : ""}" data-gsimg="${i}|${id}" aria-expanded="${on}"><small>세트 ${id}</small>${ns.map(esc).join(" · ")} <span class="gs-tri" aria-hidden="true">${on ? "▴" : "▾"}</span></button>${on ? `<div class="gs-items">${items.map(tile).join("")}</div>` : ""}`; }).join("")}</div>`;
 }
 function goalPanel(){
   const bts = DATA.battles.map((b, i) => ({i, b, v: b.site?.values || [], done: btDone(i)})).filter(x => x.v.length);
@@ -3400,6 +3401,7 @@ document.addEventListener("click", e => {
   if (d.mqacc !== undefined){ const id = +d.mqacc, cur = S.mqAcc || []; S.mqAcc = cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]; render();
     if (db) writeSerial(`${RUN}/ui/mqacc`, {ids:S.mqAcc, t:Date.now()}).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); return; }
   /* 마네킹 이름 복사(제제 2026-11-26): 게임에서 마네킹 이름 붙일 때 */
+  if (d.gsimg){ S.gsOpen = S.gsOpen === d.gsimg ? null : d.gsimg; render(); return; }
   if (d.mqcopy){ const t = d.mqcopy, ok = () => toast(`'${t}' 복사했어요`);
     (navigator.clipboard?.writeText(t) || Promise.reject()).then(ok).catch(() => { const ta = document.createElement("textarea"); ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); try{ document.execCommand("copy"); ok(); }catch(e){ toast("복사하지 못했어요"); } ta.remove(); }); return; }
   if (d.act==="sppath"){ S.spPath = !S.spPath; render(); return; }

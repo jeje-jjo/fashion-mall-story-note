@@ -782,3 +782,8 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
 :root:root .gs-it { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; width: 64px; font-size: 10.5px; line-height: 1.3; text-align: center; color: var(--fg2); }
 :root:root .gs-it .mq-img { width: 40px; height: 40px; image-rendering: pixelated; border-radius: 8px; background: var(--soft); }
 :root:root .gs-it.dim .mq-img { filter: grayscale(1); opacity: .45; }
+/* 목표치 추천 세트: 글 줄 그대로, 누르면 그림 */
+:root:root button.gs-tog { display: block; width: 100%; border: 0; background: none; padding: 4px 6px; margin: 0 -6px; border-radius: 8px; font: inherit; text-align: left; color: inherit; cursor: pointer; }
+:root:root button.gs-tog:hover, :root:root button.gs-tog.on { background: var(--soft); }
+:root:root .gs-tog .gs-tri { color: var(--fg3); font-size: .8em; }
+:root:root .goal-sets .gs-items { margin: 6px 0 4px; }
