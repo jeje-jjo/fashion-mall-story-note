@@ -1741,7 +1741,9 @@ const recipeOwned = c => { const has = (v, L) => !v || v === "없음" || v === "
 /* 일반 옷은 옵션 옷을 먼저 만든 뒤에 만든다(제제 2026-11-26): 장르~옵션이 열린 체크 대상 옷(옵션·전투·코디 추천 옷)을 전부 완료해야
    열린 일반 옷을 만든 걸로 본다. 필요한 옵션 '만들 옷'에 골라 둔 일반 옷은 아직 안 만든 것(목록에서 빼면 만든 것) */
 let _optAll = null;
-const optAllDone = () => _optAll ?? (_optAll = DATA.clo.every(c => !tracked(c) || !recipeOwned(c) || cloDone(c)));
+/* 특수옵션 옷은 빼고 셈(제제 2026-11-26): 특수옵션을 의류 필터에서 골라 두면 안 만든 특수옵션 옷 때문에 일반 옷이 전부 회색이 되던 것 */
+const optLeft = () => DATA.clo.filter(c => tracked(c) && !isSp(c) && recipeOwned(c) && !cloDone(c));
+const optAllDone = () => _optAll ?? (_optAll = !optLeft().length);
 const cloHave = c => !!c && (cloDone(c) || (!tracked(c) && recipeOwned(c) && optAllDone() && !(S.optPicks || []).includes(c.id)));
 function setInfo(s){
   const items = (s.clothes || []).map((id, i) => ({ id, c: CLO_BY_ID.get(id) || null, name: s.names?.[i] }));
