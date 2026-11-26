@@ -1989,6 +1989,15 @@ function mqSetCard(p, m){
     ${m.outfits ? MQ_SK.map(([sk, se]) => `<div class="mqset-row"><span class="mqset-s">${se}${m.rec?.fav?.[sk] != null ? `<small class="mq-fav" title="호감 손님(72명 중)">호감 ${m.rec.fav[sk]}</small>` : ""}</span><div class="mq-pcs">${pcs(m.outfits[sk])}</div></div>`).join("") : `<div class="empty">${esc(p.reason)}</div>`}
   </div>`;
 }
+/* 고른 장르 마네킹에 들어가는 액세서리(사는 것)를 이름 버튼으로. 누르면 산 걸로(${RUN}/ui/mqacc, 카드 안 액세서리와 같은 값) (제제 2026-11-26) */
+function mqAccRow(p){
+  const n = new Map(); p.list.forEach(m => m.outfits && Object.values(m.outfits).forEach(o => { if (o?.a != null) n.set(o.a, (n.get(o.a) || 0) + 1); }));
+  const ids = [...n.keys()].filter(id => CLO_BY_ID.has(id)).sort((a, b) => n.get(b) - n.get(a) || a - b);
+  if (!ids.length) return "";
+  const own = S.mqAcc || [];
+  return `<div class="chips mq-accrow" aria-label="${esc(layGName(p.g))} 액세서리">${ids.map(id => { const on = own.includes(id);
+    return `<button type="button" class="chip sm mq-accchip ${on ? "on" : ""}" data-mqacc="${id}" aria-pressed="${on}" title="${on ? "샀음 · 누르면 취소" : "누르면 산 걸로"}">${on ? ICON.ok : ""}${esc(cloName(CLO_BY_ID.get(id)))}</button>`; }).join("")}</div>`;
+}
 /* 마네킹 카드 네 가지(제제 2026-11-26): 완성 가능 → 만듦·액세서리 아직(안 산 액세서리가 있는데 만듦) → 만듦 → 옷 모자람 */
 const mqAccLack = m => !!m.outfits && Object.values(m.outfits).some(o => o?.a != null && !(S.mqAcc || []).includes(o.a));
 const mqState = m => m.built ? (mqAccLack(m) ? "acc" : "built") : mqReady(m) ? "ready" : "lack";
@@ -2013,6 +2022,7 @@ function viewMannequin(){
   return `<section class="card">
     <div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">마네킹</span><span class="hint">${plans.reduce((a, q) => a + q.list.length, 0)}개 · 만듦 ${plans.reduce((a, q) => a + q.builtN, 0)} / 완성 가능 ${plans.reduce((a, q) => a + rdy(q), 0)}(액세서리 제외)</span></span></div>
     <div class="chips">${plans.map(chip).join("")}</div>
+    ${mqAccRow(p)}
     <div class="hint" style="margin-top:10px">${(DATA.mqRecs || []).length ? `제제 시트 추천 15개 + 남는 옷을 올린 추가 마네킹(16번부터)이에요. 마네킹 하나에 봄·가을·여름·겨울 코디(상의+하의 또는 셋업, 아우터·액세서리는 있는 것만). 계절 옆 숫자는 호감 손님 수(72명 중, 선호 점수 100 이상). <b>회색</b>은 아직 없는 옷(체크하는 옷은 완료 전, 일반 옷은 의류 필터에서 장르~옵션을 다 고르기 전)·안 산 액세서리예요. 사이트 판매·빌더 공식 기반 추정 · 출처: KairoHistory` : "마네킹 하나에 봄·가을·여름·겨울 풀세트를 입혀요."}</div>
   </section>
   <section class="card"><div class="fhead rowhead"><span class="fh-l"><span class="sublbl" style="margin:0">${esc(layGName(p.g))}</span><span class="hint">옷 ${p.poolN}벌 · 만든 옷 ${DATA.clo.filter(c => c.site?.genre === p.g && MQ_KIND[c.site?.kind] && cloHave(c)).length}벌${p.okN ? ` · 다른 마네킹과 겹치는 옷 ${sameN}벌` : ""}</span></span></div>
