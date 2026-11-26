@@ -751,3 +751,11 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
 :root:root .fccard.mqset.built { border: 1.5px dashed color-mix(in srgb, var(--blue) 45%, var(--line)); background: var(--soft); opacity: .72; }
 :root:root .fccard.mqset.lack { border-color: var(--line); }
 :root:root .mq-st.built::before { content: "✓ "; }
+/* 마네킹 만듦 버튼: 상태 뱃지가 곧 버튼. 보이는 크기는 그대로, 누르는 범위는 위아래·왼쪽으로 넓힘 */
+:root:root .mqset .fc-h { position: relative; }
+:root:root .mq-btn { position: relative; margin-left: auto; display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px 0 8px; border: 0; border-radius: 999px; background: var(--blue); color: var(--on-accent); font: inherit; font-size: var(--t-meta); font-weight: 700; cursor: pointer; }
+:root:root .mq-btn .ui-icon { width: 13px; height: 13px; }
+:root:root .mq-btn::after { content: ""; position: absolute; inset: -10px -8px -10px -24px; }
+:root:root .mq-btn.on { background: transparent; color: var(--fg3); box-shadow: inset 0 0 0 1px var(--line); }
+:root:root .mqset .fc-h .mq-st { margin-left: auto; }
+:root:is([data-skin="atelier"],[data-skin="paper"]) .mq-btn { border-radius: var(--skin-small); }
