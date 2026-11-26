@@ -788,3 +788,7 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
 :root:root button.gs-tog:hover, :root:root button.gs-tog.on { background: var(--soft); }
 :root:root .gs-tog .gs-tri { color: var(--fg3); font-size: .8em; }
 :root:root .goal-sets .gs-items { margin: 6px 0 4px; }
+
+/* 마네킹 넷째 상태: 만듦·액세서리 아직(제제 2026-11-26). 만듦처럼 점선이지만 흐리지 않게, 버튼은 강조색 글씨 */
+:root:root .fccard.mqset.built.acc { opacity: 1; background: var(--card); border: 1.5px dashed var(--blue); }
+:root:root .mq-btn.on.acc { color: var(--blue-ink); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--blue) 55%, var(--line)); background: var(--blue-soft); }
