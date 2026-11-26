@@ -764,3 +764,7 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
 :root:root .mq-pc .mq-img { width: 32px; height: 32px; flex: none; image-rendering: pixelated; border-radius: 6px; background: var(--soft); }
 :root:root .mq-pc .mq-t { display: inline; }
 :root:root .mq-pc.dim .mq-img { filter: grayscale(1); opacity: .45; }
+/* 마네킹 이름(눌러서 복사) */
+:root:root button.mq-name { border: 0; background: none; padding: 2px 4px; margin: -2px -4px; border-radius: 6px; font: inherit; font-weight: 700; color: var(--fg); cursor: copy; text-align: left; }
+:root:root button.mq-name:hover { background: var(--soft); }
+:root:root button.mq-name::after { content: "⧉"; margin-left: 5px; font-size: .8em; color: var(--fg3); font-weight: 400; }

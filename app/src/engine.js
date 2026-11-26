@@ -1369,7 +1369,7 @@ function cloNeedBlock(c){
   const guests = [...new Set(DATA.coord.filter(r => coordHasClo(r, c)).map(coordName))];
   groups.push(usageRow("손님 요청", guests.map(esc)));
   const mannequins = [];
-  Object.entries(S.mqBuilt || {}).forEach(([k, v]) => { if (v?.built && Object.values(v.outfits || {}).some(o => Object.values(o || {}).includes(c.id))) mannequins.push(`${layGName(v.genre)} 마네킹 ${+k.split("k")[1] + 1}`); });
+  Object.entries(S.mqBuilt || {}).forEach(([k, v]) => { if (v?.built && Object.values(v.outfits || {}).some(o => Object.values(o || {}).includes(c.id))) mannequins.push(`${layGName(v.genre)} ${+k.split("k")[1] + 1}`); });
   groups.push(usageRow("세운 코디", mannequins));
   const uses = groups.filter(Boolean).join("");
   const sources = optSources(c.o);
@@ -1966,7 +1966,7 @@ async function mqToggleBuilt(gi, k){
   const key = mqBKey(gi, k), on = !m.built;
   const rec = on ? {built:true, genre:p.g, outfits:m.outfits, t:Date.now(), by:"app"} : {built:false, t:Date.now(), by:"app"};
   S.mqBuilt = {...(S.mqBuilt || {}), [key]: rec}; render();
-  toast(on ? `${layGName(p.g)} 마네킹 ${k+1} 만듦` : `${layGName(p.g)} 마네킹 ${k+1} 만듦 취소`);
+  toast(on ? `${layGName(p.g)} ${k+1} 만듦` : `${layGName(p.g)} ${k+1} 만듦 취소`);
   if (db) try{ await writeSerial(`${RUN}/mannequins/${key}`, rec); }catch(e){ showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
 }
 function mqSetCard(p, m){
@@ -1976,7 +1976,7 @@ function mqSetCard(p, m){
     if (k === "a"){ const own = (S.mqAcc || []).includes(c.id); return `<button type="button" class="mq-pc mq-acc ${own?"":"dim"}" data-mqacc="${c.id}" aria-pressed="${own}" title="${own?"샀음 · 누르면 취소":"누르면 산 걸로"}">${lab}</button>`; }
     return `<span class="mq-pc ${cloHave(c)?"":"dim"}">${lab}</span>`; }).join("");
   return `<div class="fccard mqset ${m.built ? "built" : mqReady(m) ? "ready" : "lack"}">
-    <div class="fc-h"><b class="fc-n">마네킹 ${m.k+1}</b>${/* 체크는 완성 가능·만듦 카드에만, 상태 뱃지 자체가 버튼(제제 2026-11-26: 누르는 범위 넓게) */
+    <div class="fc-h">${(() => { const nm = `${layGName(p.g)} ${m.k+1}`; return `<button type="button" class="fc-n mq-name" data-mqcopy="${esc(nm)}" title="눌러서 이름 복사">${esc(nm)}</button>`; })()}${/* 체크는 완성 가능·만듦 카드에만, 상태 뱃지 자체가 버튼(제제 2026-11-26: 누르는 범위 넓게) */
       m.built || mqReady(m) ? `<button type="button" class="mq-btn ${m.built ? "on" : ""}" data-mqbuilt="${p.gi}|${m.k}" aria-pressed="${!!m.built}" aria-label="마네킹 ${m.k+1} ${m.built ? "만듦 취소" : "만듦 체크"}">${ICON.ok}${m.built ? "만듦" : "완성 가능"}</button>`
       : `<span class="fc-c mq-st">${!m.outfits ? "못 만듦" : "옷 모자람"}</span>`}</div>
     ${m.outfits ? MQ_SK.map(([sk, se]) => `<div class="mqset-row"><span class="mqset-s">${se}${m.rec?.fav?.[sk] != null ? `<small class="mq-fav" title="호감 손님(72명 중)">호감 ${m.rec.fav[sk]}</small>` : ""}</span><div class="mq-pcs">${pcs(m.outfits[sk])}</div></div>`).join("") : `<div class="empty">${esc(p.reason)}</div>`}
@@ -3389,6 +3389,9 @@ document.addEventListener("click", e => {
   if (d.act==="unlockraw"){ S.unlockRaw = !S.unlockRaw; render(); return; }
   if (d.mqacc !== undefined){ const id = +d.mqacc, cur = S.mqAcc || []; S.mqAcc = cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]; render();
     if (db) writeSerial(`${RUN}/ui/mqacc`, {ids:S.mqAcc, t:Date.now()}).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); return; }
+  /* 마네킹 이름 복사(제제 2026-11-26): 게임에서 마네킹 이름 붙일 때 */
+  if (d.mqcopy){ const t = d.mqcopy, ok = () => toast(`'${t}' 복사했어요`);
+    (navigator.clipboard?.writeText(t) || Promise.reject()).then(ok).catch(() => { const ta = document.createElement("textarea"); ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0"; document.body.appendChild(ta); ta.select(); try{ document.execCommand("copy"); ok(); }catch(e){ toast("복사하지 못했어요"); } ta.remove(); }); return; }
   if (d.act==="sppath"){ S.spPath = !S.spPath; render(); return; }
   if (d.act==="outshare"){ outShare(); return; }
   if (d.act==="outsave"){ outSave(); return; }
