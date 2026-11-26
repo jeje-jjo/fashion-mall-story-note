@@ -191,9 +191,11 @@ const clkStore = docs => { let n = docs.reduce((a, d) => a + (d.ev?.length || 0)
 const clkCount = () => clkLoad().reduce((a, d) => a + (d.ev?.length || 0), 0);
 const CLK = { sid: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), seq: 0, buf: [], sent: 0 };
 const queue = {};
+/* 저장 실패 원인 보기(2026-11-26): 마지막 실패한 경로와 오류 코드를 기억해 두고 안내 뒤에 붙인다 */
+let lastWErr = null;
 function writeSerial(path, data){
   const prev = queue[path] || Promise.resolve();
-  const p = prev.catch(()=>{}).then(() => db.doc(path).set(data));
+  const p = prev.catch(()=>{}).then(() => db.doc(path).set(data)).catch(e => { lastWErr = {path, code: e?.code || e?.name || "?", msg: String(e?.message || e).slice(0, 120), t: Date.now()}; try{ console.error("write fail", path, e); }catch(_){} throw e; });
   queue[path] = p; return p;
 }
 async function persist(kind, id, patch, logEntry){
@@ -211,7 +213,9 @@ async function persist(kind, id, patch, logEntry){
 const CLOVIEW_DEFAULT = { kind:["추가옵션","전투 추천","코디 추천"], st:"미완료" };
 function saveCloView(){ if (db) writeSerial("ui/cloview", {kind:S.cloKind || [], st:S.cloSt, t:Date.now()}).catch(() => {}); }
 function saveCoordOpen(){ if (db) writeSerial("ui/coordopen", {list:S.coordOpen, hide:!!S.coordHideDone, t:Date.now()}).catch(()=>{}); }
-function showNotice(msg){ const n=$("#notice"); n.textContent=msg; n.hidden=!msg; }
+function showNotice(msg){ const n=$("#notice");
+  if (msg && /저장하지 못했/.test(msg) && lastWErr && Date.now() - lastWErr.t < 15000) msg += ` (${lastWErr.code} · ${lastWErr.path.replace(/^runs\/r\d+\//, "")}${lastWErr.code === "invalid-argument" || lastWErr.code === "?" ? ` · ${lastWErr.msg}` : ""})`;
+  n.textContent=msg; n.hidden=!msg; }
 
 (async () => {
   const cl = window.claude;
