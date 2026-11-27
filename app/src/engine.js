@@ -1378,17 +1378,31 @@ function examPanel(){
   return `<div class="exampanel"><div class="fhead" style="margin:0 0 8px"><span class="sublbl" style="margin:0">자격시험</span><span class="hint">${n} / ${G.length * 2}</span></div>
     ${grid(open)}${shut.length ? `<div class="exshut-h">아직 안 열린 장르 · 의류 장르에서 고르면 위로 올라가요</div>${grid(shut, "shut")}` : ""}${done.length ? `<div class="exshut-h">완료 ${done.length}</div>${grid(done, "fin")}` : ""}</div>`;
 }
+function setExam(k, on){ const cur = S.exams || []; if (on === cur.includes(k)) return; S.exams = on ? [...cur, k] : cur.filter(x => x !== k);
+    /* 상급을 체크하면 중급도 같이(제제 2026-11-27) */
+    if (on && k.endsWith("|상")){ const mid = k.replace(/\|상$/, "|중"); if (!S.exams.includes(mid)) S.exams = [...S.exams, mid]; }
+    /* 상급 자격시험 보상 특수옵션(오리지널리티·사이버)은 체크하면 의류 옵션 선택에도 */
+    const sp = Object.entries(EXAM_SP).find(([, v]) => examKey(...v) === k);
+    if (sp){ const o = SP_OPTS.find(x => optSources(x).includes(sp[0])); const sel = S.cloOpt || [];
+      if (o && on && !sel.includes(o)){ S.cloOpt = [...sel, o]; if (S.cloOpt.length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, opt:true}; remember(); toast(`★ ${o} 옵션 선택`); }
+      else if (o && !on && sel.includes(o) && !optSources(o).some(x => spSrcDone(o, x))){ S.cloOpt = sel.filter(x => x !== o); remember(); } }
+    if (examAllDone()){ S.guTab = "goal"; toast("자격시험을 모두 체크했어요"); }
+    render(); if (db) writeSerial(`${RUN}/ui/exams`, {done:S.exams, t:Date.now()}).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); }
 /* 자격시험 조건 저장: [저장] 버튼을 누를 때만, 그 장르의 중급·상급을 한꺼번에(제제 2026-11-27). 마지막 값 하나만 남김.
    적는 중인 값은 S.examDraft에 둬서 칸을 옮기거나 화면이 다시 그려져도 남음. 저장하면 칸은 비우고 '지난 값'으로 보임 */
 function commitExamReq(g){
-  const R = {...(S.examReq || {})}, dr = {...(S.examDraft || {})}; let n = 0;
+  const R = {...(S.examReq || {})}, dr = {...(S.examDraft || {})}, toCheck = []; let n = 0;
   ["중", "상"].forEach(lv => { const k = examKey(g, lv), d = dr[k]; if (!d) return; delete dr[k];
     const p = (d.p || "").trim(), q = (d.q || "").trim(); if (!p && !q) return;
     const cur = {...(R[k] || {})}; /* 두 값 다 최대 네 자리 숫자(제제 2026-11-27) */
-    if (p) cur.p = p.replace(/\D/g, "") || p; if (q) cur.q = q.replace(/\D/g, "") || q; cur.t = Date.now(); R[k] = cur; n++; });
+    if (p) cur.p = p.replace(/\D/g, "") || p; if (q) cur.q = q.replace(/\D/g, "") || q; cur.t = Date.now(); R[k] = cur; n++;
+    /* 파라미터·품질이 둘 다 있으면 그 급 시험도 체크(제제 2026-11-27) */
+    if (cur.p && cur.q) toCheck.push(k); });
   S.examDraft = dr;
   if (!n){ toast("적은 값이 없어요"); render(); return; }
-  S.examReq = R; render(); toast(`${g} 자격시험 조건을 저장했어요`);
+  S.examReq = R; const newly = toCheck.filter(k => !(S.exams || []).includes(k));
+  toast(`${g} 조건 저장${newly.length ? ` · ${newly.map(k => k.split("|")[1] + "급").join("·")} 체크` : ""}`);
+  toCheck.forEach(k => setExam(k, true)); render();
   if (db) writeSerial("ui/examreq", {req:R, t:Date.now()}).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."));
 }
 document.addEventListener("input", e => { const el = e.target; if (!el.dataset?.exreq) return;
@@ -3652,16 +3666,7 @@ document.addEventListener("click", e => {
     return; }
   if (d.exsave !== undefined){ commitExamReq(d.exsave); return; }
   if (d.exopen !== undefined){ S.examOpen = S.examOpen === d.exopen ? null : d.exopen; render(); return; }
-  if (d.exam){ const k = d.exam, cur = S.exams || [], on = !cur.includes(k); S.exams = on ? [...cur, k] : cur.filter(x => x !== k);
-    /* 상급을 체크하면 중급도 같이(제제 2026-11-27) */
-    if (on && k.endsWith("|상")){ const mid = k.replace(/\|상$/, "|중"); if (!S.exams.includes(mid)) S.exams = [...S.exams, mid]; }
-    /* 상급 자격시험 보상 특수옵션(오리지널리티·사이버)은 체크하면 의류 옵션 선택에도 */
-    const sp = Object.entries(EXAM_SP).find(([, v]) => examKey(...v) === k);
-    if (sp){ const o = SP_OPTS.find(x => optSources(x).includes(sp[0])); const sel = S.cloOpt || [];
-      if (o && on && !sel.includes(o)){ S.cloOpt = [...sel, o]; if (S.cloOpt.length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, opt:true}; remember(); toast(`★ ${o} 옵션 선택`); }
-      else if (o && !on && sel.includes(o) && !optSources(o).some(x => spSrcDone(o, x))){ S.cloOpt = sel.filter(x => x !== o); remember(); } }
-    if (examAllDone()){ S.guTab = "goal"; toast("자격시험을 모두 체크했어요"); }
-    render(); if (db) writeSerial(`${RUN}/ui/exams`, {done:S.exams, t:Date.now()}).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); return; }
+  if (d.exam){ setExam(d.exam, !(S.exams || []).includes(d.exam)); return; }
   if (d.gutab){ S.guTab = d.gutab; S.guLast = d.gutab; remember(); render(); return; }
   if (d.act==="memoedit"){ S.memoEdit = !S.memoEdit; render(); return; }
   if (d.mpk){ const n = +d.mpk, cur = memoNow().pumpkin; memoSave({pumpkin: pumpkinMonths(cur).includes(n) ? null : n}); return; }
