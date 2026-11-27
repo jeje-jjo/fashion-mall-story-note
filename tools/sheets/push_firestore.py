@@ -17,6 +17,7 @@ import pathlib
 import subprocess
 import sys
 import urllib.parse
+import time
 import urllib.error
 import urllib.request
 
@@ -99,6 +100,8 @@ def push(tok: str, t: dict) -> None:
         writes.append({"delete": f"{DOCS}/{coll}/{urllib.parse.quote(did, safe='')}"})
     meta = {k: t[k] for k in ("title", "key", "desc", "source", "columns")}
     meta["rows"] = len(t["rows"])
+    # 앱은 이 값이 바뀐 표만 다시 받는다(app/src/data.ts, 읽기 한도 절약)
+    meta["ver"] = int(time.time())
     writes.append({"update": {"name": f"{DOCS}/ref/{name}", "fields": {k: val(v) for k, v in meta.items()}}})
     for i in range(0, len(writes), 500):
         res = call(tok, "POST", f"{DOCS}:batchWrite", {"writes": writes[i:i + 500]})

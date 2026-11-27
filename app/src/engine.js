@@ -179,6 +179,16 @@ const goodOf = f => ITEMS.filter((_,i) => f.m[i] === "◯");
 
 /* ---------- db ---------- */
 let db = null;
+/* 변경 기록 구독(2026-11-27 읽기 한도 초과): 열 때마다 500건을 다시 읽어서, 평소엔 최근 80건만 받고
+   도구 > 관리나 '전체 기록 보기'를 열 때만 500건으로 늘린다 */
+const LOG_SMALL = 80, LOG_FULL = 500;
+let logUnsub = null, logLimit = 0;
+function subLog(n){
+  if (!db || n <= logLimit) return;
+  logLimit = n; const prev = logUnsub;
+  logUnsub = db.collection("log").orderBy("t","desc").limit(n).onSnapshot(s => { S.logs = s.docs.map(d => ({_id:d.id, ...d.data()})); render(); }, () => setSync(false, "연결 끊김"));
+  if (prev) setTimeout(prev, 0);
+}
 /* 클릭 기록 상태(아래 "클릭 기록" 참고). 시작할 때 도구 > 화면을 바로 그릴 수 있어서 맨 위에 둠 */
 const CLK_KEY = "fms-clicklog-off";
 const clkOff = () => { try{ return localStorage.getItem(CLK_KEY) === "1"; }catch(e){ return false; } };
@@ -291,7 +301,7 @@ function showNotice(msg){ const n=$("#notice");
   db.collection("chkscore").onSnapshot(s => { S.chkscore = Object.fromEntries(s.docs.map(d => [+d.id.slice(1), d.data()])); render(); }, fail);
   db.collection("checks").onSnapshot(s => { S.chkname = Object.fromEntries(s.docs.map(d => [+d.id.slice(1), d.data()])); render(); }, fail);
   db.collection("clofix").onSnapshot(s => { S.clofix = Object.fromEntries(s.docs.map(d => { const v = {...d.data()}; ["p","m","o"].forEach(k => { if (v[k]) v[k] = al("recipe", v[k]); }); return [+d.id.slice(1), v]; })); applyCloFix(); render(); }, fail);
-  db.collection("log").orderBy("t","desc").limit(500).onSnapshot(s => { S.logs = s.docs.map(d => ({_id:d.id, ...d.data()})); render(); }, fail);
+  subLog(LOG_SMALL);
   db.doc("names/all").onSnapshot(s => { const d = (s.exists && s.data()) || {}; S.names = {fac:{}, clo:{}, people:{}, ...d}; S.people = S.names.people; render(); }, fail);
   db.collection("contest").onSnapshot(s => { S.contests = s.docs.map(d => ({_id:d.id, ...d.data()})); render(); }, fail);
   db.doc("calc/clear").onSnapshot(s => { if (document.activeElement?.id?.startsWith("cp-")) return; S.cp = (s.exists && s.data()) || {}; render(); }, fail);
@@ -3074,6 +3084,7 @@ const MORE_SUBS = [["todo","할 일·검색"],["goal","목표"],["layout","배�
 function viewTool(){
   if (["goal","layout","up","home"].includes(S.recSub)){ S.moreSub = S.recSub==="home" ? "todo" : S.recSub; S.recSub = "more"; }
   const cur = TOOL_SUBS.some(([k]) => k===S.recSub) ? S.recSub : "contest";
+  if (cur==="log") subLog(LOG_FULL);
   const pc = pendingList().length;
   return `<section class="card subnav"><div class="seg wide toolnav">${TOOL_SUBS.map(([k,l]) => `<button class="${cur===k?"on":""}" data-rsub="${k}" aria-pressed="${cur===k}">${l}</button>`).join("")}</div></section>
   ${({prog:viewProg, contest:viewContest, calc:viewCalc, ref:viewRef, save:viewSave, log:viewLog, set:viewSet, more:viewMore})[cur]()}`;
@@ -3678,7 +3689,7 @@ document.addEventListener("click", e => {
   if (d.act==="allpickshow"){ S.cloAllShow = !S.cloAllShow; remember(); render(); return; }
   if (d.act==="csp"){ S.cloSp = !S.cloSp; remember(); render(); return; }
   if (d.oclo){ S.cloOpen = S.cloOpen===+d.oclo ? null : +d.oclo; render(); return; }
-  if (d.act==="log-all"){ S.logAll=true; render(); return; }
+  if (d.act==="log-all"){ S.logAll=true; subLog(LOG_FULL); render(); return; }
   if (d.act==="sync-ask"){ S.confirmSync=true; render(); return; }
   if (d.act==="sync-cancel"){ S.confirmSync=false; render(); return; }
   if (d.act==="sync-ok"){ markSynced(); return; }
