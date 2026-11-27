@@ -3496,7 +3496,10 @@ document.addEventListener("click", e => {
   if (d.reqx){ S.reqX = {...(S.reqX||{}), [d.reqx]: !S.reqX?.[d.reqx]}; remember(); render(); return; }
   if (d.reqall){ S.reqAll = {...(S.reqAll||{}), [d.reqall]: true}; render(); return; }
   if (d.reqopen){ S.reqOpen = {...(S.reqOpen||{}), [d.reqopen]: !S.reqOpen?.[d.reqopen]}; render(); return; }
-  if (d.btdone !== undefined){ toggleBtDone(/^\d+$/.test(d.btdone) ? +d.btdone : d.btdone); return; }
+  if (d.btdone !== undefined){ const k = /^\d+$/.test(d.btdone) ? +d.btdone : d.btdone, inGoal = !!b.closest(".goalpanel"); toggleBtDone(k);
+    /* 빠른 보기 목표치에서 점원 챌린지 승리를 체크하면 0.3초 뒤 '전체'로(제제 2026-11-27). 취소할 땐 그대로 */
+    if (inGoal && S.goalSt != null && btDone(k)){ const g = S.goalSt; setTimeout(() => { if (S.goalSt === g && S.quick){ S.goalSt = null; remember(); render(); } }, 300); }
+    return; }
   if (d.fcrec){ S.fcRecOpen = S.fcRecOpen===+d.fcrec ? null : +d.fcrec; render(); return; }
   if (d.act==="btextra"){ S.btExtra = !S.btExtra; render(); return; }
   if (d.ihnstep){ const k = d.ihnstep, cur = S.ihnStep?.[k] || 10; S.ihnStep = {...(S.ihnStep||{}), [k]: cur === 10 ? 30 : cur === 30 ? 50 : 10}; render(); return; }
