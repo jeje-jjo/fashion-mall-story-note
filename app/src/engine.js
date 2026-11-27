@@ -1402,6 +1402,8 @@ function commitExamReq(g){
   if (!n){ toast("적은 값이 없어요"); render(); return; }
   S.examReq = R; const newly = toCheck.filter(k => !(S.exams || []).includes(k));
   toast(`${g} 조건 저장${newly.length ? ` · ${newly.map(k => k.split("|")[1] + "급").join("·")} 체크` : ""}`);
+  /* 저장으로 체크가 되면 펼친 입력칸도 닫음(제제 2026-11-27) */
+  if (toCheck.length && S.examOpen === g) S.examOpen = null;
   toCheck.forEach(k => setExam(k, true)); render();
   if (db) writeSerial("ui/examreq", {req:R, t:Date.now()}).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."));
 }
