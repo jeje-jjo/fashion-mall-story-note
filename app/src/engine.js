@@ -3593,6 +3593,8 @@ document.addEventListener("click", e => {
     if (pk || gs){ S.mFlash = {pk: pk ? nm : 0, gs: gs ? nm : 0}; render(); clearTimeout(window.__mFlashT); window.__mFlashT = setTimeout(() => { S.mFlash = null; render(); }, 3600); }
     return; }
   if (d.exam){ const k = d.exam, cur = S.exams || [], on = !cur.includes(k); S.exams = on ? [...cur, k] : cur.filter(x => x !== k);
+    /* 상급을 체크하면 중급도 같이(제제 2026-11-27) */
+    if (on && k.endsWith("|상")){ const mid = k.replace(/\|상$/, "|중"); if (!S.exams.includes(mid)) S.exams = [...S.exams, mid]; }
     /* 상급 자격시험 보상 특수옵션(오리지널리티·사이버)은 체크하면 의류 옵션 선택에도 */
     const sp = Object.entries(EXAM_SP).find(([, v]) => examKey(...v) === k);
     if (sp){ const o = SP_OPTS.find(x => optSources(x).includes(sp[0])); const sel = S.cloOpt || [];
