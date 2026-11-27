@@ -382,7 +382,7 @@ let undoFn = null, toastT = null;
 function toast(msg, undo){
   if (S.sheet && S.sheet.kind!=="fc" && S.sheet.kind!=="clo" && S.sheet.kind!=="coord"){ S.sheet = null; render(); }
   $("#toastMsg").textContent = msg; undoFn = undo;
-  $("#toastUndo").hidden = !undo;
+  $("#toastUndo").hidden = !undo; goFn = null; $("#toastGo").hidden = true;
   const t=$("#toast"); t.classList.toggle("solo", !undo); t.classList.add("show");  /* 되돌리기 없는 안내는 글 길이에 맞춘 작은 알약(제제 2026-11-25) */
   /* 되돌리기가 있는 안내는 10초(제제 2026-11-19). 새 안내가 오면 앞 것은 바로 바뀜 */
   clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove("show"), undo ? 10000 : 3200);
@@ -392,8 +392,13 @@ let goCloT = null;
 /* 넘어가면 의류 목록이 보이게 목록 위치로 내림(제제 2026-11-27). 랭크를 올릴 때도 같은 동작 */
 function scrollCloList(){ const el = document.getElementById("clothesList"); if (!el) return;
   const top = el.getBoundingClientRect().top + scrollY - 70; scrollTo({top: Math.max(0, top), behavior: "smooth"}); }
-function goCloSoon(still){ clearTimeout(goCloT); const from = S.tab;
-  goCloT = setTimeout(() => { if (!still() || S.tab !== from) return; if (from !== "clo"){ S.tab = "clo"; S.quick = null; remember(); render(); } requestAnimationFrame(scrollCloList); }, from === "clo" ? 300 : 1000); }
+/* 바로 넘어가지 않고, 방금 뜬 안내에 [이동] 버튼을 붙임 → 누르면 의류 목록으로(제제 2026-11-27). 안내는 10초 동안 보임 */
+let goFn = null;
+function goCloSoon(still){ clearTimeout(goCloT);
+  goFn = () => { if (!still()) return; if (S.tab !== "clo"){ S.tab = "clo"; S.quick = null; remember(); render(); } requestAnimationFrame(scrollCloList); };
+  const t = $("#toast"); $("#toastGo").hidden = false; t.classList.remove("solo"); t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 10000); }
+$("#toastGo").onclick = () => { $("#toast").classList.remove("show"); const f = goFn; goFn = null; f && f(); };
 $("#toastUndo").onclick = () => { $("#toast").classList.remove("show"); undoFn && undoFn(); };
 
 function togglePut(id, it, noUndo){
@@ -3606,13 +3611,13 @@ document.addEventListener("click", e => {
   if (d.act==="hlegend"){ S.homeLegend = !S.homeLegend; render(); return; }
   if (d.act==="huptbl"){ S.homeUpTbl = !S.homeUpTbl; render(); return; }
   if (d.act==="hcp"){ S.homeCp = !S.homeCp; render(); return; }
-  if (d.rankset !== undefined){ const n = +d.rankset, up = n > (curRank() ?? -1); mqNowSave({rank: n}); S.quick = null; if (up) goCloSoon(() => curRank() === n);
+  if (d.rankset !== undefined){ const n = +d.rankset, up = n > (curRank() ?? -1); mqNowSave({rank: n}); S.quick = null;
     /* 랭크를 올리면 그 랭크까지 열리는 옷본을 의류 옷본 선택에 바로 넣는다(제제 2026-11-17). 장르·재료는 그대로 */
     const nk2 = x => String(x || "").replace(/\s/g, ""), avail = S.rowAvail?.pat || [];
     const bases = (DATA.rankPlan || []).filter(p => p.rank != null && p.base && gRank(p.rank) <= n).map(p => avail.find(k => nk2(k) === nk2(al("recipe", p.base))) || al("recipe", p.base)).filter(Boolean);
     const add = bases.filter(b => !(S.cloPat || []).includes(b));
     if (add.length){ S.cloPat = [...(S.cloPat || []), ...add]; if (S.cloPat.length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, pat:true}; remember(); }
-    toast(`현재 랭크 ${n}${add.length ? ` · 옷본 ${add.join("·")} 선택` : ""}`); render(); return; }
+    toast(`현재 랭크 ${n}${add.length ? ` · 옷본 ${add.join("·")} 선택` : ""}`); render(); if (up) goCloSoon(() => curRank() === n); return; }
   if (d.rankclr){ mqNowSave({rank: null}); toast("랭크를 지웠어요"); render(); return; }
   /* 맨 위·맨 아래로(제제 2026-11-24): 오른쪽 아래 버튼 */
   if (d.act==="scrolltop"){ scrollTo({top:0, behavior:"smooth"}); return; }
