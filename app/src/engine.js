@@ -101,7 +101,7 @@ function autoSaveSel(){
   selTimer = setTimeout(() => { const all = curSel(); S.cloSlot = {...S.cloSlot, all, ...all};
     writeSerial("ui/slots", {slot:S.cloSlot}).catch(() => showNotice("선택을 저장하지 못했어요. 도구 > 저장에서 수동 저장해 주세요.")).finally(() => { selPending = false; }); }, 400);
 }
-const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,facMode:S.facMode,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,guLast:S.guLast,coModal:S.coModal,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpV2:S.cloExpV2,cloMulti:S.cloMulti,cloAllShow:S.cloAllShow,spFold:S.spFold,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
+const remember = () => { autoSaveSel(); try{ localStorage.setItem("fms-ui", JSON.stringify({reqX:S.reqX,mqG:S.mqG,tab:S.tab,facType:S.facType,facSt:S.facSt,facSort:S.facSort,facFcSel:S.facFcSel,facFcOpen:S.facFcOpen,facMode:S.facMode,coordHideDone:S.coordHideDone,cloBt:S.cloBt,cloBtView:S.cloBtView,btOpen:S.btOpen,facExpPin:S.facExpPin,...(S.facExpPin?{facExp:S.facExp,facFcOpen:S.facFcOpen}:{}),itemAlt:S.itemAlt,fcMode:S.fcMode,upMode:S.upMode,upQMode:S.upQMode,upStaff:S.upStaff,upOpt:S.upOpt,upMulti:S.upMulti,upStaffs:S.upStaffs,goalSt:S.goalSt,guTab:S.guTab,guLast:S.guLast,coModal:S.coModal,itemPick:S.itemPick,cloCat:S.cloCat,cloPat:S.cloPat,cloMat:S.cloMat,cloOpt:S.cloOpt,cloSlot:S.cloSlot,cloExp:S.cloExp,cloExpV2:S.cloExpV2,cloMulti:S.cloMulti,cloAllShow:S.cloAllShow,spFold:S.spFold,cloRowMulti:S.cloRowMulti,cloSt:S.cloSt,cloKind:S.cloKind,cntMode:S.cntMode,recSub:S.recSub,coordSub:S.coordSub,setF:S.setF,setG:S.setG})); }catch(e){} };
 if (S.facType!=="전체" && S.facType!=="우선개량" && !(S.facType in TYPE_COLOR)) S.facType = "전체";
 if (!Array.isArray(S.cloCat)) S.cloCat = S.cloCat && S.cloCat!=="전체" ? [S.cloCat] : [];
 if (!Array.isArray(S.cloPat)) S.cloPat = S.cloPat && S.cloPat!=="전체" ? [S.cloPat] : [];
@@ -2123,22 +2123,24 @@ function upFinder(bare, staffOnly){
   /* 오른쪽 아래 빠른 보기(staffOnly)에서는 특수 옵션을 뺌(제제 2026-11-09) */
   const opts = Object.keys(DATA.up.rows).filter(o => !staffOnly || !SP_OPTS.includes(o));
   const val = (o,i) => parseInt(DATA.up.rows[o][i]) || 0;
-  const mode = staffOnly ? "직원별" : (S.upMode || "직원별");
+  /* 빠른 보기 팝업: 다중선택 대신 [직원|재료] 스위치(제제 2026-11-27). 재료 = 옵션별 보기, 고른 값은 기기에 기억 */
+  const mode = staffOnly ? (S.upQMode === "재료" ? "옵션별" : "직원별") : (S.upMode || "직원별");
+  const multi = !staffOnly && S.upMulti;
   const groupLine = (items) => [4,3,2].map(n => { const xs = items.filter(x => x.v===n); return xs.length ? `<div class="upg"><span class="upv v${n}">+${n}</span><div class="pills">${xs.map(x => `<span class="pill ${n>=3?"must":""}">${esc(x.label)}</span>`).join("")}</div></div>` : ""; }).join("");
   let body = "";
   if (mode==="직원별"){
     const si = S.upStaff ?? 0;
-    const sel = S.upMulti ? (S.upStaffs.length ? S.upStaffs : [si]) : [si];
-    const block = i => { const items = opts.map(o => ({label:o, v:val(o,i)})); return `<div class="upblk">${S.upMulti?`<div class="upname"><b>${esc(staff[i].name)}</b><span>${esc(staff[i].g)}</span></div>`:""}${groupLine(items)}<div class="hint" style="margin-top:4px">나머지 ${items.filter(x => x.v<=1).length}개 옵션은 +1</div></div>`; };
+    const sel = multi ? (S.upStaffs.length ? S.upStaffs : [si]) : [si];
+    const block = i => { const items = opts.map(o => ({label:o, v:val(o,i)})); return `<div class="upblk">${multi?`<div class="upname"><b>${esc(staff[i].name)}</b><span>${esc(staff[i].g)}</span></div>`:""}${groupLine(items)}<div class="hint" style="margin-top:4px">나머지 ${items.filter(x => x.v<=1).length}개 옵션은 +1</div></div>`; };
     body = `<div class="chips" style="margin-top:10px">${staff.map((x,i) => `<button class="chip ${sel.includes(i)?"on":""}" data-upstaff="${i}" aria-pressed="${sel.includes(i)}">${esc(x.g)}<b>${esc(x.name)}</b></button>`).join("")}</div>
-      <div style="margin-top:12px;display:flex;flex-direction:column;gap:${S.upMulti?14:0}px">${sel.map(block).join("")}</div>`;
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:${multi?14:0}px">${sel.map(block).join("")}</div>`;
   } else {
     const o = S.upOpt && DATA.up.rows[S.upOpt] ? S.upOpt : opts[0];
     const items = staff.map((x,i) => ({label:`${x.name} (${x.g})`, v:val(o,i)}));
     body = `<div class="chips" style="margin-top:10px">${opts.map(k => `<button class="chip ${k===o?"on":""}" data-upopt="${esc(k)}">${esc(k)}</button>`).join("")}</div>
       <div style="margin-top:12px">${groupLine(items) || `<div class="hint">모든 직원이 +1이에요</div>`}<div class="hint" style="margin-top:6px">나머지 직원 ${items.filter(x => x.v<=1).length}명은 +1</div></div>`;
   }
-  if (staffOnly) return `<div class="qup"><div class="fhead" style="margin:0;gap:8px"><span class="hint">직원을 골라요</span><button class="chip sm ${S.upMulti?"on":""}" data-act="upmulti" aria-pressed="${!!S.upMulti}">다중선택</button></div>${body}</div>`;
+  if (staffOnly) return `<div class="qup"><div class="fhead" style="margin:0;gap:8px"><span class="hint">${mode==="직원별" ? "직원을 골라요" : "재료를 골라요"}</span>${seg(["직원","재료"], mode==="직원별" ? "직원" : "재료", "upqmode")}</div>${body}</div>`;
   return `<div class="uppad ${bare?"":"uptop"}">
     <div class="sec-h" style="margin:14px 0 8px"><h2 style="font-size:16px">개량 옵션 찾기</h2></div>
     <div class="fhead" style="margin:0;gap:8px">${seg(["직원별","옵션별"], mode, "upmode")}${mode==="직원별"?`<button class="chip sm ${S.upMulti?"on":""}" data-act="upmulti" aria-pressed="${!!S.upMulti}">다중선택</button>`:""}</div>
@@ -3733,6 +3735,7 @@ document.addEventListener("click", e => {
   if (d.act==="cya-close"){ S.cyAsk = null; render(); return; }
   if (d.cydel){ const id = d.cydel; S.cyears = S.cyears.filter(x => x._id!==id); render(); if (db) db.doc("cyear/"+id).delete().catch(()=>{}); return; }
   if (d.upmode){ S.upMode = d.upmode; remember(); render(); return; }
+  if (d.upqmode){ S.upQMode = d.upqmode; remember(); render(); return; }
   if (d.upstaff !== undefined){ const i = +d.upstaff; if (S.upMulti){ S.upStaffs = S.upStaffs.includes(i) ? S.upStaffs.filter(x => x!==i) : [...S.upStaffs, i].sort((a,b)=>a-b); } else S.upStaff = i; remember(); render(); return; }
   if (d.act==="upmulti"){ S.upMulti = !S.upMulti; if (S.upMulti && !S.upStaffs.length) S.upStaffs = [S.upStaff ?? 0]; remember(); render(); return; }
   if (d.upopt !== undefined){ S.upOpt = d.upopt; remember(); render(); return; }
