@@ -293,6 +293,7 @@ function showNotice(msg){ const n=$("#notice");
   /* 달별 진행 기록(제제 2026-11-24): 달을 넘길 때마다 그때 상태를 남김. 지난 회차 기록과 비교 */
   db.doc(`${RUN}/ui/months`).onSnapshot(s => { S.months = ((s.exists && s.data()) || {}).m || {}; render(); }, () => {});
   if (S.prevRun) db.doc(`${S.prevRun}/ui/months`).onSnapshot(s => { S.monthsPrev = ((s.exists && s.data()) || {}).m || {}; render(); }, () => {});
+  db.doc("ui/examreq").onSnapshot(s => { S.examReq = ((s.exists && s.data()) || {}).req || {}; render(); }, () => {});
   db.doc(`${RUN}/ui/exams`).onSnapshot(s => { S.exams = ((s.exists && s.data()) || {}).done || []; render(); }, () => {});
   db.doc(`${RUN}/ui/mqacc`).onSnapshot(s => { S.mqAcc = ((s.exists && s.data()) || {}).ids || []; render(); }, () => {});
   db.doc(`${RUN}/ui/sppath`).onSnapshot(s => { S.spDone = ((s.exists && s.data()) || {}).done || []; render(); }, () => {});
@@ -1356,9 +1357,28 @@ function examPanel(){
   /* 상급까지 끝낸 장르는 맨 아래 '완료'로 따로(제제 2026-11-27) */
   const fin = g => examDone(g, "중") && examDone(g, "상");
   const open = G.filter(g => isOpen(g) && !fin(g)), shut = G.filter(g => !isOpen(g) && !fin(g)), done = G.filter(fin);
-  const grid = (L, cls = "") => L.length ? `<div class="exgrid ${cls}" style="--exr:${Math.ceil(L.length / 2)}">${L.map(g => `<div class="exrow ${examDone(g, "중") && examDone(g, "상") ? "done" : ""}"><span class="exg">${esc(g)}</span>${btn(g, "중")}${btn(g, "상")}</div>`).join("")}</div>` : "";
+  /* 장르 이름을 누르면 펼쳐서 중급·상급 조건(파라미터·품질)을 적음(제제 2026-11-27, 사이트에 상세 조건이 없음).
+     칸은 비워 두고, 아래 작은 글씨로 마지막에 적은 값만 보여 줌. 저장은 회차와 무관하게 ui/examreq {req:{"코스프레|중":{p,q,t}}} */
+  const det = g => { const R = S.examReq || {};
+    const line = lv => { const k = examKey(g, lv), r = R[k] || {}, id = `exq-${G.indexOf(g)}-${lv === "중" ? "m" : "h"}`;
+      const last = r.p || r.q ? `지난 값 · 파라미터 ${esc(r.p || "-")} · 품질 ${esc(r.q || "-")}${r.t ? ` · ${new Date(r.t).toLocaleDateString("ko-KR", {month:"numeric", day:"numeric"})}` : ""}` : "아직 적은 값 없음";
+      return `<div class="exin"><span class="exlv">${lv}급</span><label>파라미터<input class="field sm exf" id="${id}-p" data-exreq="${esc(k)}" data-exf="p" maxlength="12" autocomplete="off"></label><span class="exsep">/</span><label>품질<input class="field sm num exf" id="${id}-q" data-exreq="${esc(k)}" data-exf="q" inputmode="numeric" maxlength="6" autocomplete="off"></label></div><div class="exlast">${last}</div>`; };
+    return `<div class="exdet">${line("중")}${line("상")}</div>`; };
+  const cell = g => { const o = S.examOpen === g;
+    return `<div class="excell ${o ? "open" : ""}"><div class="exrow ${examDone(g, "중") && examDone(g, "상") ? "done" : ""}"><button type="button" class="exg" data-exopen="${esc(g)}" aria-expanded="${o}">${esc(g)}</button>${btn(g, "중")}${btn(g, "상")}</div>${o ? det(g) : ""}</div>`; };
+  /* 왼쪽 칸·오른쪽 칸을 따로 쌓아서, 한쪽을 펼쳐도 다른 쪽 줄이 벌어지지 않게. 휴대폰은 두 칸이 위아래로 이어짐 */
+  const grid = (L, cls = "") => { if (!L.length) return ""; const h = Math.ceil(L.length / 2);
+    return `<div class="exgrid ${cls}"><div class="excol">${L.slice(0, h).map(cell).join("")}</div><div class="excol">${L.slice(h).map(cell).join("")}</div></div>`; };
   return `<div class="exampanel"><div class="fhead" style="margin:0 0 8px"><span class="sublbl" style="margin:0">자격시험</span><span class="hint">${n} / ${G.length * 2}</span></div>
     ${grid(open)}${shut.length ? `<div class="exshut-h">아직 안 열린 장르 · 의류 장르에서 고르면 위로 올라가요</div>${grid(shut, "shut")}` : ""}${done.length ? `<div class="exshut-h">완료 ${done.length}</div>${grid(done, "fin")}` : ""}</div>`;
+}
+/* 자격시험 조건 저장: 마지막 값 하나만 남김. 입력칸은 저장 뒤 비우고, 값은 아래 '지난 값'으로 보임 */
+function saveExamReq(el){
+  const v = el.value.trim(); if (!v) return;
+  const k = el.dataset.exreq, f = el.dataset.exf, R = {...(S.examReq || {})};
+  R[k] = {...(R[k] || {}), [f]: f === "q" ? v.replace(/[^\d.]/g, "") || v : v, t: Date.now()};
+  S.examReq = R; el.value = ""; render(); toast("자격시험 조건을 저장했어요");
+  if (db) writeSerial("ui/examreq", {req:R, t:Date.now()}).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."));
 }
 /* 특수옵션 경로의 상급 자격시험 → 위 체크를 따라 자동 */
 const EXAM_SP = {"자격시험 12": ["오리지널리티", "상"], "자격시험 13": ["사이버", "상"]};
@@ -3613,6 +3633,7 @@ document.addEventListener("click", e => {
     toast(`${y}년 ${m}월${pk || gs ? ` · 다음 달 ${[pk && "펌프킨 숍", gs && "손님 활동 목록"].filter(Boolean).join("·")} 리셋` : ""}`);
     if (pk || gs){ S.mFlash = {pk: pk ? nm : 0, gs: gs ? nm : 0}; render(); clearTimeout(window.__mFlashT); window.__mFlashT = setTimeout(() => { S.mFlash = null; render(); }, 3600); }
     return; }
+  if (d.exopen !== undefined){ S.examOpen = S.examOpen === d.exopen ? null : d.exopen; render(); return; }
   if (d.exam){ const k = d.exam, cur = S.exams || [], on = !cur.includes(k); S.exams = on ? [...cur, k] : cur.filter(x => x !== k);
     /* 상급을 체크하면 중급도 같이(제제 2026-11-27) */
     if (on && k.endsWith("|상")){ const mid = k.replace(/\|상$/, "|중"); if (!S.exams.includes(mid)) S.exams = [...S.exams, mid]; }
@@ -3769,6 +3790,7 @@ document.addEventListener("input", e => {
   S[id] = e.target.value; if (id==="homeQ") S.homeOpen = ""; clearTimeout(qT); qT = setTimeout(render, 150);
 });
 document.addEventListener("change", e => {
+  if (e.target.dataset?.exreq){ saveExamReq(e.target); return; }
   if (e.target.id==="bkFile"){ const f = e.target.files?.[0]; if (f) backupPick(f); e.target.value = ""; return; }
   if (e.target.id==="impFile"){ const f = e.target.files?.[0]; if (f) importRead(f); e.target.value = ""; return; }
   if (/^bq-\d+$/.test(e.target.id)){ e.target.dispatchEvent(new Event("input",{bubbles:true})); return; } if (/^fa-(main|alt)-\d+$/.test(e.target.id)) return; if (e.target.tagName==="SELECT" && (["rnOld"].includes(e.target.id) || /^(ok|cf|cfp|bq)-\d+$/.test(e.target.id) || /^fa-(main|alt)-\d+$/.test(e.target.id)) && e.target.value !== ({rnOld:S.rnOld})[e.target.id] && !/^(ok|cf|cfp|bq|fa)-/.test(e.target.id)) e.target.dispatchEvent(new Event("input",{bubbles:true})); });
