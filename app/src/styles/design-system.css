@@ -846,3 +846,7 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
 :root:root #quick .gutabs { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
 /* 특수옵션 카드는 넓은 화면에서도 한 줄 전체(제제 2026-11-27: 혼자 반 칸이라 휑해 보이던 것) */
 :root:root .filter-grid > .filter-row.sp-row { grid-column: 1 / -1; }
+/* 빠른 보기 탭 글씨 작게 + 휴대폰에서도 전체 이름(제제 2026-11-27: 4칸이 되며 넘치고 커 보이던 것) */
+:root:root:root #quick .gutabs button { height: 32px; font-size: 12px; padding: 0 2px; }
+:root:root:root #quick .gutabs .ph-x { display: inline; }
+@media (max-width: 360px){ :root:root:root #quick .gutabs button { font-size: 11px; } }
