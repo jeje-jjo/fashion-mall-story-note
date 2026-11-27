@@ -1754,7 +1754,8 @@ function viewCoordReq(){
         const L = groups[n], st = dn ? L.length : Math.min(S.coordStep?.[n] || 0, L.length);
         needCloImg();
         const todo = L.slice(st).map(c => imgifyDD(entry(c, true))), got = L.slice(0, st).map(c => imgifyDD(entry(c, true)).replace('class="coord sub request-entry', 'class="coord sub request-entry req-got'));
-        return `<div class="comodal-b"><div class="request-grid">${todo.join("")}${got.length ? `<div class="req-got-h">완료한 요청 ${got.length}</div>${got.join("")}` : ""}</div></div>`; })()}
+        /* 지금 할 요청(맨 앞) 뒤에 '예정 N' 구분(제제 2026-11-27) */
+        return `<div class="comodal-b"><div class="request-grid">${todo[0] || ""}${todo.length > 1 ? `<div class="req-got-h">예정 ${todo.length - 1}</div>${todo.slice(1).join("")}` : ""}${got.length ? `<div class="req-got-h">완료한 요청 ${got.length}</div>${got.join("")}` : ""}</div></div>`; })()}
     </div></div>`; }
 }
 
