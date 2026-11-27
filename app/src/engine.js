@@ -283,6 +283,7 @@ function showNotice(msg){ const n=$("#notice");
   /* 달별 진행 기록(제제 2026-11-24): 달을 넘길 때마다 그때 상태를 남김. 지난 회차 기록과 비교 */
   db.doc(`${RUN}/ui/months`).onSnapshot(s => { S.months = ((s.exists && s.data()) || {}).m || {}; render(); }, () => {});
   if (S.prevRun) db.doc(`${S.prevRun}/ui/months`).onSnapshot(s => { S.monthsPrev = ((s.exists && s.data()) || {}).m || {}; render(); }, () => {});
+  db.doc(`${RUN}/ui/exams`).onSnapshot(s => { S.exams = ((s.exists && s.data()) || {}).done || []; render(); }, () => {});
   db.doc(`${RUN}/ui/mqacc`).onSnapshot(s => { S.mqAcc = ((s.exists && s.data()) || {}).ids || []; render(); }, () => {});
   db.doc(`${RUN}/ui/sppath`).onSnapshot(s => { S.spDone = ((s.exists && s.data()) || {}).done || []; render(); }, () => {});
   db.doc(`${RUN}/misc/coord`).onSnapshot(s => { S.coordDone = (s.exists && s.data().list) || []; S.coordStep = (s.exists && s.data().step) || {}; render(); }, fail);
@@ -1331,7 +1332,21 @@ function optSources(o){
 }
 /* 특수옵션 경로(제제 2026-11-12): 특수옵션마다 얻는 곳(전투·패션 체크·콘테스트·자격시험 등)을 글로만 */
 /* 경로 칩 상태: 패션 체크·챌린지·다른 가게 직원은 완료/승리를 따라 자동, 콘테스트·찐빵 등은 직접 체크(${RUN}/ui/sppath) */
+/* 자격시험(제제 2026-11-27): 캐주얼~사이버 14장르 × 중급·상급 체크만. ${RUN}/ui/exams {done:["캐주얼|중", ...]}. 전부 체크하면 빠른 보기 탭에서 사라짐 */
+const EXAM_G = () => [...new Set(DATA.clo.map(c => c.c))];
+const examKey = (g, lv) => `${g}|${lv}`;
+const examDone = (g, lv) => (S.exams || []).includes(examKey(g, lv));
+const examAllDone = () => EXAM_G().every(g => examDone(g, "중") && examDone(g, "상"));
+function examPanel(){
+  const G = EXAM_G(), n = (S.exams || []).filter(k => G.some(g => k.startsWith(g + "|"))).length;
+  const btn = (g, lv) => { const d = examDone(g, lv); return `<button type="button" class="chip sm exbtn ${d ? "on" : ""}" data-exam="${esc(examKey(g, lv))}" aria-pressed="${d}">${d ? ICON.ok : ""}${lv}급</button>`; };
+  return `<div class="exampanel"><div class="fhead" style="margin:0 0 8px"><span class="sublbl" style="margin:0">자격시험</span><span class="hint">${n} / ${G.length * 2}</span></div>
+    <div class="exgrid">${G.map(g => `<div class="exrow ${examDone(g, "중") && examDone(g, "상") ? "done" : ""}"><span class="exg">${esc(g)}</span>${btn(g, "중")}${btn(g, "상")}</div>`).join("")}</div></div>`;
+}
+/* 특수옵션 경로의 상급 자격시험 → 위 체크를 따라 자동 */
+const EXAM_SP = {"자격시험 12": ["오리지널리티", "상"], "자격시험 13": ["사이버", "상"]};
 function spSrcAuto(src){
+  if (EXAM_SP[src]) return examDone(...EXAM_SP[src]);
   let m = src.match(/^패션 체크 (\d+)$/); if (m) return fcDone(+m[1] - 1);
   m = src.match(/^(.+) 챌린지 승리$/); if (m){ const i = DATA.battles.findIndex((_, j) => bShort(j) === m[1]);
     /* '자신 있는' 챌린지는 목표치에 없어 승리 체크할 곳이 없음 → 여기서 직접 체크(제제 2026-11-24). 승리 체크돼 있으면 자동 완료 */
@@ -3325,8 +3340,9 @@ function render(){
   if (S.quick === "memo"){ S.quick = "gu"; S.guTab = "date"; } else if (S.quick === "rank"){ S.quick = "rank"; } else if (S.quick === "goal"){ S.quick = "gu"; S.guTab = S.guTab || S.guLast || "goal"; }
   if (S.guTab === "rank") S.guTab = "goal";
   document.querySelectorAll('#fab [data-q="memo"], #fab [data-q="rank"]').forEach(b => { b.hidden = true; });
-  const guTabs = () => `<div class="gutabs-wrap"><div class="seg wide gutabs">${[["date","날짜"],["goal","목표치"],["up","개량<span class=\"ph-x\"> 옵션</span>"]].map(([k, l]) => `<button type="button" class="${(S.guTab || "goal") === k ? "on" : ""}" data-gutab="${k}" aria-pressed="${(S.guTab || "goal") === k}">${l}</button>`).join("")}</div></div>`;
-  if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="rank" ? rankPanel() : guTabs() + (S.guTab === "rank" ? rankPanel() : S.guTab === "date" ? gameDatePanel() + homeMemo(true) : (S.guTab || "goal") === "up" ? upFinder(true, true) : goalPanel())}</div>` : ""; qk.hidden = !S.quick; }
+  if (S.guTab === "exam" && examAllDone()) S.guTab = "goal";
+  const guTabs = () => `<div class="gutabs-wrap"><div class="seg wide gutabs">${[["date","날짜"],["goal","목표치"],["up","개량<span class=\"ph-x\"> 옵션</span>"], ...(examAllDone() ? [] : [["exam","자격<span class=\"ph-x\">시험</span>"]])].map(([k, l]) => `<button type="button" class="${(S.guTab || "goal") === k ? "on" : ""}" data-gutab="${k}" aria-pressed="${(S.guTab || "goal") === k}">${l}</button>`).join("")}</div></div>`;
+  if (qk){ qk.innerHTML = S.quick ? `<div class="qpanel">${S.quick==="rank" ? rankPanel() : guTabs() + (S.guTab === "rank" ? rankPanel() : S.guTab === "date" ? gameDatePanel() + homeMemo(true) : S.guTab === "exam" ? examPanel() : (S.guTab || "goal") === "up" ? upFinder(true, true) : goalPanel())}</div>` : ""; qk.hidden = !S.quick; }
   document.querySelectorAll("#fab [data-q]").forEach(b => { const q = b.dataset.q, on = S.quick==="gu" ? q==="goal" : S.quick===q; b.classList.toggle("on", on); b.setAttribute("aria-expanded", on); });
   const rp = $("#recentPanel"); if (rp){ rp.innerHTML = S.recentOpen ? recentPanel() : ""; rp.hidden = !S.recentOpen; }
   $("#recentBtn")?.classList.toggle("on", !!S.recentOpen); $("#recentBtn")?.setAttribute("aria-expanded", !!S.recentOpen);
@@ -3576,6 +3592,14 @@ document.addEventListener("click", e => {
     toast(`${y}년 ${m}월${pk || gs ? ` · 다음 달 ${[pk && "펌프킨 숍", gs && "손님 활동 목록"].filter(Boolean).join("·")} 리셋` : ""}`);
     if (pk || gs){ S.mFlash = {pk: pk ? nm : 0, gs: gs ? nm : 0}; render(); clearTimeout(window.__mFlashT); window.__mFlashT = setTimeout(() => { S.mFlash = null; render(); }, 3600); }
     return; }
+  if (d.exam){ const k = d.exam, cur = S.exams || [], on = !cur.includes(k); S.exams = on ? [...cur, k] : cur.filter(x => x !== k);
+    /* 상급 자격시험 보상 특수옵션(오리지널리티·사이버)은 체크하면 의류 옵션 선택에도 */
+    const sp = Object.entries(EXAM_SP).find(([, v]) => examKey(...v) === k);
+    if (sp){ const o = SP_OPTS.find(x => optSources(x).includes(sp[0])); const sel = S.cloOpt || [];
+      if (o && on && !sel.includes(o)){ S.cloOpt = [...sel, o]; if (S.cloOpt.length > 1 && !S.cloMulti) S.cloRowMulti = {...S.cloRowMulti, opt:true}; remember(); toast(`★ ${o} 옵션 선택`); }
+      else if (o && !on && sel.includes(o) && !optSources(o).some(x => spSrcDone(o, x))){ S.cloOpt = sel.filter(x => x !== o); remember(); } }
+    if (examAllDone()){ S.guTab = "goal"; toast("자격시험을 모두 체크했어요"); }
+    render(); if (db) writeSerial(`${RUN}/ui/exams`, {done:S.exams, t:Date.now()}).catch(() => showNotice("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요.")); return; }
   if (d.gutab){ S.guTab = d.gutab; S.guLast = d.gutab; remember(); render(); return; }
   if (d.act==="memoedit"){ S.memoEdit = !S.memoEdit; render(); return; }
   if (d.mpk){ const n = +d.mpk, cur = memoNow().pumpkin; memoSave({pumpkin: pumpkinMonths(cur).includes(n) ? null : n}); return; }

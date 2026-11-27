@@ -833,3 +833,16 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
 :root:root .numpad button.fcnext { box-shadow: inset 0 0 0 2px var(--blue); color: var(--blue-ink); font-weight: 800; position: relative; }
 :root:root .numpad button.fcnext::after { content: ""; position: absolute; top: 4px; right: 4px; width: 6px; height: 6px; border-radius: 50%; background: var(--blue); }
 :root:root .numpad button.fcnext.on { box-shadow: inset 0 0 0 2px var(--blue-ink); }
+
+/* 빠른 보기 > 자격시험: 장르 이름 + 중급·상급 체크만 */
+:root:root .exgrid { display: grid; grid-template-columns: 1fr; gap: 4px 16px; }
+@media (min-width: 560px){ :root:root .exgrid { grid-template-columns: 1fr 1fr; } }
+:root:root .exrow { display: flex; align-items: center; gap: 6px; padding: 3px 0; border-bottom: 1px dashed var(--line); }
+:root:root .exrow .exg { flex: 1; font-size: var(--t-body); color: var(--fg); }
+:root:root .exrow.done .exg { color: var(--fg3); }
+:root:root .chip.exbtn { min-width: 56px; justify-content: center; }
+:root:root .chip.exbtn .ui-icon { width: 12px; height: 12px; margin-right: 2px; }
+/* 빠른 보기 탭: 자격시험이 있으면 4칸, 다 끝나 사라지면 3칸 */
+:root:root #quick .gutabs { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+/* 특수옵션 카드는 넓은 화면에서도 한 줄 전체(제제 2026-11-27: 혼자 반 칸이라 휑해 보이던 것) */
+:root:root .filter-grid > .filter-row.sp-row { grid-column: 1 / -1; }
