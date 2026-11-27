@@ -1353,10 +1353,12 @@ function examPanel(){
   /* 의류 장르 칩에서 고른 장르 = 열린 장르(제제 2026-11-27). 안 열린 장르는 아래에 흐리게 따로. 시험을 이미 체크한 장르는 열린 쪽
      순서는 세로로 먼저 읽기(캐주얼 아래 스트리트) */
   const cats = S.cloCat || [], isOpen = g => !cats.length || cats.includes(g) || examDone(g, "중") || examDone(g, "상");
-  const open = G.filter(isOpen), shut = G.filter(g => !isOpen(g));
+  /* 상급까지 끝낸 장르는 맨 아래 '완료'로 따로(제제 2026-11-27) */
+  const fin = g => examDone(g, "중") && examDone(g, "상");
+  const open = G.filter(g => isOpen(g) && !fin(g)), shut = G.filter(g => !isOpen(g) && !fin(g)), done = G.filter(fin);
   const grid = (L, cls = "") => L.length ? `<div class="exgrid ${cls}" style="--exr:${Math.ceil(L.length / 2)}">${L.map(g => `<div class="exrow ${examDone(g, "중") && examDone(g, "상") ? "done" : ""}"><span class="exg">${esc(g)}</span>${btn(g, "중")}${btn(g, "상")}</div>`).join("")}</div>` : "";
   return `<div class="exampanel"><div class="fhead" style="margin:0 0 8px"><span class="sublbl" style="margin:0">자격시험</span><span class="hint">${n} / ${G.length * 2}</span></div>
-    ${grid(open)}${shut.length ? `<div class="exshut-h">아직 안 열린 장르 · 의류 장르에서 고르면 위로 올라가요</div>${grid(shut, "shut")}` : ""}</div>`;
+    ${grid(open)}${shut.length ? `<div class="exshut-h">아직 안 열린 장르 · 의류 장르에서 고르면 위로 올라가요</div>${grid(shut, "shut")}` : ""}${done.length ? `<div class="exshut-h">완료 ${done.length}</div>${grid(done, "fin")}` : ""}</div>`;
 }
 /* 특수옵션 경로의 상급 자격시험 → 위 체크를 따라 자동 */
 const EXAM_SP = {"자격시험 12": ["오리지널리티", "상"], "자격시험 13": ["사이버", "상"]};
