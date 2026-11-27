@@ -853,3 +853,9 @@ html:has(#quick:not([hidden])) #fab .fab-sc { visibility: hidden; }
 :root:root:root #quick .gutabs button { height: 32px; font-size: 12px; padding: 0 2px; }
 :root:root:root #quick .gutabs .ph-x { display: inline; }
 @media (max-width: 360px){ :root:root:root #quick .gutabs button { font-size: 11px; } }
+
+/* 자격시험: 세로로 먼저 읽기 + 안 열린 장르는 아래에 흐리게(제제 2026-11-27) */
+@media (min-width: 560px){ :root:root .exgrid { grid-auto-flow: column; grid-template-rows: repeat(var(--exr, 7), auto); } }
+:root:root .exshut-h { margin: 10px 0 2px; font-size: 11.5px; color: var(--fg3); }
+:root:root .exgrid.shut .exrow { opacity: .62; }
+:root:root .exgrid.shut .exrow .exg { color: var(--fg3); }
